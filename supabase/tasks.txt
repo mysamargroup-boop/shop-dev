@@ -1,0 +1,78 @@
+1) Seed initial data for categories, products, coupons, site_settings
+2) Migrate image storage to Supabase Storage buckets
+3) Build admin auth with Supabase Auth and roles
+4) Replace JSON file reads with Supabase queries in API routes
+5) Add REST/RPC endpoints or use Supabase client on Next.js
+6) Implement webhooks for Cashfree payment status updates
+7) Write migrations for schema changes and CI pipeline
+8) Add rate-limiting for marketing sends and logging of errors
+9) Add audit logs for admin changes (settings, products, coupons)
+10) Implement background jobs for WhatsApp batch sending
+11) Add caching layer for read-heavy endpoints (Edge cache/CDN)
+12) Add activity dashboard: orders, payments, campaigns metrics
+13) Write integration tests for orders/payments/marketing flows
+14) Configure Supabase project and get connection strings
+15) Set up Supabase Auth with admin role authentication
+16) Create service role key for server-side operations
+17) Update .env.local with Supabase credentials
+18) Install @supabase/supabase-js package
+19) Create Supabase client helper functions
+20) Update API routes to use Supabase instead of JSON files
+21) Create data migration scripts from JSON to Supabase
+22) Test all admin panel functionality with Supabase
+23) Update frontend to use new API endpoints
+24) Set up Supabase Storage for image uploads
+25) Add database backups and monitoring
+
+# DATABASE SETUP INSTRUCTIONS:
+
+## Step 1: Create Supabase Project
+1. Go to https://supabase.com
+2. Create new project
+3. Get project URL and keys from Settings > API
+
+## Step 2: Add Credentials to .env.local
+```bash
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+```
+
+## Step 3: Setup Database
+1. Go to Supabase SQL Editor
+2. Copy and paste entire content of: `supabase/schema.sql` (single source of truth)
+3. Click "Run" to execute
+
+## Step 4: Test Features
+- Admin Panel: http://localhost:3000/wb-admin
+- Orders Page: http://localhost:3000/wb-admin/orders
+- Test order management (cancel/return/refund)
+
+# PENDING HIGH PRIORITY TASKS:
+26) Ensure single SQL file; remove deprecated migrations/complete_migration.sql
+27) Add Supabase credentials to .env.local file
+28) Migrate JSON data (products, categories, orders) into Supabase
+29) Protect admin APIs with auth; restrict access to admins only
+30) Replace JSON reads with Supabase queries in API routes
+31) Verify RLS: public read-only for storefront tables
+32) Create RPC for update_order_status and use in admin APIs
+33) Configure Cashfree webhook to also upsert into Supabase orders/payments
+34) Add indexes for transaction_id and refund_amount ✓ ADDED IN schema.sql
+
+# NEXT STEPS:
+35) Add Supabase credentials to .env.local
+36) Create Supabase project and run schema.sql
+37) Delete deprecated migrations/complete_migration.sql to keep single SQL file
+38) Test order management features in admin panel
+39) Migrate existing data to Supabase
+40) Update webhook to write orders/payments into Supabase
+41) Switch storefront reads from JSON to Supabase
+42) Fix TypeScript issues in UI (menubar, pathname checks, embla)
+
+# COMPLETED IN THIS SESSION:
+43) Fresh build with caches cleared
+44) Tailwind content paths fixed for proper CSS
+45) Admin Orders list shows transaction ID
+46) Bulk import categories/products into Supabase via Node script
+47) Insert test order and payment via Node script
+48) Dev server running on port 4001 and verified
