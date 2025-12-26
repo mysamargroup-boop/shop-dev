@@ -2,11 +2,8 @@
 'use server';
 import path from 'path';
 import type { Category, Product, ProductsData, BlogPost, SiteSettings } from './types';
-import blogData from './blogs.json';
 import imageData from './placeholder-images.json';
 import { unstable_noStore as noStore } from 'next/cache';
-import tagsData from './tags.json';
-// Import from Supabase instead of JSON files
 import { 
   getCategories as getCategoriesFromSupabase, 
   getProducts as getProductsFromSupabase, 
@@ -14,18 +11,9 @@ import {
   getOrders as getOrdersFromSupabase, 
   getSiteSettings as getSiteSettingsFromSupabase, 
   getBlogPosts as getBlogPostsFromSupabase, 
+  getBlogPostBySlug as getBlogPostBySlugFromSupabase,
   getTags as getTagsFromSupabase 
 } from './data-supabase';
-
-
-const fs = require('fs').promises;
-
-const categoriesFilePath = path.join(process.cwd(), 'src', 'lib', 'categories.json');
-const productsFilePath = path.join(process.cwd(), 'src', 'lib', 'products.json');
-const ordersFilePath = path.join(process.cwd(), 'src', 'lib', 'orders.json');
-const settingsFilePath = path.join(process.cwd(), 'src', 'lib', 'site-settings.json');
-const bannersFilePath = path.join(process.cwd(), 'src', 'lib', 'banners.json');
-
 
 const { placeholderImages } = imageData;
 
@@ -61,18 +49,43 @@ export async function getImageData() {
     return imageData;
 }
 
-const blogPosts: BlogPost[] = (blogData as { posts: BlogPost[] }).posts.map(post => ({
-  ...post,
-  imageUrl: getImage(post.imageKey).imageUrl,
-  imageHint: getImage(post.imageKey).imageHint,
-}));
-
 export async function getBlogPosts(): Promise<BlogPost[]> {
-  return blogPosts;
+  const posts = await getBlogPostsFromSupabase();
+  return posts.map(post => {
+    const img = getImage((post as any).image_key || '');
+    const finalUrl = (post as any).image_url || img.imageUrl;
+    const finalHint = img.imageHint;
+    return {
+      slug: (post as any).slug,
+      title: (post as any).title,
+      date: (post as any).published_at || '',
+      excerpt: '',
+      imageUrl: finalUrl,
+      imageHint: finalHint,
+      author: (post as any).author || '',
+      content: (post as any).content || '',
+      imageKey: (post as any).image_key || '',
+    } as BlogPost;
+  });
 }
 
 export async function getBlogPostBySlug(slug: string): Promise<BlogPost | undefined> {
-  return blogPosts.find(post => post.slug === slug);
+  const post = await getBlogPostBySlugFromSupabase(slug);
+  if (!post) return undefined;
+  const img = getImage((post as any).image_key || '');
+  const finalUrl = (post as any).image_url || img.imageUrl;
+  const finalHint = img.imageHint;
+  return {
+    slug: (post as any).slug,
+    title: (post as any).title,
+    date: (post as any).published_at || '',
+    excerpt: '',
+    imageUrl: finalUrl,
+    imageHint: finalHint,
+    author: (post as any).author || '',
+    content: (post as any).content || '',
+    imageKey: (post as any).image_key || '',
+  } as BlogPost;
 }
 
 export async function getTags(): Promise<string[]> {

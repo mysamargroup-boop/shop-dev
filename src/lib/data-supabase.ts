@@ -143,7 +143,7 @@ export async function getBlogPosts(): Promise<BlogPost[]> {
     const { data, error } = await supabaseAdmin()
       .from('blog_posts')
       .select('*')
-      .eq('published_at', 'not null')
+      .not('published_at', 'is', null)
       .order('published_at', { ascending: false });
     
     if (error) throw error;
@@ -151,6 +151,21 @@ export async function getBlogPosts(): Promise<BlogPost[]> {
   } catch (error) {
     console.error('Error fetching blog posts:', error);
     return [];
+  }
+}
+
+export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
+  try {
+    const { data, error } = await supabaseAdmin()
+      .from('blog_posts')
+      .select('*')
+      .eq('slug', slug)
+      .single();
+    if (error) throw error;
+    return data || null;
+  } catch (error) {
+    console.error('Error fetching blog post:', error);
+    return null;
   }
 }
 

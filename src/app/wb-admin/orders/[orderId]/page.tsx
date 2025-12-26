@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { User, Phone, Calendar, IndianRupee, Hash, CheckCircle, AlertCircle, Clock, ShoppingCart } from 'lucide-react';
+import { User, Phone, Calendar, IndianRupee, Hash, CheckCircle, AlertCircle, Clock, ShoppingCart, RotateCcw, DollarSign } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BLUR_DATA_URL } from "@/lib/constants";
 import OrderManagementActions from '@/components/order-management-actions';

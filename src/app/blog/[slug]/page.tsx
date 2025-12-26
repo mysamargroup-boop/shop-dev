@@ -1,12 +1,12 @@
 
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
-import { getBlogPostBySlug } from '@/lib/blog-data';
+import { getBlogPostBySlug } from '@/lib/data-async';
 import { Calendar, User } from 'lucide-react';
 import { BLUR_DATA_URL } from '@/lib/constants';
 
-export default function BlogPostPage({ params }: { params: { slug: string } }) {
-  const post = getBlogPostBySlug(params.slug);
+export default async function BlogPostPage({ params }: { params: { slug: string } }) {
+  const post = await getBlogPostBySlug(params.slug);
 
   if (!post) {
     notFound();
