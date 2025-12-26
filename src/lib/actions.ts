@@ -7,6 +7,7 @@ import { z } from "zod";
 import fs from "fs/promises";
 import path from "path";
 import type { Product, BlogPost, Category, SiteImageData, SiteImage, Coupon, Subscription, SiteSettings } from "./types";
+import { supabaseAdmin } from "./supabase";
 import { sendWhatsAppTemplateMessage, sendWhatsAppTextMessage } from "./whatsapp-cloud";
 
 const productSchema = z.object({
@@ -14,7 +15,8 @@ const productSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().min(1, "Description is required"),
   shortDescription: z.string().optional(),
-  price: z.coerce.number().min(0.01, "Price must be positive"),
+  regularPrice: z.coerce.number().min(0.01, "Regular price must be positive"),
+  salePrice: z.coerce.number().optional(),
   category: z.string().min(1, "Category is required"),
   subCategory: z.string().optional(),
   imageUrl: z.string().url("Must be a valid URL"),
@@ -144,31 +146,59 @@ export async function createProduct(previousState: any, formData: FormData) {
     };
   }
 
-  const products = await readJsonFile(productsFilePath);
-  const existingProduct = products.find((p: Product) => p.id === validatedFields.data.id);
-  if (existingProduct) {
-      return { errors: { id: ["A product with this ID already exists."] } };
-  }
-  
   const { features, galleryImages, tags, allowImageUpload, lengthCm, widthCm, heightCm, ...rest } = validatedFields.data;
 
-  const newProduct: Product = {
-    ...rest,
-    allowImageUpload: allowImageUpload === 'on',
-    features: toArray(features),
-    galleryImages: toArray(galleryImages),
+  const supabase = supabaseAdmin();
+  const { data: existing, error: existingError } = await supabase
+    .from('products')
+    .select('id')
+    .eq('id', rest.id)
+    .single();
+  if (existingError && existingError.code !== 'PGRST116') {
+    return { errors: { _form: ["Database error while checking existing product."] } };
+  }
+  if (existing) {
+    return { errors: { id: ["A product with this ID already exists."] } };
+  }
+
+  const insertPayload = {
+    id: rest.id,
+    name: rest.name,
+    short_description: rest.shortDescription || null,
+    description: rest.description,
+    regular_price: rest.regularPrice,
+    sale_price: rest.salePrice || null,
+    category_id: rest.category,
+    sub_category: rest.subCategory || null,
+    image_url: rest.imageUrl,
+    image_alt: rest.imageAlt || null,
+    image_hint: rest.imageHint || null,
+    inventory: rest.inventory,
     tags: toArray(tags),
-    dimensionsCm: (lengthCm || widthCm || heightCm)
-      ? {
-          length: Number(lengthCm || 0),
-          width: Number(widthCm || 0),
-          height: Number(heightCm || 0),
-        }
-      : undefined,
+    gallery_images: toArray(galleryImages),
+    allow_image_upload: allowImageUpload === 'on',
+    video_url: rest.videoUrl || null,
+    image_attribution: rest.imageAttribution || null,
+    license: rest.license || null,
+    material: rest.material || null,
+    color: rest.color || null,
+    badge: rest.badge || null,
+    specific_description: rest.specificDescription || null,
+    features: toArray(features),
+    weight_grams: rest.weightGrams || null,
+    dimensions_length: lengthCm ? Number(lengthCm) : null,
+    dimensions_width: widthCm ? Number(widthCm) : null,
+    dimensions_height: heightCm ? Number(heightCm) : null,
+    weight: rest.weight || null,
+    dimensions: rest.dimensions || null,
   };
 
-  products.push(newProduct);
-  await writeJsonFile(productsFilePath, products);
+  const { error } = await supabase
+    .from('products')
+    .insert(insertPayload);
+  if (error) {
+    return { errors: { _form: ["Database Error: Failed to create product."] } };
+  }
 
   revalidatePath("/wb-admin/products");
   revalidatePath("/");
@@ -185,40 +215,54 @@ export async function updateProduct(productId: string, previousState: any, formD
     };
   }
 
-  const products = await readJsonFile(productsFilePath);
-  const productIndex = products.findIndex((p: Product) => p.id === productId);
-
-  if (productIndex === -1) {
-    return { errors: { _form: ["Product not found"] } };
-  }
-
-  const productToUpdate = products[productIndex];
   const { features, galleryImages, tags, allowImageUpload, lengthCm, widthCm, heightCm, ...rest } = validatedFields.data;
 
-  const updatedProduct: Product = { ...productToUpdate, ...rest };
-  
-  updatedProduct.allowImageUpload = allowImageUpload === 'on';
-  if (lengthCm !== undefined || widthCm !== undefined || heightCm !== undefined) {
-    updatedProduct.dimensionsCm = {
-      length: Number(lengthCm || productToUpdate.dimensionsCm?.length || 0),
-      width: Number(widthCm || productToUpdate.dimensionsCm?.width || 0),
-      height: Number(heightCm || productToUpdate.dimensionsCm?.height || 0),
-    };
+  const supabase = supabaseAdmin();
+  const payload: any = {};
+  if (rest.name !== undefined) payload.name = rest.name;
+  if (rest.shortDescription !== undefined) payload.short_description = rest.shortDescription || null;
+  if (rest.description !== undefined) payload.description = rest.description;
+  if (rest.regularPrice !== undefined) payload.regular_price = rest.regularPrice;
+  if (rest.salePrice !== undefined) payload.sale_price = rest.salePrice || null;
+  if (rest.category !== undefined) payload.category_id = rest.category;
+  if (rest.subCategory !== undefined) payload.sub_category = rest.subCategory || null;
+  if (rest.imageUrl !== undefined) payload.image_url = rest.imageUrl;
+  if (rest.imageAlt !== undefined) payload.image_alt = rest.imageAlt || null;
+  if (rest.imageHint !== undefined) payload.image_hint = rest.imageHint || null;
+  if (rest.inventory !== undefined) payload.inventory = rest.inventory;
+  if (tags !== undefined) payload.tags = toArray(tags);
+  if (galleryImages !== undefined) payload.gallery_images = toArray(galleryImages);
+  if (allowImageUpload !== undefined) payload.allow_image_upload = allowImageUpload === 'on';
+  if (rest.videoUrl !== undefined) payload.video_url = rest.videoUrl || null;
+  if (rest.imageAttribution !== undefined) payload.image_attribution = rest.imageAttribution || null;
+  if (rest.license !== undefined) payload.license = rest.license || null;
+  if (rest.material !== undefined) payload.material = rest.material || null;
+  if (rest.color !== undefined) payload.color = rest.color || null;
+  if (rest.badge !== undefined) payload.badge = rest.badge || null;
+  if (rest.specificDescription !== undefined) payload.specific_description = rest.specificDescription || null;
+  if (features !== undefined) payload.features = toArray(features);
+  if (rest.weightGrams !== undefined) payload.weight_grams = rest.weightGrams || null;
+  if (lengthCm !== undefined) payload.dimensions_length = lengthCm ? Number(lengthCm) : null;
+  if (widthCm !== undefined) payload.dimensions_width = widthCm ? Number(widthCm) : null;
+  if (heightCm !== undefined) payload.dimensions_height = heightCm ? Number(heightCm) : null;
+  if (rest.weight !== undefined) payload.weight = rest.weight || null;
+  if (rest.dimensions !== undefined) payload.dimensions = rest.dimensions || null;
+
+  const { error } = await supabase
+    .from('products')
+    .update(payload)
+    .eq('id', productId);
+  if (error) {
+    return { errors: { _form: ["Database Error: Failed to update product."] } };
   }
-
-  if (features !== undefined) updatedProduct.features = toArray(features);
-  if (galleryImages !== undefined) updatedProduct.galleryImages = toArray(galleryImages);
-  if (tags !== undefined) updatedProduct.tags = toArray(tags);
-
-  products[productIndex] = updatedProduct;
-  await writeJsonFile(productsFilePath, products);
   
   // Update tags.json if new tags are present
-  if (updatedProduct.tags && updatedProduct.tags.length > 0) {
+  const updatedTagsArr = tags !== undefined ? toArray(tags) : undefined;
+  if (updatedTagsArr && updatedTagsArr.length > 0) {
       const tagsData = await readJsonFile(tagsFilePath);
       const existingTags = new Set<string>(tagsData.tags || []);
       let tagsChanged = false;
-      updatedProduct.tags.forEach(t => {
+      updatedTagsArr.forEach(t => {
           if (!existingTags.has(t)) {
               existingTags.add(t);
               tagsChanged = true;
@@ -231,7 +275,7 @@ export async function updateProduct(productId: string, previousState: any, formD
   
   revalidatePath(`/wb-admin/products`);
   revalidatePath(`/wb-admin/products/${productId}/edit`);
-  revalidatePath(`/collections/${productToUpdate.category.toLowerCase().replace(/ /g, '-')}/${productId}`);
+  revalidatePath(`/collections`);
   revalidatePath("/");
   return { success: true };
 }
@@ -241,15 +285,11 @@ export async function deleteProductAction(formData: FormData) {
   const productId = formData.get('id') as string;
   if (!productId) return;
 
-  let products = await readJsonFile(productsFilePath);
-  const product = products.find((p: Product) => p.id === productId);
-  if(!product) return;
-
-  products = products.filter((p: Product) => p.id !== productId);
-  await writeJsonFile(productsFilePath, products);
+  const supabase = supabaseAdmin();
+  await supabase.from('products').delete().eq('id', productId);
   
   revalidatePath("/wb-admin/products");
-  revalidatePath(`/collections/${product.category.toLowerCase().replace(/ /g, '-')}`);
+  revalidatePath(`/collections`);
   revalidatePath("/");
 }
 
@@ -475,6 +515,8 @@ const siteSettingsSchema = z.object({
   redirects: z.string().optional(),
   maintenance_mode_enabled: z.preprocess((val) => val === 'on', z.boolean()).optional(),
   maintenance_mode_message: z.string().optional(),
+  advance_payment_enabled: z.preprocess((val) => val === 'on', z.boolean()).optional(),
+  advance_payment_percent: z.coerce.number().optional(),
 });
 
 export async function getSiteSettings(): Promise<SiteSettings> {
@@ -549,8 +591,16 @@ const updateCouponSchema = couponSchema.extend({
 });
 
 export async function getCoupons() {
-  const data = await readJsonFile(couponsFilePath);
-  return data.coupons || [];
+  try {
+    const { data, error } = await supabaseAdmin()
+      .from('coupons')
+      .select('*')
+      .order('code');
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    return [];
+  }
 }
 
 export async function createCoupon(previousState: any, formData: FormData) {
@@ -565,20 +615,31 @@ export async function createCoupon(previousState: any, formData: FormData) {
   }
 
   try {
-    const fileData = await readJsonFile(couponsFilePath);
-    const coupons: Coupon[] = fileData.coupons || [];
-    
-    if (coupons.some((c) => c.code === validatedFields.data.code)) {
-        return { message: 'Coupon code already exists.', success: false };
+    const supabase = supabaseAdmin();
+    const { data: existing, error: existingError } = await supabase
+      .from('coupons')
+      .select('code')
+      .eq('code', validatedFields.data.code)
+      .single();
+    if (existingError && existingError.code !== 'PGRST116') {
+      return { message: 'Database Error while checking coupon.', success: false };
+    }
+    if (existing) {
+      return { message: 'Coupon code already exists.', success: false };
     }
 
-    const newCoupon: Coupon = {
-      ...validatedFields.data,
+    const insertPayload = {
+      code: validatedFields.data.code,
+      type: validatedFields.data.type,
+      value: validatedFields.data.value,
       active: true,
     };
-
-    coupons.push(newCoupon);
-    await writeJsonFile(couponsFilePath, { ...fileData, coupons });
+    const { error } = await supabase
+      .from('coupons')
+      .insert(insertPayload);
+    if (error) {
+      return { message: 'Database Error: Failed to create coupon.', success: false };
+    }
     revalidatePath('/wb-admin/coupons');
     return { success: true, message: 'Coupon created successfully' };
   } catch (error) {
@@ -597,22 +658,32 @@ export async function updateCoupon(previousState: any, formData: FormData) {
     const { originalCode, ...couponData } = validatedFields.data;
 
     try {
-        const fileData = await readJsonFile(couponsFilePath);
-        let coupons: Coupon[] = fileData.coupons || [];
-        
-        const couponIndex = coupons.findIndex(c => c.code === originalCode);
-        if (couponIndex === -1) {
-            return { message: 'Coupon to update not found.', success: false };
+        const supabase = supabaseAdmin();
+        if (originalCode !== couponData.code) {
+          const { data: exists, error: existsError } = await supabase
+            .from('coupons')
+            .select('code')
+            .eq('code', couponData.code)
+            .single();
+          if (existsError && existsError.code !== 'PGRST116') {
+            return { message: 'Database Error while checking coupon.', success: false };
+          }
+          if (exists) {
+            return { message: 'The new coupon code already exists.', success: false };
+          }
         }
 
-        // If code is changed, check for conflicts
-        if (originalCode !== couponData.code && coupons.some(c => c.code === couponData.code)) {
-             return { message: 'The new coupon code already exists.', success: false };
+        const { error } = await supabase
+          .from('coupons')
+          .update({
+            code: couponData.code,
+            type: couponData.type,
+            value: couponData.value,
+          })
+          .eq('code', originalCode);
+        if (error) {
+          return { message: 'Database Error: Failed to update coupon.', success: false };
         }
-
-        coupons[couponIndex] = { ...coupons[couponIndex], ...couponData };
-
-        await writeJsonFile(couponsFilePath, { ...fileData, coupons });
         revalidatePath('/wb-admin/coupons');
         return { success: true, message: 'Coupon updated successfully.' };
     } catch (error) {
@@ -623,10 +694,14 @@ export async function updateCoupon(previousState: any, formData: FormData) {
 
 export async function deleteCoupon(code: string) {
   try {
-    const fileData = await readJsonFile(couponsFilePath);
-    const coupons = fileData.coupons || [];
-    const updatedCoupons = coupons.filter((c: any) => c.code !== code);
-    await writeJsonFile(couponsFilePath, { ...fileData, coupons: updatedCoupons });
+    const supabase = supabaseAdmin();
+    const { error } = await supabase
+      .from('coupons')
+      .delete()
+      .eq('code', code);
+    if (error) {
+      return { message: 'Database Error: Failed to delete coupon.' };
+    }
     revalidatePath('/wb-admin/coupons');
     return { success: true, message: 'Coupon deleted successfully' };
   } catch (error) {
@@ -636,10 +711,23 @@ export async function deleteCoupon(code: string) {
 
 export async function toggleCouponStatus(code: string) {
     try {
-        const fileData = await readJsonFile(couponsFilePath);
-        const coupons = fileData.coupons || [];
-        const updatedCoupons = coupons.map((c: any) => c.code === code ? { ...c, active: !c.active } : c);
-        await writeJsonFile(couponsFilePath, { ...fileData, coupons: updatedCoupons });
+        const supabase = supabaseAdmin();
+        const { data: coupon, error: fetchError } = await supabase
+          .from('coupons')
+          .select('active')
+          .eq('code', code)
+          .single();
+        if (fetchError) {
+          return { message: 'Database Error: Failed to fetch coupon.' };
+        }
+        const current = !!(coupon && coupon.active);
+        const { error } = await supabase
+          .from('coupons')
+          .update({ active: !current })
+          .eq('code', code);
+        if (error) {
+          return { message: 'Database Error: Failed to update coupon.' };
+        }
         revalidatePath('/wb-admin/coupons');
         return { success: true, message: 'Coupon status updated' };
     } catch (error) {
@@ -662,19 +750,27 @@ export async function bulkUpdateProductPrices(previousState: any, formData: Form
     return { success: false, message: 'Invalid mode' };
   }
   const ids: string[] = idsRaw.includes(',') ? idsRaw.split(',').map(s => s.trim()).filter(Boolean) : JSON.parse(idsRaw);
-  const products = await readJsonFile(productsFilePath);
-  let updatedCount = 0;
   const factor = percent / 100;
-  const updated = (products as Product[]).map((p: Product) => {
-    if (ids.includes(p.id)) {
-      const change = p.price * factor;
-      const newPrice = mode === 'increase' ? p.price + change : p.price - change;
-      p.price = Math.max(0.01, Number(newPrice.toFixed(2)));
-      updatedCount++;
-    }
-    return p;
-  });
-  await writeJsonFile(productsFilePath, updated);
+  const supabase = supabaseAdmin();
+  let updatedCount = 0;
+  const { data: products, error } = await supabase
+    .from('products')
+    .select('id, regular_price, sale_price')
+    .in('id', ids);
+  if (error) {
+    return { success: false, message: 'Failed to fetch selected products' };
+  }
+  for (const p of (products || [])) {
+    const base = typeof p.sale_price === 'number' ? Number(p.sale_price) : (typeof p.regular_price === 'number' ? Number(p.regular_price) : 0);
+    const change = base * factor;
+    const newPrice = mode === 'increase' ? base + change : base - change;
+    const nextRegular = Math.max(0.01, Number(newPrice.toFixed(2)));
+    const { error: upErr } = await supabase
+      .from('products')
+      .update({ regular_price: nextRegular })
+      .eq('id', p.id);
+    if (!upErr) updatedCount++;
+  }
   revalidatePath('/wb-admin/products');
   revalidatePath('/collections');
   revalidatePath('/');

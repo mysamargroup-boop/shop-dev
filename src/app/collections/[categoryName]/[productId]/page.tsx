@@ -13,7 +13,7 @@ export const revalidate = 600;
 
 const Breadcrumbs = async ({ product }: { product: any }) => {
   const categories = await getCategories();
-  const category = categories.find(c => c.name === product.category.split(',')[0].trim());
+  const category = categories.find(c => product.category && c.name === product.category.split(',')[0].trim());
 
   return (
     <div className="container mx-auto px-4 pt-4">

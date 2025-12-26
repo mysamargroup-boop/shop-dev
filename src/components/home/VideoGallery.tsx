@@ -80,7 +80,7 @@ const VideoGallery = () => {
                             <CarouselItem key={video.id} className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5">
                                 <div className="p-1">
                                     <Card className="overflow-hidden">
-                                        <CardContent className="p-0 relative aspect-[9/16]">
+                                        <CardContent className="p-0 relative aspect-[9/16] overflow-hidden">
                                             {videoContent}
                                         </CardContent>
                                     </Card>

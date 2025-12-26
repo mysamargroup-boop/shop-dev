@@ -25,7 +25,38 @@ export async function getProducts(): Promise<ProductsData> {
       .order('created_at', { ascending: false });
     
     if (error) throw error;
-    return { products: data || [] };
+    
+    // Transform snake_case to camelCase to match TypeScript interface
+    const transformedProducts = (data || []).map(product => {
+      const regularPrice = typeof product.regular_price === 'number' ? product.regular_price : undefined;
+      const salePrice = typeof product.sale_price === 'number' ? product.sale_price : undefined;
+      const price = typeof salePrice === 'number' ? salePrice : (typeof regularPrice === 'number' ? regularPrice : 0);
+      const hasDims = [product.dimensions_length, product.dimensions_width, product.dimensions_height].some(v => typeof v === 'number');
+      return {
+        ...product,
+        imageUrl: product.image_url,
+        imageAlt: product.image_alt,
+        imageHint: product.image_hint,
+        galleryImages: product.gallery_images,
+        videoUrl: product.video_url,
+        imageAttribution: product.image_attribution,
+        allowImageUpload: product.allow_image_upload,
+        weightGrams: product.weight_grams,
+        dimensionsCm: hasDims ? {
+          length: Number(product.dimensions_length || 0),
+          width: Number(product.dimensions_width || 0),
+          height: Number(product.dimensions_height || 0),
+        } : undefined,
+        specificDescription: product.specific_description,
+        reviewCount: product.review_count,
+        price,
+        regularPrice,
+        salePrice,
+        category: product.category_id
+      };
+    });
+    
+    return { products: transformedProducts };
   } catch (error) {
     console.error('Error fetching products:', error);
     return { products: [] };
@@ -41,7 +72,36 @@ export async function getProductById(id: string): Promise<Product | null> {
       .single();
     
     if (error) throw error;
-    return data;
+    
+    if (!data) return null;
+    
+    // Transform snake_case to camelCase to match TypeScript interface
+    const regularPrice = typeof data.regular_price === 'number' ? data.regular_price : undefined;
+    const salePrice = typeof data.sale_price === 'number' ? data.sale_price : undefined;
+    const price = typeof salePrice === 'number' ? salePrice : (typeof regularPrice === 'number' ? regularPrice : 0);
+    const hasDims = [data.dimensions_length, data.dimensions_width, data.dimensions_height].some(v => typeof v === 'number');
+    return {
+      ...data,
+      imageUrl: data.image_url,
+      imageAlt: data.image_alt,
+      imageHint: data.image_hint,
+      galleryImages: data.gallery_images,
+      videoUrl: data.video_url,
+      imageAttribution: data.image_attribution,
+      allowImageUpload: data.allow_image_upload,
+      weightGrams: data.weight_grams,
+      dimensionsCm: hasDims ? {
+        length: Number(data.dimensions_length || 0),
+        width: Number(data.dimensions_width || 0),
+        height: Number(data.dimensions_height || 0),
+      } : undefined,
+      specificDescription: data.specific_description,
+      reviewCount: data.review_count,
+      price,
+      regularPrice,
+      salePrice,
+      category: data.category_id
+    };
   } catch (error) {
     console.error('Error fetching product:', error);
     return null;

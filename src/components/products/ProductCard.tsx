@@ -27,8 +27,9 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [checkoutMode, setCheckoutMode] = useState<'whatsapp' | 'payment'>('payment');
   
-  const categorySlug = product.category.split(',')[0].trim().toLowerCase().replace(/ /g, '-');
+  const categorySlug = product.category ? product.category.split(',')[0].trim().toLowerCase().replace(/ /g, '-') : 'uncategorized';
   const productUrl = `/collections/${categorySlug}/${product.id}`;
+  const imageUrl = product.imageUrl || '/placeholder-image.svg';
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
   const currentUrl = baseUrl ? `${baseUrl}${productUrl}` : '';
@@ -52,7 +53,12 @@ const ProductCard = ({ product }: ProductCardProps) => {
     }
   };
   
-  const discountedSubtotal = product.price;
+  const effectivePrice = typeof product.salePrice === 'number'
+    ? product.salePrice
+    : typeof product.regularPrice === 'number'
+      ? product.regularPrice
+      : product.price;
+  const discountedSubtotal = effectivePrice;
   const shippingCost = discountedSubtotal > 2999 ? 0 : 99;
   const totalCost = discountedSubtotal + shippingCost;
 
@@ -67,7 +73,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
         <Link href={productUrl}>
           <div className="aspect-square relative">
             <Image
-              src={product.imageUrl}
+              src={imageUrl}
               alt={product.imageAlt || product.name}
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
@@ -101,9 +107,22 @@ const ProductCard = ({ product }: ProductCardProps) => {
                 </h3>
             </Link>
              <div className="flex items-baseline gap-2">
-                 <p className="text-lg font-bold text-primary">
-                    {typeof product.price === 'number' ? `₹${product.price.toFixed(0)}` : 'Price not available'}
-                 </p>
+                 {typeof effectivePrice === 'number' && effectivePrice > 0 ? (
+                   <>
+                     <p className="text-lg font-bold text-primary">
+                       ₹{Number(effectivePrice).toFixed(0)}
+                     </p>
+                     {typeof product.regularPrice === 'number' &&
+                      typeof product.salePrice === 'number' &&
+                      product.salePrice < product.regularPrice && (
+                        <p className="text-sm text-muted-foreground line-through">
+                          ₹{Number(product.regularPrice).toFixed(0)}
+                        </p>
+                     )}
+                   </>
+                 ) : (
+                   <p className="text-sm text-muted-foreground">Price not available</p>
+                 )}
             </div>
             {product.specificDescription && <p className="text-xs text-muted-foreground font-semibold">{product.specificDescription}</p>}
         </div>

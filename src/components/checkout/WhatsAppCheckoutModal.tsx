@@ -22,7 +22,7 @@ import confetti from 'canvas-confetti';
 import { createPaymentLink } from '@/lib/payment';
 import ImageUploadHandler from '@/components/checkout/ImageUploadHandler';
 import Link from 'next/link';
-import type { Coupon, OrderItem, Product } from '@/lib/types';
+import type { Coupon, OrderItem, Product, SiteSettings } from '@/lib/types';
 import { BLUR_DATA_URL } from '@/lib/constants';
 
 interface WhatsAppCheckoutModalProps {
@@ -41,6 +41,7 @@ const OrderSummary = ({
   couponDiscount,
   finalTotal,
   advanceAmount,
+  advancePercent,
   mode,
 }: {
   checkoutInput: WhatsAppCheckoutModalProps['checkoutInput'];
@@ -51,6 +52,7 @@ const OrderSummary = ({
   couponDiscount: number;
   finalTotal: number;
   advanceAmount: number;
+  advancePercent: number;
   mode: 'whatsapp' | 'payment';
 }) => {
   if (!checkoutInput) return null;
@@ -86,7 +88,7 @@ const OrderSummary = ({
 
          {mode === 'payment' && (
           <div className="flex justify-between font-bold text-primary pt-2 border-t">
-            <span>Advance Payable (5%):</span>
+            <span>{advancePercent > 0 ? `Advance Payable (${advancePercent}%)` : `Amount Payable (Full)`}:</span>
             <span>₹{advanceAmount.toFixed(2)}</span>
           </div>
         )}
@@ -133,21 +135,30 @@ const WhatsAppCheckoutModal = ({ isOpen, onOpenChange, checkoutInput, checkoutMo
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [availableCoupons, setAvailableCoupons] = useState<Coupon[]>([]);
   const [selectedUploadFiles, setSelectedUploadFiles] = useState<File[]>([]);
+  const [siteSettings, setSiteSettings] = useState<Partial<SiteSettings>>({});
   
   const { toast } = useToast();
   const audioRef = useRef<HTMLAudioElement>(null);
   const imageUploader = useMemo(() => ImageUploadHandler({ onImagesChange: setSelectedUploadFiles, maxImages: 3 }), []);
 
-  const baseTotal = useMemo(() => checkoutInput?.totalCost || 0, [checkoutInput?.totalCost]);
+  const baseTotal = checkoutInput?.totalCost ?? 0;
   const finalTotal = useMemo(() => {
     const total = baseTotal - couponDiscount;
     return total < 0 ? 0 : total;
   }, [baseTotal, couponDiscount]);
 
-   const advanceAmount = useMemo(() => {
-    const amount = checkoutMode === 'payment' ? finalTotal * 0.05 : 0;
-    return Math.max(1, parseFloat(amount.toFixed(2))); // Ensure minimum is 1
-  }, [finalTotal, checkoutMode]);
+  const advancePercent = useMemo(() => {
+    const enabled = !!siteSettings.advance_payment_enabled;
+    const percent = enabled ? Number(siteSettings.advance_payment_percent ?? 0) : 0;
+    return Math.max(0, Math.min(100, isNaN(percent) ? 0 : percent));
+  }, [siteSettings]);
+
+  const advanceAmount = useMemo(() => {
+    const amount = checkoutMode === 'payment'
+      ? (advancePercent > 0 ? finalTotal * (advancePercent / 100) : finalTotal)
+      : 0;
+    return Math.max(1, parseFloat(amount.toFixed(2)));
+  }, [finalTotal, checkoutMode, advancePercent]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -170,8 +181,22 @@ const WhatsAppCheckoutModal = ({ isOpen, onOpenChange, checkoutInput, checkoutMo
       try {
         const res = await fetch('/api/coupons', { cache: 'no-store' });
         const data = await res.json();
-        if (res.ok && Array.isArray(data.coupons)) {
-          setAvailableCoupons(data.coupons.filter((c: Coupon) => c.active));
+        if (res.ok && Array.isArray(data)) {
+          setAvailableCoupons(data.filter((c: Coupon) => c.active));
+        } else if (res.ok && Array.isArray((data as any).coupons)) {
+          setAvailableCoupons((data as any).coupons.filter((c: Coupon) => c.active));
+        }
+      } catch {}
+    })();
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/settings', { cache: 'no-store' });
+        const data = await res.json();
+        if (res.ok && data) {
+          setSiteSettings(data);
         }
       } catch {}
     })();
@@ -277,8 +302,9 @@ const WhatsAppCheckoutModal = ({ isOpen, onOpenChange, checkoutInput, checkoutMo
           }
         } catch {}
         
+        const origin = (process.env.NEXT_PUBLIC_BASE_URL || '').trim() || (typeof window !== 'undefined' ? window.location.origin : '');
         const composeReturnUrl = (orderIdParam: string) => {
-          return `${window.location.origin}/order-confirmation?order_id=${orderIdParam}`;
+          return `${origin}/order-confirmation?order_id=${orderIdParam}`;
         };
 
         const getPaymentsUrl = async (orderIdParam: string) => {
@@ -301,7 +327,7 @@ const WhatsAppCheckoutModal = ({ isOpen, onOpenChange, checkoutInput, checkoutMo
 
             cashfree.checkout({
                 paymentSessionId: res.payment_session_id,
-                returnUrl: `${window.location.origin}/order-confirmation?order_id={order_id}`
+                returnUrl: `${origin}/order-confirmation?order_id={order_id}`
             })
             .catch(async (err: any) => {
               console.error('Cashfree SDK checkout failed:', err);
@@ -413,6 +439,7 @@ const WhatsAppCheckoutModal = ({ isOpen, onOpenChange, checkoutInput, checkoutMo
                       couponDiscount={couponDiscount}
                       finalTotal={finalTotal}
                       advanceAmount={advanceAmount}
+                      advancePercent={advancePercent}
                       mode={checkoutMode}
                     />
                     {checkoutMode === 'payment' && checkoutInput && (checkoutInput.uploadProductIds || []).length > 0 && (
@@ -541,7 +568,7 @@ const WhatsAppCheckoutModal = ({ isOpen, onOpenChange, checkoutInput, checkoutMo
   const getDescription = () => {
     if (step === 'loading') return 'Please wait while we process your request.';
     if (step === 'confirmation') return 'Thank you for your order!';
-    if (checkoutMode === 'payment') return 'Confirm your bulk order by paying a 5% advance. The remaining balance will be settled before dispatch.';
+    if (checkoutMode === 'payment') return advancePercent > 0 ? `Confirm your order by paying a ${advancePercent}% advance. The remaining balance will be settled before dispatch.` : 'Confirm your order by paying the full amount at checkout.';
     return 'Enter your details to confirm your order. You will receive a confirmation message on WhatsApp.';
   }
 

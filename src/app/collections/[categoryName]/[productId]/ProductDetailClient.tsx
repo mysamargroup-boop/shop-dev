@@ -261,18 +261,34 @@ export default function ProductDetailClient({ product }: { product: Product }) {
 
         <div className="space-y-2">
             <div className="flex items-baseline gap-2">
-                <p className="text-3xl font-bold text-foreground">₹{product.price.toFixed(0)}<span className="text-base font-normal text-muted-foreground">/piece</span></p>
-                 <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button>
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Price includes all taxes.</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+              {(() => {
+                const effective = typeof product.salePrice === 'number'
+                  ? product.salePrice
+                  : typeof product.regularPrice === 'number'
+                    ? product.regularPrice
+                    : product.price;
+                const showStrike = typeof product.regularPrice === 'number' &&
+                  typeof product.salePrice === 'number' &&
+                  product.salePrice < product.regularPrice;
+                return (
+                  <>
+                    <p className="text-3xl font-bold text-foreground">₹{Number(effective).toFixed(0)}</p>
+                    {showStrike && (
+                      <p className="text-lg text-muted-foreground line-through">₹{Number(product.regularPrice).toFixed(0)}</p>
+                    )}
+                  </>
+                );
+              })()}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Price includes all taxes.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
         </div>
 
@@ -469,7 +485,16 @@ export default function ProductDetailClient({ product }: { product: Product }) {
                   <Image src={product.imageUrl} alt={product.imageAlt || product.name} width={40} height={40} className="rounded-md object-cover flex-shrink-0" data-ai-hint={product.imageHint} placeholder="blur" blurDataURL={BLUR_DATA_URL} sizes="40px" />
                   <div className="overflow-hidden">
                       <p className="font-semibold text-sm truncate">{product.name}</p>
-                      <p className="text-muted-foreground text-xs">₹{product.price.toFixed(2)}</p>
+                      <p className="text-muted-foreground text-xs">
+                        {(() => {
+                          const effective = typeof product.salePrice === 'number'
+                            ? product.salePrice
+                            : typeof product.regularPrice === 'number'
+                              ? product.regularPrice
+                              : product.price;
+                          return `₹${Number(effective).toFixed(2)}`;
+                        })()}
+                      </p>
                   </div>
               </div>
             <div className="flex items-center gap-2 flex-shrink-0">

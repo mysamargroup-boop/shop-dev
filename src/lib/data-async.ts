@@ -53,7 +53,8 @@ export async function getOrders(): Promise<any[]> {
 
 export async function getProductById(id: string): Promise<Product | undefined> {
     noStore();
-    return getProductByIdFromSupabase(id) || undefined;
+    const p = await getProductByIdFromSupabase(id);
+    return p || undefined;
 }
 
 export async function getImageData() {

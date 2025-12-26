@@ -52,7 +52,12 @@ export default async function Home() {
         <FeaturedCategories />
 
         {categories.map(category => {
-          const categoryProducts = products.filter(p => p.category.split(',').map(c => c.trim()).includes(category.name)).slice(0, 4);
+          const categoryProducts = products
+            .filter(p => p.category && p.category
+              .split(',')
+              .map(c => c.trim().toLowerCase().replace(/ /g, '-'))
+              .includes(category.id.toLowerCase()))
+            .slice(0, 4);
           if (categoryProducts.length === 0) return null;
 
           return (
