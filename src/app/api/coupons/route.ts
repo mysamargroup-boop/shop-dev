@@ -3,7 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 
 export async function GET() {
   try {
-    const { data: coupons, error } = await supabaseAdmin
+    const { data: coupons, error } = await supabaseAdmin()
       .from('coupons')
       .select('*')
       .order('code');
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
   try {
     const couponData = await req.json();
     
-    const { data: coupon, error } = await supabaseAdmin
+    const { data: coupon, error } = await supabaseAdmin()
       .from('coupons')
       .insert(couponData)
       .select()

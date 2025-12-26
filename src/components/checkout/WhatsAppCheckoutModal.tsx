@@ -139,7 +139,7 @@ const WhatsAppCheckoutModal = ({ isOpen, onOpenChange, checkoutInput, checkoutMo
   
   const { toast } = useToast();
   const audioRef = useRef<HTMLAudioElement>(null);
-  const imageUploader = useMemo(() => ImageUploadHandler({ onImagesChange: setSelectedUploadFiles, maxImages: 3 }), []);
+  const imageUploader = ImageUploadHandler({ onImagesChange: setSelectedUploadFiles, maxImages: 3 });
 
   const baseTotal = checkoutInput?.totalCost ?? 0;
   const finalTotal = useMemo(() => {

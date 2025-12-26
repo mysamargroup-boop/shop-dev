@@ -31,7 +31,8 @@ async function getProductById(productId: string) {
     });
     if (!response.ok) throw new Error('Failed to fetch products');
     const data = await response.json();
-    return data.products?.find((p: any) => p.id === productId);
+    const list = Array.isArray(data) ? data : (Array.isArray((data as any).products) ? (data as any).products : []);
+    return list.find((p: any) => p.id === productId);
   } catch (error) {
     console.error('Error fetching product:', error);
     return null;
