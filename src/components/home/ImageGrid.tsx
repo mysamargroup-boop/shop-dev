@@ -2,7 +2,7 @@
 'use client';
 import Link from 'next/link';
 import Image from 'next/image';
-import imageData from '@/lib/placeholder-images.json';
+import imageData from '@/lib/json-seeds/placeholder-images.json';
 import { BLUR_DATA_URL } from '@/lib/constants';
 import { useEffect, useState } from 'react';
 

@@ -3,7 +3,7 @@
 
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
-import imageData from '@/lib/placeholder-images.json';
+import imageData from '@/lib/json-seeds/placeholder-images.json';
 import { BLUR_DATA_URL } from '@/lib/constants';
 import { useEffect, useState } from 'react';
 import type { SiteSettings } from '@/lib/types';

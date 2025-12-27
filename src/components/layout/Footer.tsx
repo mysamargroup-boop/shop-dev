@@ -48,13 +48,7 @@ const Footer = async () => {
                 <Logo />
                 <p className="text-sm text-muted-foreground mt-4 max-w-md">Exquisite Personalized Wooden Gifts. Handcrafted with love, designed to capture your most cherished memories.</p>
             </div>
-            <div className='flex flex-col items-center text-center md:items-end md:text-right'>
-                 <h3 className="font-semibold text-foreground mb-4">Our Portals</h3>
-                 <ul className="space-y-2 text-sm">
-                    <li><a href="https://woody.co.in" target="_blank" rel="noopener noreferrer" className="font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent hover:underline">Retail Site (Woody)</a></li>
-                    <li><a href="https://business.woody.co.in" target="_blank" rel="noopener noreferrer" className="font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent hover:underline">B2B / Bulk Site</a></li>
-                </ul>
-            </div>
+            {/* Removed external portal links as requested */}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">

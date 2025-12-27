@@ -90,7 +90,7 @@ const Header = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [allCategories, setAllCategories] = useState<Category[]>([]);
-  const pathname = usePathname();
+  const pathname = usePathname() || '';
 
   useEffect(() => {
     async function fetchData() {

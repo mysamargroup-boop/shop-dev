@@ -1,9 +1,8 @@
 
 'use client';
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { getBlogPosts } from "@/lib/blog-data";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -18,10 +17,23 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { deleteBlogPostAction } from "@/lib/actions";
 import { BLUR_DATA_URL } from "@/lib/constants";
 import { Input } from "@/components/ui/input";
+import type { BlogPost } from "@/lib/types";
 
 export default function BlogsPage() {
-  const posts = getBlogPosts();
+  const [posts, setPosts] = useState<BlogPost[]>([]);
   const [q, setQ] = useState('');
+  useEffect(() => {
+    const run = async () => {
+      try {
+        const res = await fetch('/api/blogs');
+        const json = await res.json();
+        setPosts(json || []);
+      } catch (e) {
+        setPosts([]);
+      }
+    };
+    run();
+  }, []);
   const filtered = useMemo(() => {
     if (!q) return posts;
     const qq = q.toLowerCase();
@@ -54,7 +66,7 @@ export default function BlogsPage() {
       <div className="rounded-lg border overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow>
+              <TableRow>
               <TableHead className="w-20">Image</TableHead>
               <TableHead>Title</TableHead>
               <TableHead>Slug</TableHead>

@@ -2,9 +2,9 @@
 // Do not import any server-only modules like 'fs' or 'path' here.
 
 import type { Category } from './types';
-import categoriesJson from './categories.json';
-import imageData from './placeholder-images.json';
-import tagsJson from './tags.json';
+import categoriesJson from './json-seeds/categories.json';
+import imageData from './json-seeds/placeholder-images.json';
+import tagsJson from './json-seeds/tags.json';
 
 export async function getTags(): Promise<string[]> {
     const data = tagsJson as { tags: string[] };

@@ -2,7 +2,7 @@
 'use server';
 import path from 'path';
 import type { Category, Product, ProductsData, BlogPost, SiteSettings } from './types';
-import imageData from './placeholder-images.json';
+import imageData from './json-seeds/placeholder-images.json';
 import { unstable_noStore as noStore } from 'next/cache';
 import { 
   getCategories as getCategoriesFromSupabase, 

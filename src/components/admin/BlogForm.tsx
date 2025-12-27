@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { BlogPost } from "@/lib/types";
 import { Loader2, Bold, Italic, Underline, Link2, Heading1, Heading2, Heading3, List, ListOrdered, AlignLeft, AlignCenter, AlignRight, Pilcrow } from "lucide-react";
-import imageData from "@/lib/placeholder-images.json";
+import imageData from "@/lib/json-seeds/placeholder-images.json";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type BlogFormProps = {
@@ -188,7 +188,7 @@ export function BlogForm({ action, post, buttonText, initialState }: BlogFormPro
                     <option key={key} value={key}>{key}</option>
                 ))}
             </select>
-            <p className="text-xs text-muted-foreground">Select an ID from `placeholder-images.json`.</p>
+            <p className="text-xs text-muted-foreground">Select an ID from `json-seeds/placeholder-images.json`.</p>
             {state?.errors?.imageKey && <p className="text-destructive text-sm">{state.errors.imageKey[0]}</p>}
           </div>
           

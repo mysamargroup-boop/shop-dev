@@ -2,7 +2,7 @@
 'use client';
 import Link from 'next/link';
 import Image from 'next/image';
-import imageData from '@/lib/placeholder-images.json';
+import imageData from '@/lib/json-seeds/placeholder-images.json';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowRight } from 'lucide-react';
 import { BLUR_DATA_URL } from '@/lib/constants';

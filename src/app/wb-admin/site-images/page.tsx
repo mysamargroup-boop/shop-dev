@@ -92,7 +92,7 @@ export default async function SiteImagesPage() {
     <div className="space-y-8">
       <div className="text-center">
         <h1 className="text-3xl font-headline font-bold">Site Images</h1>
-        <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">Update your site's key visual assets here. The data is saved in <code className="bg-muted px-1 py-0.5 rounded-sm">src/lib/placeholder-images.json</code>.</p>
+        <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">Update your site's key visual assets here. The data is saved in <code className="bg-muted px-1 py-0.5 rounded-sm">src/lib/json-seeds/placeholder-images.json</code>.</p>
       </div>
 
        <Alert>

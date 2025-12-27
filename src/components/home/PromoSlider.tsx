@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/carousel';
 import Autoplay from "embla-carousel-autoplay";
 import { Button } from '../ui/button';
-import imageData from '@/lib/placeholder-images.json';
+import imageData from '@/lib/json-seeds/placeholder-images.json';
 import { BLUR_DATA_URL } from '@/lib/constants';
 
 const { placeholderImages } = imageData;

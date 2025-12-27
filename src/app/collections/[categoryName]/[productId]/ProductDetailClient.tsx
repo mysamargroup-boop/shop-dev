@@ -108,15 +108,11 @@ const ImageUpload = ({ onFilesChange }: { onFilesChange: (files: File[]) => void
 export default function ProductDetailClient({ product }: { product: Product }) {
   const pathname = usePathname();
   
-  const isKeychainCategory = product?.category.toLowerCase().includes('keychain');
-  const minQuantity = isKeychainCategory ? 100 : 25;
-
-  const [quantity, setQuantity] = useState(minQuantity);
+  const minQuantity = 1;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [checkoutMode, setCheckoutMode] = useState<'whatsapp' | 'payment'>('whatsapp');
   const [showStickyBar, setShowStickyBar] = useState(false);
   const [customImages, setCustomImages] = useState<File[]>([]);
-  const [quantityType, setQuantityType] = useState<'preset' | 'custom'>('preset');
   const [customQuantity, setCustomQuantity] = useState<number | string>(minQuantity);
   
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
@@ -129,9 +125,7 @@ export default function ProductDetailClient({ product }: { product: Product }) {
   const [selectedVariant, setSelectedVariant] = useState(product?.options && product.options.length > 0 ? undefined : product?.options?.[0]?.value);
   
   useEffect(() => {
-    const newMinQuantity = product?.category.toLowerCase().includes('keychain') ? 100 : 25;
-    setQuantity(newMinQuantity);
-    setCustomQuantity(newMinQuantity);
+    setCustomQuantity(minQuantity);
   }, [product?.category]);
 
 
@@ -186,19 +180,18 @@ export default function ProductDetailClient({ product }: { product: Product }) {
     setIsModalOpen(true);
   };
 
-  const finalQuantity = quantityType === 'preset' ? quantity : (typeof customQuantity === 'number' ? customQuantity : 0);
+  const finalQuantity = typeof customQuantity === 'number' ? customQuantity : 0;
 
   const areActionsDisabled =
     (product.options && product.options.length > 0 && !selectedVariant) ||
     (product.allowImageUpload && customImages.length === 0) ||
-    finalQuantity <= 0 ||
-    (isKeychainCategory && finalQuantity < 100);
+    finalQuantity <= 0;
 
   const discountedSubtotal = product.price * finalQuantity;
   const shippingCost = discountedSubtotal > 2999 ? 0 : 99;
   const totalCost = discountedSubtotal + shippingCost;
 
-  const presetQuantities = isKeychainCategory ? [100, 200, 500] : [25, 50, 100];
+  // Removed preset quantity options; only custom input is supported
 
   const [deliveryMinDays, setDeliveryMinDays] = useState<number>(7);
   const [deliveryMaxDays, setDeliveryMaxDays] = useState<number>(15);
@@ -335,43 +328,27 @@ export default function ProductDetailClient({ product }: { product: Product }) {
         
         <div className="flex flex-col gap-4 pt-4">
             <div className="space-y-3">
-                <Label className="font-semibold">Select Quantity</Label>
+                <Label className="font-semibold">Enter Quantity</Label>
                 <div className="flex flex-wrap items-center gap-2">
-                    {presetQuantities.map(q => (
-                        <Button 
-                            key={q}
-                            type="button"
-                            variant={quantity === q && quantityType === 'preset' ? "default" : "outline"}
-                            className="rounded-lg"
-                            onClick={() => {
-                                setQuantity(q);
-                                setQuantityType('preset');
-                            }}
-                        >
-                            {q}
-                        </Button>
-                    ))}
-                    <div className="relative">
-                        <Input
-                            type="number"
-                            min={minQuantity}
-                            placeholder="Custom"
-                            value={customQuantity}
-                            onFocus={() => setQuantityType('custom')}
-                            onChange={(e) => {
-                                setQuantityType('custom');
-                                const val = e.target.value;
-                                setCustomQuantity(val === '' ? '' : Math.max(minQuantity, parseInt(val, 10) || minQuantity));
-                            }}
-                            className={cn(
-                                "w-28 text-center font-semibold rounded-lg bg-muted/50",
-                                quantityType === 'custom' && "border-primary ring-2 ring-primary bg-background"
-                            )}
-                        />
-                    </div>
-                     <Button variant="ghost" size="icon" onClick={handleWishlistToggle} className="ml-auto">
-                        <Heart className={cn("h-6 w-6", isInWishlist ? "fill-destructive text-destructive" : "text-foreground")} />
-                    </Button>
+                  <div className="relative">
+                      <Input
+                          type="number"
+                          min={minQuantity}
+                          placeholder="Custom"
+                          value={customQuantity}
+                          onChange={(e) => {
+                              const val = e.target.value;
+                              setCustomQuantity(val === '' ? '' : Math.max(minQuantity, parseInt(val, 10) || minQuantity));
+                          }}
+                          className={cn(
+                              "w-28 text-center font-semibold rounded-lg bg-muted/50",
+                              "border-primary ring-2 ring-primary bg-background"
+                          )}
+                      />
+                  </div>
+                  <Button variant="ghost" size="icon" onClick={handleWishlistToggle} className="ml-auto">
+                      <Heart className={cn("h-6 w-6", isInWishlist ? "fill-destructive text-destructive" : "text-foreground")} />
+                  </Button>
                 </div>
             </div>
 
@@ -379,9 +356,7 @@ export default function ProductDetailClient({ product }: { product: Product }) {
               <p className="text-sm text-destructive font-semibold">
                 {product.allowImageUpload && customImages.length === 0 
                   ? "Please upload at least one image to continue."
-                  : (isKeychainCategory && finalQuantity < 100)
-                  ? `Minimum quantity for keychains is ${minQuantity}.`
-                  : "Please select a valid quantity."}
+                  : "Please enter a valid quantity."}
               </p>
              )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
@@ -502,16 +477,11 @@ export default function ProductDetailClient({ product }: { product: Product }) {
                 <Input
                     type="number"
                     min={minQuantity}
-                    value={finalQuantity}
+                    value={customQuantity}
                     onChange={(e) => {
-                      const val = Math.max(minQuantity, parseInt(e.target.value, 10) || minQuantity);
-                      if (presetQuantities.includes(val)) {
-                        setQuantityType('preset');
-                        setQuantity(val);
-                      } else {
-                        setQuantityType('custom');
-                        setCustomQuantity(val);
-                      }
+                      const raw = e.target.value;
+                      const next = raw === '' ? '' : Math.max(minQuantity, parseInt(raw, 10) || minQuantity);
+                      setCustomQuantity(next);
                     }}
                     className="w-full h-9 text-center"
                 />

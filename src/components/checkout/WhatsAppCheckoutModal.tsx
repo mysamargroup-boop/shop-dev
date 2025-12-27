@@ -222,6 +222,18 @@ const WhatsAppCheckoutModal = ({ isOpen, onOpenChange, checkoutInput, checkoutMo
     }
     discountAmount = Math.min(discountAmount, subtotal);
     setCouponDiscount(discountAmount);
+    try {
+      fetch('/api/coupon-redemptions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code,
+          subtotal,
+          discountAmount,
+          sessionId: typeof window !== 'undefined' ? (window.sessionStorage.getItem('session_id') || '') : '',
+        }),
+      }).catch(() => {});
+    } catch {}
     
     confetti({
         particleCount: 100,
@@ -562,7 +574,7 @@ const WhatsAppCheckoutModal = ({ isOpen, onOpenChange, checkoutInput, checkoutMo
 
   const getTitle = () => {
     if (step === 'confirmation') return 'Order Confirmed!';
-    return checkoutMode === 'payment' ? 'Pay an Advance' : 'Confirm Order via WhatsApp';
+    return checkoutMode === 'payment' ? 'Pay at Checkout' : 'Confirm Order via WhatsApp';
   }
   
   const getDescription = () => {

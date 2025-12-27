@@ -1,11 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import couponsData from '@/lib/coupons.json';
+import { supabaseAdmin } from '@/lib/supabase';
 
 export async function POST(req: NextRequest) {
   try {
     const { code, subtotal } = await req.json();
     if (!code) return NextResponse.json({ error: 'Coupon code is required' }, { status: 400 });
-    const coupon = (couponsData as any).coupons.find((c: any) => c.code === String(code).toUpperCase() && c.active);
+    const supabase = supabaseAdmin();
+    const { data: coupon, error } = await supabase
+      .from('coupons')
+      .select('*')
+      .eq('code', String(code).toUpperCase())
+      .eq('active', true)
+      .single();
+    if (error) {
+      return NextResponse.json({ error: error.message || 'Failed to fetch coupon' }, { status: 500 });
+    }
     if (!coupon) return NextResponse.json({ error: 'Invalid coupon' }, { status: 400 });
     const sub = Number(subtotal || 0);
     let discountAmount = 0;

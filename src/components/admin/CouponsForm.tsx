@@ -15,9 +15,11 @@ import { Trash2, Loader2, Edit } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 
 const initialState = {
-  message: null,
   errors: {},
   success: false,
+} as {
+  errors: { code?: string[]; type?: string[]; value?: string[]; originalCode?: string[] };
+  success: boolean;
 };
 
 function SubmitButton({ isEditing }: { isEditing: boolean }) {
