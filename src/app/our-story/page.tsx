@@ -1,10 +1,13 @@
 
 import Image from 'next/image';
-import imageData from '@/lib/json-seeds/placeholder-images.json';
+import { getSiteImages } from '@/lib/data-async';
 import { BLUR_DATA_URL } from '@/lib/constants';
 
-const { placeholderImages } = imageData;
-const workshopImage = placeholderImages.find(img => img.id === 'our-story-workshop') || { imageUrl: 'https://picsum.photos/seed/workshop/2070/1164', imageHint: 'woodworking craftsman' };
+async function getWorkshop() {
+  const images = await getSiteImages();
+  const img = images.find(i => i.id === 'our-story-workshop');
+  return img ? { imageUrl: img.image_url, imageHint: img.image_hint } : { imageUrl: 'https://picsum.photos/seed/workshop/2070/1164', imageHint: 'woodworking craftsman' };
+}
 
 
 const Highlight = ({ children }: { children: React.ReactNode }) => (
@@ -19,7 +22,8 @@ const FounderHighlight = ({ children }: { children: React.ReactNode }) => (
     </span>
 );
 
-export default function OurStoryPage() {
+export default async function OurStoryPage() {
+  const workshopImage = await getWorkshop();
   return (
     <div className="container mx-auto px-4 py-12">
       <div className="max-w-4xl mx-auto">

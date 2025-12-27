@@ -12,14 +12,13 @@ import {
   getSiteSettings as getSiteSettingsFromSupabase, 
   getBlogPosts as getBlogPostsFromSupabase, 
   getBlogPostBySlug as getBlogPostBySlugFromSupabase,
-  getTags as getTagsFromSupabase 
+  getTags as getTagsFromSupabase,
+  getSiteImages as getSiteImagesFromSupabase 
 } from './data-supabase';
 
-const { placeholderImages } = imageData;
-
-const getImage = (id: string) => {
-  const image = placeholderImages.find(img => img.id === id);
-  return image || { imageUrl: `https://picsum.photos/seed/${id}/1200/1200`, imageHint: 'placeholder' };
+const pickImage = (images: Array<{ id: string; image_url: string; image_hint?: string }>, id: string) => {
+  const image = images.find(img => img.id === id);
+  return image || { id, image_url: `https://picsum.photos/seed/${id}/1200/1200`, image_hint: 'placeholder' };
 };
 
 export async function getCategories(): Promise<Category[]> {
@@ -50,11 +49,14 @@ export async function getImageData() {
 }
 
 export async function getBlogPosts(): Promise<BlogPost[]> {
-  const posts = await getBlogPostsFromSupabase();
+  const [posts, images] = await Promise.all([
+    getBlogPostsFromSupabase(),
+    getSiteImagesFromSupabase()
+  ]);
   return posts.map(post => {
-    const img = getImage((post as any).image_key || '');
-    const finalUrl = (post as any).image_url || img.imageUrl;
-    const finalHint = img.imageHint;
+    const img = pickImage(images, (post as any).image_key || '');
+    const finalUrl = (post as any).image_url || img.image_url;
+    const finalHint = img.image_hint;
     return {
       slug: (post as any).slug,
       title: (post as any).title,
@@ -70,11 +72,14 @@ export async function getBlogPosts(): Promise<BlogPost[]> {
 }
 
 export async function getBlogPostBySlug(slug: string): Promise<BlogPost | undefined> {
-  const post = await getBlogPostBySlugFromSupabase(slug);
+  const [post, images] = await Promise.all([
+    getBlogPostBySlugFromSupabase(slug),
+    getSiteImagesFromSupabase()
+  ]);
   if (!post) return undefined;
-  const img = getImage((post as any).image_key || '');
-  const finalUrl = (post as any).image_url || img.imageUrl;
-  const finalHint = img.imageHint;
+  const img = pickImage(images, (post as any).image_key || '');
+  const finalUrl = (post as any).image_url || img.image_url;
+  const finalHint = img.image_hint;
   return {
     slug: (post as any).slug,
     title: (post as any).title,
@@ -95,4 +100,9 @@ export async function getTags(): Promise<string[]> {
 export async function getSiteSettings(): Promise<SiteSettings> {
   noStore();
   return getSiteSettingsFromSupabase();
+}
+
+export async function getSiteImages() {
+  noStore();
+  return getSiteImagesFromSupabase();
 }

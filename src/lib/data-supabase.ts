@@ -2,6 +2,20 @@
 import { supabaseAdmin } from './supabase';
 import type { Category, Product, ProductsData, BlogPost, SiteSettings } from './types';
 
+export async function getSiteImages(): Promise<Array<{ id: string; name?: string; image_url: string; image_hint?: string; description?: string }>> {
+  try {
+    const { data, error } = await supabaseAdmin()
+      .from('site_images')
+      .select('id,name,image_url,image_hint,description')
+      .order('id');
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching site images:', error);
+    return [];
+  }
+}
+
 export async function getCategories(): Promise<Category[]> {
   try {
     const { data, error } = await supabaseAdmin()

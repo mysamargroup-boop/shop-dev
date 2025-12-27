@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { BlogPost } from "@/lib/types";
 import { Loader2, Bold, Italic, Underline, Link2, Heading1, Heading2, Heading3, List, ListOrdered, AlignLeft, AlignCenter, AlignRight, Pilcrow } from "lucide-react";
-import imageData from "@/lib/json-seeds/placeholder-images.json";
+import { supabase } from "@/lib/supabase";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type BlogFormProps = {
@@ -31,7 +31,7 @@ function SubmitButton({ text }: { text: string }) {
 
 export function BlogForm({ action, post, buttonText, initialState }: BlogFormProps) {
   const state = initialState;
-  const imageKeys = imageData.placeholderImages.map(img => img.id);
+  const [imageKeys, setImageKeys] = useState<string[]>([]);
   const [title, setTitle] = useState(post?.title || '');
   const [excerpt, setExcerpt] = useState(post?.excerpt || '');
   const [content, setContent] = useState(post?.content || '');
@@ -94,6 +94,26 @@ export function BlogForm({ action, post, buttonText, initialState }: BlogFormPro
 
   const editorRef = useRef<HTMLDivElement>(null);
   const isUpdatingFromState = useRef(false);
+
+  useEffect(() => {
+    const loadKeys = async () => {
+      try {
+        const client = supabase();
+        const { data, error } = await client
+          .from('site_images')
+          .select('id')
+          .order('id');
+        if (!error && Array.isArray(data)) {
+          setImageKeys(data.map(d => d.id));
+        } else {
+          setImageKeys([]);
+        }
+      } catch {
+        setImageKeys([]);
+      }
+    };
+    loadKeys();
+  }, []);
 
   useEffect(() => {
     const editor = editorRef.current;
