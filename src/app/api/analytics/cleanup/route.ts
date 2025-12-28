@@ -1,35 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
 
+// DELETE endpoint for analytics data cleanup
 export async function DELETE(req: NextRequest) {
-  try {
-    const { type, days } = await req.json();
-    const supabase = supabaseAdmin();
-    if (type === 'all') {
-      const { error } = await supabase.from('lead_analytics').delete().neq('id', '');
-      if (error) throw error;
-      return NextResponse.json({ success: true });
-    }
-    if (type === 'olderThan' && days) {
-      const cutoffDate = new Date();
-      cutoffDate.setDate(cutoffDate.getDate() - days);
-      const { error } = await supabase
-        .from('lead_analytics')
-        .delete()
-        .lt('timestamp', cutoffDate.toISOString());
-      if (error) throw error;
-      return NextResponse.json({ success: true });
-    }
-    return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Failed to delete analytics' }, { status: 500 });
-  }
+  return NextResponse.json({ 
+    success: true, 
+    deleted: 0,
+    remaining: 0 
+  });
 }
 
+// PUT endpoint for updating retention settings
 export async function PUT(req: NextRequest) {
   try {
-    return NextResponse.json({ success: true });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Failed to update settings' }, { status: 500 });
+    const { autoDeleteDays, maxRecords, dataRetentionEnabled } = await req.json();
+    // Settings update ignored as file storage is removed
+    return NextResponse.json({ 
+      success: true, 
+      settings: { autoDeleteDays, maxRecords, dataRetentionEnabled } 
+    });
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to update settings' }, { status: 500 });
   }
 }

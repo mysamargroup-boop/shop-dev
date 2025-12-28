@@ -64,7 +64,7 @@ export default function AdminSidebar({ isSidebarOpen, setIsSidebarOpen }: { isSi
             <ScrollArea className="h-full">
               <nav className="grid items-start px-2 text-sm font-medium lg:px-4 space-y-1">
               {navItems.map((item) => {
-                  const isActive = pathname?.startsWith(item.href) || false;
+                  const isActive = pathname.startsWith(item.href);
                   return (
                 <Link
                   key={item.href}

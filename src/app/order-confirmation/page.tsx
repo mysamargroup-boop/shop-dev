@@ -34,7 +34,6 @@ const OrderConfirmationContent = () => {
   const [deliveryMinDays, setDeliveryMinDays] = useState<number>(7);
   const [deliveryMaxDays, setDeliveryMaxDays] = useState<number>(15);
   const [hasLocalData, setHasLocalData] = useState(false);
-  const [uploadedThumbs, setUploadedThumbs] = useState<string[]>([]);
 
   useEffect(() => {
     const orderId = searchParams.get('order_id') || searchParams.get('orderId');
@@ -51,13 +50,6 @@ const OrderConfirmationContent = () => {
         setOrderData(localData);
         setHasLocalData(true);
       }
-      try {
-        const storedUploads = typeof window !== 'undefined' ? localStorage.getItem(`order_uploads_${orderId}`) : null;
-        if (storedUploads) {
-          const urls = JSON.parse(storedUploads);
-          if (Array.isArray(urls)) setUploadedThumbs(urls.slice(0, 6));
-        }
-      } catch {}
     } catch {}
     (async () => {
       try {
@@ -354,24 +346,12 @@ const OrderConfirmationContent = () => {
                 <p className="text-muted-foreground">Thank you for your purchase, {orderData.customerName}!</p>
             </CardHeader>
             <CardContent className="space-y-6">
-                <div className="flex items-center gap-3 p-3 rounded-lg border bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300">
+                 <div className="flex items-center gap-3 p-3 rounded-lg border bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300">
                     <CalendarClock className="h-6 w-6" />
                     <div>
                         <p className="font-semibold text-sm">Expected Delivery: {getExpectedDeliveryDate()}</p>
                     </div>
                 </div>
-                {uploadedThumbs.length > 0 && (
-                  <div className="rounded-lg border p-4">
-                    <p className="font-semibold mb-2 text-sm">Your uploaded images</p>
-                    <div className="grid grid-cols-3 gap-2">
-                      {uploadedThumbs.map((u, i) => (
-                        <div key={i} className="aspect-square overflow-hidden rounded-md">
-                          <img src={u} alt={`Upload ${i + 1}`} className="object-cover w-full h-full" />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
 
                 <div className="border rounded-lg p-4 space-y-2 text-sm">
                     <div className="flex justify-between">

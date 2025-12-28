@@ -1,20 +1,6 @@
 'use server';
 import { supabaseAdmin } from './supabase';
-import type { Category, Product, ProductsData, BlogPost, SiteSettings } from './types';
-
-export async function getSiteImages(): Promise<Array<{ id: string; name?: string; image_url: string; image_hint?: string; description?: string }>> {
-  try {
-    const { data, error } = await supabaseAdmin()
-      .from('site_images')
-      .select('id,name,image_url,image_hint,description')
-      .order('id');
-    if (error) throw error;
-    return data || [];
-  } catch (error) {
-    console.error('Error fetching site images:', error);
-    return [];
-  }
-}
+import type { Category, Product, ProductsData, BlogPost, SiteSettings, SiteImage } from './types';
 
 export async function getCategories(): Promise<Category[]> {
   try {
@@ -41,34 +27,26 @@ export async function getProducts(): Promise<ProductsData> {
     if (error) throw error;
     
     // Transform snake_case to camelCase to match TypeScript interface
-    const transformedProducts = (data || []).map(product => {
-      const regularPrice = typeof product.regular_price === 'number' ? product.regular_price : undefined;
-      const salePrice = typeof product.sale_price === 'number' ? product.sale_price : undefined;
-      const price = typeof salePrice === 'number' ? salePrice : (typeof regularPrice === 'number' ? regularPrice : 0);
-      const hasDims = [product.dimensions_length, product.dimensions_width, product.dimensions_height].some(v => typeof v === 'number');
-      return {
-        ...product,
-        imageUrl: product.image_url,
-        imageAlt: product.image_alt,
-        imageHint: product.image_hint,
-        galleryImages: product.gallery_images,
-        videoUrl: product.video_url,
-        imageAttribution: product.image_attribution,
-        allowImageUpload: product.allow_image_upload,
-        weightGrams: product.weight_grams,
-        dimensionsCm: hasDims ? {
-          length: Number(product.dimensions_length || 0),
-          width: Number(product.dimensions_width || 0),
-          height: Number(product.dimensions_height || 0),
-        } : undefined,
-        specificDescription: product.specific_description,
-        reviewCount: product.review_count,
-        price,
-        regularPrice,
-        salePrice,
-        category: product.category_id
-      };
-    });
+    const transformedProducts = (data || []).map(product => ({
+      ...product,
+      imageUrl: product.image_url,
+      imageAlt: product.image_alt,
+      imageHint: product.image_hint,
+      galleryImages: product.gallery_images,
+      videoUrl: product.video_url,
+      imageAttribution: product.image_attribution,
+      allowImageUpload: product.allow_image_upload,
+      weightGrams: product.weight_grams,
+      dimensionsLength: product.dimensions_length,
+      dimensionsWidth: product.dimensions_width,
+      dimensionsHeight: product.dimensions_height,
+      specificDescription: product.specific_description,
+      reviewCount: product.review_count,
+      // Map price fields
+      price: product.sale_price || product.regular_price,
+      // Map category
+      category: product.category_id
+    }));
     
     return { products: transformedProducts };
   } catch (error) {
@@ -86,14 +64,8 @@ export async function getProductById(id: string): Promise<Product | null> {
       .single();
     
     if (error) throw error;
-    
     if (!data) return null;
-    
-    // Transform snake_case to camelCase to match TypeScript interface
-    const regularPrice = typeof data.regular_price === 'number' ? data.regular_price : undefined;
-    const salePrice = typeof data.sale_price === 'number' ? data.sale_price : undefined;
-    const price = typeof salePrice === 'number' ? salePrice : (typeof regularPrice === 'number' ? regularPrice : 0);
-    const hasDims = [data.dimensions_length, data.dimensions_width, data.dimensions_height].some(v => typeof v === 'number');
+
     return {
       ...data,
       imageUrl: data.image_url,
@@ -104,16 +76,12 @@ export async function getProductById(id: string): Promise<Product | null> {
       imageAttribution: data.image_attribution,
       allowImageUpload: data.allow_image_upload,
       weightGrams: data.weight_grams,
-      dimensionsCm: hasDims ? {
-        length: Number(data.dimensions_length || 0),
-        width: Number(data.dimensions_width || 0),
-        height: Number(data.dimensions_height || 0),
-      } : undefined,
+      dimensionsLength: data.dimensions_length,
+      dimensionsWidth: data.dimensions_width,
+      dimensionsHeight: data.dimensions_height,
       specificDescription: data.specific_description,
       reviewCount: data.review_count,
-      price,
-      regularPrice,
-      salePrice,
+      price: data.sale_price || data.regular_price,
       category: data.category_id
     };
   } catch (error) {
@@ -122,7 +90,7 @@ export async function getProductById(id: string): Promise<Product | null> {
   }
 }
 
-export async function getOrders() {
+export async function getOrders(): Promise<any[]> {
   try {
     const { data, error } = await supabaseAdmin()
       .from('orders')
@@ -157,29 +125,25 @@ export async function getBlogPosts(): Promise<BlogPost[]> {
     const { data, error } = await supabaseAdmin()
       .from('blog_posts')
       .select('*')
-      .not('published_at', 'is', null)
+      .not('published_at', 'is', null) // Corrected filter syntax if needed, or stick to previous if valid
       .order('published_at', { ascending: false });
     
     if (error) throw error;
-    return data || [];
+    
+    return (data || []).map(post => ({
+      slug: post.slug,
+      title: post.title,
+      date: post.published_at ? new Date(post.published_at).toISOString().split('T')[0] : '', // Assuming date is stored as timestamp
+      author: post.author,
+      excerpt: post.excerpt,
+      imageKey: post.image_key,
+      imageUrl: post.image_url,
+      imageHint: post.image_hint,
+      content: post.content
+    }));
   } catch (error) {
     console.error('Error fetching blog posts:', error);
     return [];
-  }
-}
-
-export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
-  try {
-    const { data, error } = await supabaseAdmin()
-      .from('blog_posts')
-      .select('*')
-      .eq('slug', slug)
-      .single();
-    if (error) throw error;
-    return data || null;
-  } catch (error) {
-    console.error('Error fetching blog post:', error);
-    return null;
   }
 }
 
@@ -194,6 +158,70 @@ export async function getTags(): Promise<string[]> {
     return data?.map(tag => tag.name) || [];
   } catch (error) {
     console.error('Error fetching tags:', error);
+    return [];
+  }
+}
+
+export async function getSiteImages(): Promise<SiteImage[]> {
+  try {
+    const { data, error } = await supabaseAdmin()
+      .from('site_images')
+      .select('*');
+    
+    if (error) throw error;
+    
+    return (data || []).map(img => ({
+      id: img.id,
+      name: img.name,
+      description: img.description,
+      imageUrl: img.image_url,
+      imageHint: img.image_hint
+    }));
+  } catch (error) {
+    console.error('Error fetching site images:', error);
+    return [];
+  }
+}
+
+export async function getHeaderLinks(): Promise<any[]> {
+  try {
+    const { data, error } = await supabaseAdmin()
+      .from('navigation_links')
+      .select('*')
+      .eq('area', 'header')
+      .order('sort_order');
+    if (error) throw error;
+    return (data || []).map(link => ({
+      id: link.id,
+      href: link.href,
+      label: link.label,
+      special: !!link.special,
+      isMegaMenu: !!link.is_mega_menu,
+      icon: null
+    }));
+  } catch (error) {
+    console.error('Error fetching header links:', error);
+    return [];
+  }
+}
+
+export async function getFooterLinkSections(): Promise<any[]> {
+  try {
+    const { data, error } = await supabaseAdmin()
+      .from('navigation_links')
+      .select('*')
+      .eq('area', 'footer')
+      .order('sort_order');
+    if (error) throw error;
+    const bySection: Record<string, { title: string; links: { id: number; href: string; label: string }[] }> = {};
+    (data || []).forEach(link => {
+      const section = link.section || 'Links';
+      if (!bySection[section]) bySection[section] = { title: section, links: [] };
+      bySection[section].links.push({ id: link.id, href: link.href, label: link.label });
+    });
+    return Object.values(bySection);
+  } catch (error) {
+    console.error('Error fetching footer links:', error);
     return [];
   }
 }

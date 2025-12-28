@@ -13,10 +13,16 @@ import {
 } from '@/components/ui/carousel';
 import Autoplay from "embla-carousel-autoplay";
 import { Youtube, Instagram } from 'lucide-react';
-import imageData from '@/lib/json-seeds/placeholder-images.json';
 import { BLUR_DATA_URL } from '@/lib/constants';
 
-const { videos } = imageData;
+const videos = [
+    {
+      "id": "video1",
+      "type": "youtube",
+      "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "thumbnailUrl": "https://img.youtube.com/vi/dQw4w9WgXcQ/0.jpg"
+    }
+];
 
 const VideoGallery = () => {
     if (!videos || videos.length === 0) {

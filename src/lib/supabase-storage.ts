@@ -43,18 +43,6 @@ export async function uploadCustomerImage(
 
     if (dbError) throw dbError;
 
-    const { data: existingItem } = await supabase
-      .from('order_items')
-      .select('id, customer_uploaded_images')
-      .eq('id', orderItemId)
-      .single();
-    const current = (existingItem as any)?.customer_uploaded_images || [];
-    const updated = Array.isArray(current) ? [...current, publicUrl] : [publicUrl];
-    await supabase
-      .from('order_items')
-      .update({ customer_uploaded_images: updated })
-      .eq('id', orderItemId);
-
     return { fileUrl: publicUrl };
   } catch (error) {
     console.error('Upload error:', error);

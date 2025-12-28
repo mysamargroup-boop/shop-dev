@@ -53,12 +53,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
     }
   };
   
-  const effectivePrice = typeof product.salePrice === 'number'
-    ? product.salePrice
-    : typeof product.regularPrice === 'number'
-      ? product.regularPrice
-      : product.price;
-  const discountedSubtotal = effectivePrice;
+  const discountedSubtotal = product.price;
   const shippingCost = discountedSubtotal > 2999 ? 0 : 99;
   const totalCost = discountedSubtotal + shippingCost;
 
@@ -102,27 +97,14 @@ const ProductCard = ({ product }: ProductCardProps) => {
       <CardContent className="flex-1 p-3 space-y-2 flex flex-col">
         <div className="flex-1 space-y-1">
             <Link href={productUrl}>
-                <h3 className="font-headline font-bold text-base leading-tight group-hover:text-accent transition-colors">
+                <h3 className="font-headline font-bold text-base leading-tight group-hover:text-accent transition-colors line-clamp-2 min-h-[2.5rem]">
                 {product.name}
                 </h3>
             </Link>
              <div className="flex items-baseline gap-2">
-                 {typeof effectivePrice === 'number' && effectivePrice > 0 ? (
-                   <>
-                     <p className="text-lg font-bold text-primary">
-                       ₹{Number(effectivePrice).toFixed(0)}
-                     </p>
-                     {typeof product.regularPrice === 'number' &&
-                      typeof product.salePrice === 'number' &&
-                      product.salePrice < product.regularPrice && (
-                        <p className="text-sm text-muted-foreground line-through">
-                          ₹{Number(product.regularPrice).toFixed(0)}
-                        </p>
-                     )}
-                   </>
-                 ) : (
-                   <p className="text-sm text-muted-foreground">Price not available</p>
-                 )}
+                 <p className="text-lg font-bold text-primary">
+                    {typeof product.price === 'number' ? `₹${product.price.toFixed(0)}` : 'Price not available'}
+                 </p>
             </div>
             {product.specificDescription && <p className="text-xs text-muted-foreground font-semibold">{product.specificDescription}</p>}
         </div>

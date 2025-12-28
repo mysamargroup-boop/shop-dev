@@ -13,39 +13,40 @@ import {
 } from '@/components/ui/carousel';
 import Autoplay from "embla-carousel-autoplay";
 import { Button } from '../ui/button';
-import imageData from '@/lib/json-seeds/placeholder-images.json';
 import { BLUR_DATA_URL } from '@/lib/constants';
+import type { SiteImage } from '@/lib/types';
 
-const { placeholderImages } = imageData;
+interface PromoSliderProps {
+    siteImages: SiteImage[];
+}
 
-const getImage = (id: string) => {
-  const image = placeholderImages.find(img => img.id === id);
-  return image || { imageUrl: 'https://picsum.photos/seed/error/2070/1164', imageHint: 'placeholder' };
-};
+export default function PromoSlider({ siteImages }: PromoSliderProps) {
+    const getImage = (id: string) => {
+        const image = siteImages.find(img => img.id === id);
+        return image || { imageUrl: 'https://picsum.photos/seed/error/2070/1164', imageHint: 'placeholder' };
+    };
 
+    const sliderItems = [
+        {
+            title: "Send Xmas Gifts Worldwide",
+            date: "25TH DECEMBER",
+            image: getImage('slider-xmas'),
+            href: "/collections/christmas"
+        },
+        {
+            title: "Anniversary Specials",
+            date: "Celebrate Your Love",
+            image: getImage('slider-anniversary'),
+            href: "/collections/anniversary"
+        },
+        {
+            title: "Birthday Surprises",
+            date: "Make Their Day Special",
+            image: getImage('slider-birthday'),
+            href: "/collections/birthday"
+        }
+    ];
 
-const sliderItems = [
-    {
-        title: "Send Xmas Gifts Worldwide",
-        date: "25TH DECEMBER",
-        image: getImage('slider-xmas'),
-        href: "/collections/christmas"
-    },
-    {
-        title: "Anniversary Specials",
-        date: "Celebrate Your Love",
-        image: getImage('slider-anniversary'),
-        href: "/collections/anniversary"
-    },
-    {
-        title: "Birthday Surprises",
-        date: "Make Their Day Special",
-        image: getImage('slider-birthday'),
-        href: "/collections/birthday"
-    }
-]
-
-export default function PromoSlider() {
   return (
     <section className="mb-12">
         <Carousel

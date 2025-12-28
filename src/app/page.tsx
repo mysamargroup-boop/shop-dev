@@ -1,7 +1,7 @@
 
 
 import ProductCard from '@/components/products/ProductCard';
-import { getProducts, getCategories, getSiteSettings } from '@/lib/data-async';
+import { getProducts, getCategories, getSiteSettings, getSiteImages } from '@/lib/data-async';
 import PromoBanners from '@/components/home/PromoBanners';
 import ShopByOccasion from '@/components/home/ShopByOccasion';
 import ReviewsCarousel from '@/components/products/ReviewsCarousel';
@@ -24,6 +24,7 @@ export default async function Home() {
   const products = await getProducts();
   const allCategories = await getCategories();
   const settings: SiteSettings = await getSiteSettings();
+  const siteImages = await getSiteImages();
 
   const displayCategoryNames = ["Wall Decor", "Keychains", "Desk Accessories", "Personal Accessories", "Wall Hangings"];
   const categories = allCategories.filter(c => displayCategoryNames.includes(c.name));
@@ -33,31 +34,29 @@ export default async function Home() {
     <>
       <WholesaleNotice />
       <div className="container mx-auto px-4 pt-4 md:hidden">
-        <div className="relative">
+        <form action="/shop" method="get" className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input 
+            name="search"
             placeholder="Sending good luck plants or more" 
             className="pl-12 pr-12 h-12 rounded-full bg-background border-2"
           />
-          <Mic className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-        </div>
+          <Button type="submit" variant="ghost" size="icon" className="absolute right-4 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground">
+             <Mic className="h-5 w-5" />
+          </Button>
+        </form>
       </div>
-      <PromoBanners />
-      <ImageGrid />
+      <PromoBanners siteImages={siteImages} />
+      <ImageGrid siteImages={siteImages} />
       <div className="container mx-auto px-4 py-8">
 
         <TimerBanner settings={settings} />
         <IconCategoryGrid />
         <PopularProducts products={products} />
-        <FeaturedCategories />
+        <FeaturedCategories siteImages={siteImages} />
 
         {categories.map(category => {
-          const categoryProducts = products
-            .filter(p => p.category && p.category
-              .split(',')
-              .map(c => c.trim().toLowerCase().replace(/ /g, '-'))
-              .includes(category.id.toLowerCase()))
-            .slice(0, 4);
+          const categoryProducts = products.filter(p => p.category && p.category.split(',').map(c => c.trim()).includes(category.name)).slice(0, 4);
           if (categoryProducts.length === 0) return null;
 
           return (
@@ -81,7 +80,7 @@ export default async function Home() {
         
         
 
-        <PromoSlider />
+        <PromoSlider siteImages={siteImages} />
         <ShopByOccasion products={products} />
 
         <div className="rounded-lg border border-primary/20 bg-primary/5 p-8 my-16">

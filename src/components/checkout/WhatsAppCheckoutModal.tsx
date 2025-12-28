@@ -116,7 +116,7 @@ const OrderSummary = ({
         </div>
       </div>
        <div className="text-xs text-muted-foreground pt-3 border-t">
-        <p>Estimated Delivery: 7-15 days, depending on quantity.</p>
+        <p>Estimated Delivery: 7-15 days, depending on location.</p>
         {supportPhoneNumber && <p>For details, call <a href={`tel:${supportPhoneNumber}`} className="font-semibold text-primary">{supportPhoneNumber}</a>.</p>}
       </div>
     </div>

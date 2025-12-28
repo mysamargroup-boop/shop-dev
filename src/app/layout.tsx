@@ -44,7 +44,7 @@ export default async function RootLayout({
   const themeStyle = (themeBackground || themeMuted) ? (
     <style>
       {`
-        :root:not(.dark) {
+        :root {
           ${themeBackground ? `--background: ${themeBackground};` : ''}
           ${themeMuted ? `--muted: ${themeMuted};` : ''}
         }

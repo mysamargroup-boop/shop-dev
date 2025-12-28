@@ -1,6 +1,6 @@
 
 import Image from "next/image";
-import { getImageData } from "@/lib/data";
+import { getSiteImages } from "@/lib/data-async";
 import { updateSiteImage } from "@/lib/actions";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -79,8 +79,8 @@ function ImageCard({ image }: { image: { id: string; imageUrl: string; descripti
 
 export default async function SiteImagesPage() {
   noStore();
-  const imageData = await getImageData();
-  const allImages = imageData.placeholderImages.filter(img => usageMap[img.id]);
+  const images = await getSiteImages();
+  const allImages = images.filter(img => usageMap[img.id]);
   
   const sliderImages = allImages.filter((img: any) => img.id.startsWith('slider-'));
   const bannerImages = allImages.filter((img: any) => img.id.startsWith('promo-banner-'));
@@ -92,7 +92,7 @@ export default async function SiteImagesPage() {
     <div className="space-y-8">
       <div className="text-center">
         <h1 className="text-3xl font-headline font-bold">Site Images</h1>
-        <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">Update your site's key visual assets here. The data is saved in <code className="bg-muted px-1 py-0.5 rounded-sm">src/lib/json-seeds/placeholder-images.json</code>.</p>
+        <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">Update your site's key visual assets here.</p>
       </div>
 
        <Alert>

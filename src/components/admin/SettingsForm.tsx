@@ -295,6 +295,8 @@ export default function SettingsForm({ settings, mode = 'all' }: { settings: Sit
           </Card>
         )}
 
+        
+
         {showBanners && (
           <Card>
             <CardHeader>
@@ -330,15 +332,6 @@ export default function SettingsForm({ settings, mode = 'all' }: { settings: Sit
               <CardDescription>Configure invoice details and delivery timelines.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <Switch id="advance_payment_enabled" name="advance_payment_enabled" defaultChecked={settings.advance_payment_enabled} />
-                <Label htmlFor="advance_payment_enabled">Enable Advance Payment</Label>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="advance_payment_percent">Advance Payment Percent</Label>
-                <Input id="advance_payment_percent" name="advance_payment_percent" type="number" step="0.01" min={0} max={100} defaultValue={settings.advance_payment_percent ?? 0} />
-                <p className="text-xs text-muted-foreground">Set to 0 to charge full amount at checkout.</p>
-              </div>
               <div className="grid gap-2">
                 <Label htmlFor="invoice_business_name">Business Name (for Invoice)</Label>
                 <Input id="invoice_business_name" name="invoice_business_name" defaultValue={settings.invoice_business_name || ''} placeholder="Woody Business" />

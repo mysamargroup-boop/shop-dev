@@ -1,9 +1,7 @@
-
 "use client";
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { getTags } from '@/lib/data';
 import ProductCard from '@/components/products/ProductCard';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,22 +18,13 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Filter } from 'lucide-react';
 import type { Product } from '@/lib/types';
 
-export default function ShopClientPage({ allProducts }: { allProducts: Product[]}) {
+export default function ShopClientPage({ allProducts, allTags }: { allProducts: Product[], allTags: string[] }) {
   const searchParams = useSearchParams();
 
   const [sort, setSort] = useState('relevance');
   const [priceRange, setPriceRange] = useState([0, 1000]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [filteredProducts, setFilteredProducts] = useState(allProducts);
-  const [allTags, setAllTags] = useState<string[]>([]);
-
-  useEffect(() => {
-    async function fetchTags() {
-        const tags = await getTags();
-        setAllTags(tags);
-    }
-    fetchTags();
-  }, []);
 
   useEffect(() => {
     const priceQuery = searchParams.get('price');
@@ -49,6 +38,17 @@ export default function ShopClientPage({ allProducts }: { allProducts: Product[]
 
   useEffect(() => {
     let products = allProducts;
+    
+    // Search filter
+    const searchQuery = searchParams.get('search');
+    if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        products = products.filter(p => 
+            p.name.toLowerCase().includes(query) || 
+            p.description?.toLowerCase().includes(query) ||
+            p.category.toLowerCase().includes(query)
+        );
+    }
 
     products = products.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1]);
     
@@ -74,7 +74,7 @@ export default function ShopClientPage({ allProducts }: { allProducts: Product[]
     }
     setFilteredProducts(products);
 
-  }, [sort, priceRange, selectedTags, allProducts]);
+  }, [sort, priceRange, selectedTags, allProducts, searchParams]);
   
   const handleTagChange = (tag: string) => {
     setSelectedTags(prev => 

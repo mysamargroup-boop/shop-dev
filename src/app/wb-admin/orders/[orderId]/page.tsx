@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { User, Phone, Calendar, IndianRupee, Hash, CheckCircle, AlertCircle, Clock, ShoppingCart, RotateCcw, DollarSign } from 'lucide-react';
+import { User, Phone, Calendar, IndianRupee, Hash, CheckCircle, AlertCircle, Clock, ShoppingCart } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BLUR_DATA_URL } from "@/lib/constants";
 import OrderManagementActions from '@/components/order-management-actions';
@@ -31,8 +31,7 @@ async function getProductById(productId: string) {
     });
     if (!response.ok) throw new Error('Failed to fetch products');
     const data = await response.json();
-    const list = Array.isArray(data) ? data : (Array.isArray((data as any).products) ? (data as any).products : []);
-    return list.find((p: any) => p.id === productId);
+    return data.products?.find((p: any) => p.id === productId);
   } catch (error) {
     console.error('Error fetching product:', error);
     return null;

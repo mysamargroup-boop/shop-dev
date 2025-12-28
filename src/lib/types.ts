@@ -12,8 +12,6 @@ export interface Product {
   name: string;
   description: string;
   price: number;
-  regularPrice?: number;
-  salePrice?: number;
   imageUrl: string;
   imageAlt?: string;
   imageHint?: string;
@@ -90,7 +88,6 @@ export interface Order {
   createdAt: string;
   updatedAt: string;
   paymentStatus?: string;
-  transactionId?: string;
 }
 
 
@@ -124,7 +121,6 @@ export interface SiteSettings {
   contact_phone?: string;
   contact_address?: string;
   contact_hours?: string;
-  redirects?: string;
   maintenance_mode_enabled?: boolean;
   maintenance_mode_message?: string;
   social_facebook?: string;
@@ -154,8 +150,7 @@ export interface SiteSettings {
   timer_banner_end_date?: string;
   theme_background?: string;
   theme_muted?: string;
-  advance_payment_enabled?: boolean;
-  advance_payment_percent?: number;
+  redirects?: string;
 }
 
 export interface Coupon {

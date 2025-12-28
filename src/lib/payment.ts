@@ -62,6 +62,5 @@ export async function createPaymentLink(input: PaymentInput & { productUrls: str
         orderId: orderId,
         payment_url: paymentData.payments?.url || paymentData.payment_link || null,
         payment_session_id: paymentData.payment_session_id || null,
-        order_items: paymentData.order_items || []
     };
 }

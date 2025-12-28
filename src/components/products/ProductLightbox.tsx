@@ -60,7 +60,7 @@ const ProductLightbox = ({ images, product }: ProductLightboxProps) => {
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      lightboxApi?.off("select", () => {});
+      lightboxApi?.off("select");
     };
   }, [isLightboxOpen, lightboxApi, lightboxStartIndex]);
 

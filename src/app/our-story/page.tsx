@@ -3,13 +3,6 @@ import Image from 'next/image';
 import { getSiteImages } from '@/lib/data-async';
 import { BLUR_DATA_URL } from '@/lib/constants';
 
-async function getWorkshop() {
-  const images = await getSiteImages();
-  const img = images.find(i => i.id === 'our-story-workshop');
-  return img ? { imageUrl: img.image_url, imageHint: img.image_hint } : { imageUrl: 'https://picsum.photos/seed/workshop/2070/1164', imageHint: 'woodworking craftsman' };
-}
-
-
 const Highlight = ({ children }: { children: React.ReactNode }) => (
   <span className="font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
     {children}
@@ -23,8 +16,10 @@ const FounderHighlight = ({ children }: { children: React.ReactNode }) => (
 );
 
 export default async function OurStoryPage() {
-  const workshopImage = await getWorkshop();
-  return (
+    const siteImages = await getSiteImages();
+    const workshopImage = siteImages.find(img => img.id === 'our-story-workshop') || { imageUrl: 'https://picsum.photos/seed/workshop/2070/1164', imageHint: 'woodworking craftsman' };
+    
+    return (
     <div className="container mx-auto px-4 py-12">
       <div className="max-w-4xl mx-auto">
         <header className="text-center mb-12">

@@ -40,7 +40,7 @@ SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 
 ## Step 3: Setup Database
 1. Go to Supabase SQL Editor
-2. Copy and paste entire content of: `supabase/schema.sql` (single source of truth)
+2. Copy and paste entire content of: `supabase/schema.sql`
 3. Click "Run" to execute
 
 ## Step 4: Test Features
@@ -49,30 +49,19 @@ SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 - Test order management (cancel/return/refund)
 
 # PENDING HIGH PRIORITY TASKS:
-26) Ensure single SQL file; remove deprecated migrations/complete_migration.sql
-27) Add Supabase credentials to .env.local file
-28) Migrate JSON data (products, categories, orders) into Supabase
-29) Protect admin APIs with auth; restrict access to admins only
-30) Replace JSON reads with Supabase queries in API routes
-31) Verify RLS: public read-only for storefront tables
-32) Create RPC for update_order_status and use in admin APIs
-33) Configure Cashfree webhook to also upsert into Supabase orders/payments
-34) Add indexes for transaction_id and refund_amount ✓ ADDED IN schema.sql
+26) Add transaction_id field to orders table schema ✓ COMPLETED
+27) Update webhook handler to store transaction_id from Cashfree ✓ COMPLETED
+28) Update admin panel to display transaction_id for orders ✓ COMPLETED
+29) Add Supabase credentials to .env.local file
+30) Create migration script for transaction_id field ✓ COMPLETED
+31) Add order management features (cancel/return/refund) ✓ COMPLETED
+32) Update admin panel UI for order management ✓ COMPLETED
+33) Add order status history tracking ✓ COMPLETED
+34) Create single migration file ✓ COMPLETED
 
 # NEXT STEPS:
 35) Add Supabase credentials to .env.local
 36) Create Supabase project and run schema.sql
-37) Delete deprecated migrations/complete_migration.sql to keep single SQL file
+37) Run complete_migration.sql in Supabase
 38) Test order management features in admin panel
 39) Migrate existing data to Supabase
-40) Update webhook to write orders/payments into Supabase
-41) Switch storefront reads from JSON to Supabase
-42) Fix TypeScript issues in UI (menubar, pathname checks, embla)
-
-# COMPLETED IN THIS SESSION:
-43) Fresh build with caches cleared
-44) Tailwind content paths fixed for proper CSS
-45) Admin Orders list shows transaction ID
-46) Bulk import categories/products into Supabase via Node script
-47) Insert test order and payment via Node script
-48) Dev server running on port 4001 and verified

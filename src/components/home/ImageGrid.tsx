@@ -2,11 +2,9 @@
 'use client';
 import Link from 'next/link';
 import Image from 'next/image';
-import imageData from '@/lib/json-seeds/placeholder-images.json';
 import { BLUR_DATA_URL } from '@/lib/constants';
 import { useEffect, useState } from 'react';
-
-const { placeholderImages } = imageData;
+import type { SiteImage } from '@/lib/types';
 
 const defaultCategories = [
     {
@@ -51,7 +49,11 @@ const defaultCategories = [
     },
 ];
 
-export default function ImageGrid() {
+interface ImageGridProps {
+    siteImages: SiteImage[];
+}
+
+export default function ImageGrid({ siteImages }: ImageGridProps) {
     const [giftCategories, setGiftCategories] = useState(defaultCategories);
 
     useEffect(() => {
@@ -72,7 +74,7 @@ export default function ImageGrid() {
         };
 
         const updatedCategories = categoryIds.map(id => {
-            const imgData = placeholderImages.find(img => img.id === id);
+            const imgData = siteImages.find(img => img.id === id);
             return {
                 name: imgData?.name || id.replace('grid-', ''),
                 href: hrefMap[id],
@@ -82,7 +84,7 @@ export default function ImageGrid() {
         
         setGiftCategories(updatedCategories);
 
-    }, []);
+    }, [siteImages]);
 
 
     return (

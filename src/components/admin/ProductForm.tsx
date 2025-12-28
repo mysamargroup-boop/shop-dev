@@ -404,14 +404,9 @@ export function ProductForm({ action, product, buttonText, initialState }: Produ
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="regularPrice">Regular Price</Label>
-                    <Input id="regularPrice" name="regularPrice" type="number" step="0.01" defaultValue={product?.regularPrice ?? product?.price} required/>
-                    {state?.errors?.regularPrice && <p className="text-destructive text-sm">{state.errors.regularPrice[0]}</p>}
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="salePrice">Sale Price (optional)</Label>
-                    <Input id="salePrice" name="salePrice" type="number" step="0.01" defaultValue={product?.salePrice ?? ''} />
-                    {state?.errors?.salePrice && <p className="text-destructive text-sm">{state.errors.salePrice[0]}</p>}
+                    <Label htmlFor="price">Sale Price</Label>
+                    <Input id="price" name="price" type="number" step="0.01" defaultValue={product?.price} required/>
+                    {state?.errors?.price && <p className="text-destructive text-sm">{state.errors.price[0]}</p>}
                 </div>
 
                 <div className="space-y-2">
@@ -426,7 +421,7 @@ export function ProductForm({ action, product, buttonText, initialState }: Produ
                         <SelectValue placeholder="Select a category" />
                     </SelectTrigger>
                     <SelectContent>
-                        {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                        {categories.map(c => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
                     </SelectContent>
                     </Select>
                     {state?.errors?.category && <p className="text-destructive text-sm">{state.errors.category[0]}</p>}

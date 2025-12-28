@@ -6,11 +6,12 @@ import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import { getSiteSettings } from '@/lib/actions';
+import { getFooterLinkSections } from '@/lib/data-supabase';
 
 const Footer = async () => {
   const settings = await getSiteSettings();
 
-  const linkSections = [
+  const defaultSections = [
       {
         title: 'Shop',
         links: [
@@ -39,6 +40,10 @@ const Footer = async () => {
         ],
       },
   ];
+  let linkSections = await getFooterLinkSections();
+  if (!linkSections || linkSections.length === 0) {
+    linkSections = defaultSections;
+  }
 
   return (
     <footer className="bg-primary/5 border-t mt-auto pb-20 md:pb-0">
@@ -48,17 +53,23 @@ const Footer = async () => {
                 <Logo />
                 <p className="text-sm text-muted-foreground mt-4 max-w-md">Exquisite Personalized Wooden Gifts. Handcrafted with love, designed to capture your most cherished memories.</p>
             </div>
-            {/* Removed external portal links as requested */}
+            <div className='flex flex-col items-center text-center md:items-end md:text-right'>
+                 <h3 className="font-semibold text-foreground mb-4">Our Portals</h3>
+                 <ul className="space-y-2 text-sm">
+                    <li><a href="https://woody.co.in" target="_blank" rel="noopener noreferrer" className="font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent hover:underline">Retail Site (Woody)</a></li>
+                    <li><a href="https://business.woody.co.in" target="_blank" rel="noopener noreferrer" className="font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent hover:underline">B2B / Bulk Site</a></li>
+                </ul>
+            </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {/* Desktop View: Grid */}
             <div className="hidden md:grid md:grid-cols-3 col-span-3 gap-8">
-              {linkSections.map((section) => (
+              {linkSections.map((section: any) => (
                 <div key={section.title}>
                     <h3 className="font-semibold text-foreground mb-4">{section.title}</h3>
                     <ul className="space-y-2 text-sm">
-                    {section.links.map(link => (
+                    {section.links.map((link: any) => (
                         <li key={link.href}>
                         <Link href={link.href} className="text-muted-foreground hover:text-primary">{link.label}</Link>
                         </li>
@@ -71,12 +82,12 @@ const Footer = async () => {
             {/* Mobile View: Accordion */}
             <div className="md:hidden col-span-1">
                 <Accordion type="single" collapsible className="w-full">
-                    {linkSections.map(section => (
+                    {linkSections.map((section: any) => (
                         <AccordionItem value={section.title} key={section.title}>
                             <AccordionTrigger className="font-semibold text-foreground">{section.title}</AccordionTrigger>
                             <AccordionContent>
                                 <ul className="space-y-3 pt-2">
-                                {section.links.map(link => (
+                                {section.links.map((link: any) => (
                                     <li key={link.href}>
                                         <Link href={link.href} className="text-muted-foreground hover:text-primary">{link.label}</Link>
                                     </li>

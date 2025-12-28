@@ -1,9 +1,8 @@
-
 'use server';
 import path from 'path';
-import type { Category, Product, ProductsData, BlogPost, SiteSettings } from './types';
-import imageData from './json-seeds/placeholder-images.json';
+import type { Category, Product, ProductsData, BlogPost, SiteSettings, SiteImage } from './types';
 import { unstable_noStore as noStore } from 'next/cache';
+// Import from Supabase instead of JSON files
 import { 
   getCategories as getCategoriesFromSupabase, 
   getProducts as getProductsFromSupabase, 
@@ -11,15 +10,12 @@ import {
   getOrders as getOrdersFromSupabase, 
   getSiteSettings as getSiteSettingsFromSupabase, 
   getBlogPosts as getBlogPostsFromSupabase, 
-  getBlogPostBySlug as getBlogPostBySlugFromSupabase,
   getTags as getTagsFromSupabase,
-  getSiteImages as getSiteImagesFromSupabase 
+  getSiteImages as getSiteImagesFromSupabase
 } from './data-supabase';
 
-const pickImage = (images: Array<{ id: string; image_url: string; image_hint?: string }>, id: string) => {
-  const image = images.find(img => img.id === id);
-  return image || { id, image_url: `https://picsum.photos/seed/${id}/1200/1200`, image_hint: 'placeholder' };
-};
+
+
 
 export async function getCategories(): Promise<Category[]> {
   noStore();
@@ -40,57 +36,19 @@ export async function getOrders(): Promise<any[]> {
 
 export async function getProductById(id: string): Promise<Product | undefined> {
     noStore();
-    const p = await getProductByIdFromSupabase(id);
-    return p || undefined;
-}
-
-export async function getImageData() {
-    return imageData;
+    const res = await getProductByIdFromSupabase(id);
+    return res ?? undefined;
 }
 
 export async function getBlogPosts(): Promise<BlogPost[]> {
-  const [posts, images] = await Promise.all([
-    getBlogPostsFromSupabase(),
-    getSiteImagesFromSupabase()
-  ]);
-  return posts.map(post => {
-    const img = pickImage(images, (post as any).image_key || '');
-    const finalUrl = (post as any).image_url || img.image_url;
-    const finalHint = img.image_hint;
-    return {
-      slug: (post as any).slug,
-      title: (post as any).title,
-      date: (post as any).published_at || '',
-      excerpt: '',
-      imageUrl: finalUrl,
-      imageHint: finalHint,
-      author: (post as any).author || '',
-      content: (post as any).content || '',
-      imageKey: (post as any).image_key || '',
-    } as BlogPost;
-  });
+  noStore();
+  return getBlogPostsFromSupabase();
 }
 
 export async function getBlogPostBySlug(slug: string): Promise<BlogPost | undefined> {
-  const [post, images] = await Promise.all([
-    getBlogPostBySlugFromSupabase(slug),
-    getSiteImagesFromSupabase()
-  ]);
-  if (!post) return undefined;
-  const img = pickImage(images, (post as any).image_key || '');
-  const finalUrl = (post as any).image_url || img.image_url;
-  const finalHint = img.image_hint;
-  return {
-    slug: (post as any).slug,
-    title: (post as any).title,
-    date: (post as any).published_at || '',
-    excerpt: '',
-    imageUrl: finalUrl,
-    imageHint: finalHint,
-    author: (post as any).author || '',
-    content: (post as any).content || '',
-    imageKey: (post as any).image_key || '',
-  } as BlogPost;
+  noStore();
+  const posts = await getBlogPostsFromSupabase();
+  return posts.find(post => post.slug === slug);
 }
 
 export async function getTags(): Promise<string[]> {
@@ -102,7 +60,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
   return getSiteSettingsFromSupabase();
 }
 
-export async function getSiteImages() {
+export async function getSiteImages(): Promise<SiteImage[]> {
   noStore();
   return getSiteImagesFromSupabase();
 }

@@ -9,14 +9,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { BlogPost } from "@/lib/types";
 import { Loader2, Bold, Italic, Underline, Link2, Heading1, Heading2, Heading3, List, ListOrdered, AlignLeft, AlignCenter, AlignRight, Pilcrow } from "lucide-react";
-import { supabase } from "@/lib/supabase";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { SiteImage } from '@/lib/types';
 
 type BlogFormProps = {
   action: (formData: FormData) => void;
   post?: BlogPost | null;
   buttonText: string;
   initialState: any;
+  siteImages: SiteImage[];
 };
 
 function SubmitButton({ text }: { text: string }) {
@@ -29,9 +30,9 @@ function SubmitButton({ text }: { text: string }) {
     );
 }
 
-export function BlogForm({ action, post, buttonText, initialState }: BlogFormProps) {
+export function BlogForm({ action, post, buttonText, initialState, siteImages }: BlogFormProps) {
   const state = initialState;
-  const [imageKeys, setImageKeys] = useState<string[]>([]);
+  const imageKeys = siteImages.map(img => img.id);
   const [title, setTitle] = useState(post?.title || '');
   const [excerpt, setExcerpt] = useState(post?.excerpt || '');
   const [content, setContent] = useState(post?.content || '');
@@ -94,26 +95,6 @@ export function BlogForm({ action, post, buttonText, initialState }: BlogFormPro
 
   const editorRef = useRef<HTMLDivElement>(null);
   const isUpdatingFromState = useRef(false);
-
-  useEffect(() => {
-    const loadKeys = async () => {
-      try {
-        const client = supabase();
-        const { data, error } = await client
-          .from('site_images')
-          .select('id')
-          .order('id');
-        if (!error && Array.isArray(data)) {
-          setImageKeys(data.map(d => d.id));
-        } else {
-          setImageKeys([]);
-        }
-      } catch {
-        setImageKeys([]);
-      }
-    };
-    loadKeys();
-  }, []);
 
   useEffect(() => {
     const editor = editorRef.current;
@@ -208,7 +189,7 @@ export function BlogForm({ action, post, buttonText, initialState }: BlogFormPro
                     <option key={key} value={key}>{key}</option>
                 ))}
             </select>
-            <p className="text-xs text-muted-foreground">Select an ID from `json-seeds/placeholder-images.json`.</p>
+            <p className="text-xs text-muted-foreground">Select an ID from Site Images (Admin → Site Images).</p>
             {state?.errors?.imageKey && <p className="text-destructive text-sm">{state.errors.imageKey[0]}</p>}
           </div>
           

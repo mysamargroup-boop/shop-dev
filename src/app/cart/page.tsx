@@ -63,10 +63,6 @@ export default function CartPage() {
     imageHint: item.product.imageHint,
   }))
 
-  const uploadProductIds: string[] = cart
-    .filter(item => item.product.allowImageUpload)
-    .map(item => item.product.id);
-
   const checkoutInput: Omit<WhatsAppCheckoutInput, 'customerName' | 'customerPhoneNumber' | 'customerAddress' | 'extraNote'> & { productImages?: string[], products: OrderItem[] } | null = cart.length > 0 ? {
     productName: cart.map(item => `${item.quantity}x ${item.product.name}`).join(', '),
     productDescription: `Total order value: ₹${totalCost.toFixed(2)}`,
@@ -79,7 +75,6 @@ export default function CartPage() {
     productImages: cart.map(item => item.product.imageUrl),
     productUrls: baseUrl ? cart.map(item => `${baseUrl}/collections/${item.product.category.toLowerCase().replace(/ /g, '-')}/${item.product.id}`) : [],
     products: productsForCheckout,
-    uploadProductIds: uploadProductIds
   } : null;
 
   return (

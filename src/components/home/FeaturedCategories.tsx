@@ -2,42 +2,44 @@
 'use client';
 import Link from 'next/link';
 import Image from 'next/image';
-import imageData from '@/lib/json-seeds/placeholder-images.json';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowRight } from 'lucide-react';
 import { BLUR_DATA_URL } from '@/lib/constants';
+import type { SiteImage } from '@/lib/types';
 
-const { placeholderImages } = imageData;
+interface FeaturedCategoriesProps {
+    siteImages: SiteImage[];
+}
 
-const getImage = (id: string) => {
-  const image = placeholderImages.find(img => img.id === id);
-  return image || { imageUrl: 'https://picsum.photos/seed/error/500/500', imageHint: 'placeholder' };
-};
+export default function FeaturedCategories({ siteImages }: FeaturedCategoriesProps) {
+    const getImage = (id: string) => {
+        const image = siteImages.find(img => img.id === id);
+        return image || { imageUrl: 'https://picsum.photos/seed/error/500/500', imageHint: 'placeholder' };
+    };
+  
+    const featuredCategories = [
+        {
+            name: 'Keychains',
+            href: '/collections/keychains',
+            image: getImage('keychain'),
+        },
+        {
+            name: 'Mobile Stands',
+            href: '/collections/mobile-stands',
+            image: getImage('mobile-stand'),
+        },
+        {
+            name: 'Wall Hangings',
+            href: '/collections/wall-hangings',
+            image: getImage('mandala-art'),
+        },
+        {
+            name: 'Pen Holders',
+            href: '/collections/pen-stands',
+            image: getImage('pen-holder'),
+        },
+    ];
 
-const featuredCategories = [
-    {
-        name: 'Keychains',
-        href: '/collections/keychains',
-        image: getImage('keychain'),
-    },
-    {
-        name: 'Mobile Stands',
-        href: '/collections/mobile-stands',
-        image: getImage('mobile-stand'),
-    },
-    {
-        name: 'Wall Hangings',
-        href: '/collections/wall-hangings',
-        image: getImage('mandala-art'),
-    },
-    {
-        name: 'Pen Holders',
-        href: '/collections/pen-stands',
-        image: getImage('pen-holder'),
-    },
-];
-
-export default function FeaturedCategories() {
     return (
         <section className="container mx-auto px-4 py-12">
             <h2 className="mb-8 text-3xl font-headline text-center font-bold md:text-4xl">Featured Categories</h2>

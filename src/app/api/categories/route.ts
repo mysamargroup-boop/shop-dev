@@ -3,7 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 
 export async function GET() {
   try {
-    const { data: categories, error } = await supabaseAdmin
+    const { data: categories, error } = await supabaseAdmin()
       .from('categories')
       .select('*')
       .order('name');
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
   try {
     const categoryData = await req.json();
     
-    const { data: category, error } = await supabaseAdmin
+    const { data: category, error } = await supabaseAdmin()
       .from('categories')
       .insert(categoryData)
       .select()

@@ -31,7 +31,7 @@ const rightNavItems = [
 ]
 
 export default function MobileNavFooter() {
-    const pathname = usePathname() || '';
+    const pathname = usePathname();
 
     const isAdminPage = pathname.startsWith('/wb-admin');
 

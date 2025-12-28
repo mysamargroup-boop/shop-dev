@@ -53,7 +53,7 @@ export default function IconCategoryGrid() {
                   <div className={`flex items-center justify-center h-20 w-20 rounded-full ${item.color} group-hover:bg-accent transition-colors`}>
                     {item.icon}
                   </div>
-                  <p className="text-xs sm:text-sm font-semibold text-foreground group-hover:text-accent transition-colors">
+                  <p className="text-xs lg:text-sm font-semibold text-foreground group-hover:text-accent transition-colors">
                     {item.name}
                   </p>
                 </Link>

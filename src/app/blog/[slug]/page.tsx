@@ -5,8 +5,8 @@ import { getBlogPostBySlug } from '@/lib/data-async';
 import { Calendar, User } from 'lucide-react';
 import { BLUR_DATA_URL } from '@/lib/constants';
 
-export default async function BlogPostPage({ params }: { params: { slug: string } }) {
-  const post = await getBlogPostBySlug(params.slug);
+export default function BlogPostPage({ params }: { params: { slug: string } }) {
+  const post = getBlogPostBySlug(params.slug);
 
   if (!post) {
     notFound();

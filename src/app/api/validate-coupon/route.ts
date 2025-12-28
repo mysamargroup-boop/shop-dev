@@ -5,17 +5,19 @@ export async function POST(req: NextRequest) {
   try {
     const { code, subtotal } = await req.json();
     if (!code) return NextResponse.json({ error: 'Coupon code is required' }, { status: 400 });
-    const supabase = supabaseAdmin();
-    const { data: coupon, error } = await supabase
+    
+    const codeUpper = String(code).toUpperCase();
+    const { data: coupon, error } = await supabaseAdmin()
       .from('coupons')
       .select('*')
-      .eq('code', String(code).toUpperCase())
+      .eq('code', codeUpper)
       .eq('active', true)
       .single();
-    if (error) {
-      return NextResponse.json({ error: error.message || 'Failed to fetch coupon' }, { status: 500 });
+      
+    if (error || !coupon) {
+      return NextResponse.json({ error: 'Invalid coupon' }, { status: 400 });
     }
-    if (!coupon) return NextResponse.json({ error: 'Invalid coupon' }, { status: 400 });
+    
     const sub = Number(subtotal || 0);
     let discountAmount = 0;
     if (coupon.type === 'percent') {

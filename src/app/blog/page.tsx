@@ -1,7 +1,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { getBlogPosts } from '@/lib/blog-data';
+import { getBlogPosts } from '@/lib/data-async';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { ArrowRight } from 'lucide-react';
 import { BLUR_DATA_URL } from '@/lib/constants';

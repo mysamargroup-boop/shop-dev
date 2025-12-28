@@ -18,8 +18,6 @@ export type SendWhatsAppTemplateMessageParams = {
   apiVersion?: string;
 };
 
-import { supabaseAdmin } from './supabase';
-
 export async function sendWhatsAppTextMessage({
   to,
   body,
@@ -63,17 +61,6 @@ export async function sendWhatsAppTextMessage({
       'WhatsApp API request failed';
     throw new Error(`WhatsApp API error (${response.status}): ${message}`);
   }
-
-  try {
-    const supabase = supabaseAdmin();
-    await supabase.from('whatsapp_messages').insert({
-      to,
-      message_type: 'text',
-      content_preview: String(body).slice(0, 500),
-      api_version: apiVersion,
-      status: 'sent',
-    });
-  } catch {}
 
   return data;
 }
@@ -148,20 +135,6 @@ export async function sendWhatsAppTemplateMessage({
       'WhatsApp API request failed';
     throw new Error(`WhatsApp API error (${response.status}): ${message}`);
   }
-
-  try {
-    const supabase = supabaseAdmin();
-    await supabase.from('whatsapp_messages').insert({
-      to,
-      message_type: 'template',
-      template_name: templateName,
-      language_code: normalizedLanguage,
-      body_params: bodyParameters,
-      header_params: headerParameters,
-      api_version: apiVersion,
-      status: 'sent',
-    });
-  } catch {}
 
   return data;
 }

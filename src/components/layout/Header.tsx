@@ -30,7 +30,7 @@ import { useTheme } from 'next-themes';
 import { Label } from '../ui/label';
 import { Switch } from '../ui/switch';
 
-const navLinks = [
+const defaultNavLinks = [
   { href: '/collections', label: 'Categories', icon: <LayoutGrid />, isMegaMenu: true },
   { href: '/collections/keychains', label: 'Keychains', icon: <KeyRound /> },
   { href: '/collections/wall-hangings', label: 'Wall Hanging', icon: <ImageIcon /> },
@@ -90,13 +90,15 @@ const Header = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [allCategories, setAllCategories] = useState<Category[]>([]);
-  const pathname = usePathname() || '';
+  const [headerLinks, setHeaderLinks] = useState<any[]>(defaultNavLinks);
+  const pathname = usePathname();
 
   useEffect(() => {
     async function fetchData() {
-        const [productsRes, categoriesRes] = await Promise.all([
+        const [productsRes, categoriesRes, headerRes] = await Promise.all([
           fetch('/api/products'),
-          fetch('/api/categories')
+          fetch('/api/categories'),
+          fetch('/api/navigation/header', { cache: 'no-store' })
         ]);
         
         if (productsRes.ok) {
@@ -107,6 +109,14 @@ const Header = () => {
         if (categoriesRes.ok) {
           const categories = await categoriesRes.json();
           setAllCategories(categories);
+        }
+        if (headerRes?.ok) {
+          try {
+            const links = await headerRes.json();
+            if (Array.isArray(links) && links.length > 0) {
+              setHeaderLinks(links);
+            }
+          } catch {}
         }
     }
     fetchData();
@@ -136,7 +146,7 @@ const Header = () => {
   const MobileNavContent = () => (
     <div className="flex flex-col h-full">
         <nav className="flex flex-col gap-4 pt-4 flex-1">
-        {navLinks.map((link) => {
+        {headerLinks.map((link) => {
             const isActive = pathname.startsWith(link.href);
             const specialClassName = link.label === 'Our Story'
                 ? "bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent"
@@ -167,7 +177,7 @@ const Header = () => {
     return (
         <NavigationMenu>
         <NavigationMenuList>
-            {navLinks.map((link) => {
+            {headerLinks.map((link) => {
             const isActive = pathname === link.href || (link.href !== '/collections' && pathname.startsWith(link.href) && !link.isMegaMenu);
             const specialClassName = link.label === 'Our Story'
                 ? "bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent"
@@ -249,7 +259,37 @@ const Header = () => {
                   </SheetHeader>
                   <div className="relative mt-8 mb-4">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"/>
-                      <Input placeholder="Search For Gifts..." className="pl-10 bg-white"/>
+                      <Input 
+                        placeholder="Search For Gifts..." 
+                        className="pl-10 bg-white"
+                        value={searchQuery}
+                        onChange={(e) => handleSearch(e.target.value)}
+                        onFocus={(e) => handleSearch(e.target.value)}
+                      />
+                      {isSearchOpen && searchResults.length > 0 && (
+                        <div className="absolute top-full mt-2 w-full p-2 bg-popover border rounded-md shadow-lg z-20">
+                            <ScrollArea className="max-h-60">
+                              <div className="space-y-1">
+                                  {searchResults.map(product => {
+                                      const categorySlug = product.category.split(',')[0].trim().toLowerCase().replace(/ /g, '-');
+                                      return (
+                                      <Link 
+                                        key={product.id} 
+                                        href={`/collections/${categorySlug}/${product.id}`} 
+                                        className="flex items-center gap-3 p-2 rounded-md hover:bg-accent/10"
+                                        onClick={() => setIsSheetOpen(false)}
+                                      >
+                                          <Image src={product.imageUrl} alt={product.name} width={40} height={40} className="rounded-md object-cover"/>
+                                          <div>
+                                              <p className="font-semibold text-sm">{product.name}</p>
+                                              <p className="text-sm text-muted-foreground">₹{product.price.toFixed(2)}</p>
+                                          </div>
+                                      </Link>
+                                  )})}
+                              </div>
+                            </ScrollArea>
+                        </div>
+                    )}
                   </div>
                   <MobileNavContent />
                 </SheetContent>

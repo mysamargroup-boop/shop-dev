@@ -4,11 +4,48 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import fs from "fs/promises";
-import path from "path";
 import type { Product, BlogPost, Category, SiteImageData, SiteImage, Coupon, Subscription, SiteSettings } from "./types";
 import { supabaseAdmin } from "./supabase";
+import { getSiteSettings as getSiteSettingsFromSupabase, getTags as getTagsFromSupabase } from './data-supabase';
 import { sendWhatsAppTemplateMessage, sendWhatsAppTextMessage } from "./whatsapp-cloud";
+
+const siteSettingsSchema = z.object({
+  logo_url: z.string().optional(),
+  contact_email: z.string().email().optional().or(z.literal('')),
+  contact_phone: z.string().optional(),
+  contact_address: z.string().optional(),
+  contact_hours: z.string().optional(),
+  maintenance_mode_enabled: z.coerce.boolean().optional(),
+  maintenance_mode_message: z.string().optional(),
+  social_facebook: z.string().url().optional().or(z.literal('')),
+  social_instagram: z.string().url().optional().or(z.literal('')),
+  social_youtube: z.string().url().optional().or(z.literal('')),
+  social_linkedin: z.string().url().optional().or(z.literal('')),
+  social_twitter: z.string().url().optional().or(z.literal('')),
+  home_meta_title: z.string().optional(),
+  home_meta_description: z.string().optional(),
+  google_verification_code: z.string().optional(),
+  google_tag_manager_id: z.string().optional(),
+  invoice_business_name: z.string().optional(),
+  invoice_business_address: z.string().optional(),
+  invoice_logo_url: z.string().optional(),
+  invoice_tax_percent: z.coerce.number().optional(),
+  invoice_currency_symbol: z.string().optional(),
+  invoice_gst_number: z.string().optional(),
+  expected_delivery_min_days: z.coerce.number().optional(),
+  expected_delivery_max_days: z.coerce.number().optional(),
+  free_shipping_threshold: z.coerce.number().optional(),
+  promo_banner_enabled: z.coerce.boolean().optional(),
+  promo_banner_title: z.string().optional(),
+  promo_banner_subtitle: z.string().optional(),
+  timer_banner_enabled: z.coerce.boolean().optional(),
+  timer_banner_title: z.string().optional(),
+  timer_banner_image_url: z.string().optional(),
+  timer_banner_end_date: z.string().optional(),
+  theme_background: z.string().optional(),
+  theme_muted: z.string().optional(),
+  redirects: z.string().optional(),
+});
 
 const productSchema = z.object({
   id: z.string().min(1, "ID is required"),
@@ -28,6 +65,7 @@ const productSchema = z.object({
   inventory: z.coerce.number().min(0, "Inventory can't be negative"),
   features: z.string().optional(),
   galleryImages: z.string().optional(),
+  specificDescription: z.string().optional(),
   tags: z.string().optional(),
   material: z.string().optional(),
   color: z.string().optional(),
@@ -40,7 +78,6 @@ const productSchema = z.object({
   /** legacy */
   weight: z.string().optional(),
   dimensions: z.string().optional(),
-  specificDescription: z.string().optional(),
 });
 
 
@@ -57,11 +94,9 @@ const blogPostSchema = z.object({
 });
 
 const categorySchema = z.object({
-    id: z.string().min(1, "ID is required").regex(/^[a-z0-9-]+$/, "ID can only contain lowercase letters, numbers, and hyphens."),
-    name: z.string().min(1, "Name is required"),
-    imageUrl: z.string().url("Must be a valid URL"),
-    imageHint: z.string().min(1, "Image hint is required"),
-    linkUrl: z.string().url("Must be a valid URL").optional(),
+  id: z.string().min(1, "Category ID is required").regex(/^[a-z0-9-]+$/, "ID must be lowercase, numbers, and hyphens only"),
+  name: z.string().min(1, "Name is required"),
+  imageUrl: z.string().url("Must be a valid URL").optional(),
 });
 
 const siteImageSchema = z.object({
@@ -74,28 +109,17 @@ const siteImageSchema = z.object({
 
 const toArray = (value?: string) => value ? value.split(',').map(item => item.trim()).filter(Boolean) : [];
 
-const productsFilePath = path.join(process.cwd(), 'src', 'lib', 'json-seeds', 'products.json');
-const blogsFilePath = path.join(process.cwd(), 'src', 'lib', 'json-seeds', 'blogs.json');
-const imagesFilePath = path.join(process.cwd(), 'src', 'lib', 'json-seeds', 'placeholder-images.json');
-const subscriptionsFilePath = path.join(process.cwd(), 'src', 'lib', 'json-seeds', 'subscriptions.json');
+export async function getSubscriptions(): Promise<Subscription[]> {
+  const { data, error } = await supabaseAdmin()
+    .from('subscriptions')
+    .select('*')
+    .order('created_at', { ascending: false });
 
-async function readJsonFile(filePath: string) {
-  try {
-    const data = await fs.readFile(filePath, 'utf8');
-    return JSON.parse(data);
-  } catch (error) {
-    console.error(`Error reading file ${filePath}:`, error);
-    if (filePath.includes('products')) return { products: [] };
-    if (filePath.includes('blogs')) return { posts: [] };
-    if (filePath.includes('placeholder-images')) return { placeholderImages: [], videos: [] };
-    if (filePath.includes('categories')) return { categories: [] };
-    if (filePath.includes('coupons')) return { coupons: [] };
-    return {};
+  if (error) {
+    console.error('Error fetching subscriptions:', error);
+    return [];
   }
-}
-
-async function writeJsonFile(filePath: string, data: any) {
-  await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf8');
+  return data || [];
 }
 
 const subscriptionSchema = z.object({
@@ -103,12 +127,6 @@ const subscriptionSchema = z.object({
   phone: z.string().min(10).max(15).regex(/^\d+$/),
   source: z.string().optional(),
 });
-
-export async function getSubscriptions(): Promise<Subscription[]> {
-  const data = await readJsonFile(subscriptionsFilePath);
-  const list = Array.isArray(data.subscriptions) ? data.subscriptions : [];
-  return list;
-}
 
 export async function createSubscription(input: { name: string; phone: string; source?: string }): Promise<{ success: boolean }> {
   const validated = subscriptionSchema.safeParse({
@@ -119,17 +137,20 @@ export async function createSubscription(input: { name: string; phone: string; s
   if (!validated.success) {
     return { success: false };
   }
-  const fileData = await readJsonFile(subscriptionsFilePath);
-  const list: Subscription[] = Array.isArray(fileData.subscriptions) ? fileData.subscriptions : [];
-  const record: Subscription = {
-    id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-    name: validated.data.name,
-    phone: validated.data.phone,
-    source: validated.data.source,
-    created_at: new Date().toISOString(),
-  };
-  list.push(record);
-  await writeJsonFile(subscriptionsFilePath, { ...fileData, subscriptions: list });
+  
+  const { error } = await supabaseAdmin()
+    .from('subscriptions')
+    .insert({
+      name: validated.data.name,
+      phone: validated.data.phone,
+      source: validated.data.source,
+    });
+
+  if (error) {
+    console.error('Error creating subscription:', error);
+    return { success: false };
+  }
+
   revalidatePath('/wb-admin/marketing');
   return { success: true };
 }
@@ -255,22 +276,16 @@ export async function updateProduct(productId: string, previousState: any, formD
     return { errors: { _form: ["Database Error: Failed to update product."] } };
   }
   
-  // Sync tags to 'tags' table
+  // Update tags if new tags are present
   const updatedTagsArr = tags !== undefined ? toArray(tags) : undefined;
   if (updatedTagsArr && updatedTagsArr.length > 0) {
-    const supabase = supabaseAdmin();
-    for (const t of updatedTagsArr) {
-      const name = t.trim();
-      if (!name) continue;
-      const { data: exists, error: existsErr } = await supabase
+      const { error: tagsError } = await supabase
         .from('tags')
-        .select('name')
-        .eq('name', name)
-        .single();
-      if (!exists && (!existsErr || existsErr.code === 'PGRST116')) {
-        await supabase.from('tags').insert({ name });
+        .upsert(updatedTagsArr.map(t => ({ name: t })), { onConflict: 'name', ignoreDuplicates: true });
+        
+      if (tagsError) {
+          console.error("Error updating tags:", tagsError);
       }
-    }
   }
   
   revalidatePath(`/wb-admin/products`);
@@ -304,36 +319,31 @@ export async function createBlogPost(previousState: any, formData: FormData) {
     };
   }
 
-  try {
-    const supabase = supabaseAdmin();
-    const { data: existing, error: existingError } = await supabase
+  const { imageKey, imageUrl, date, ...rest } = validatedFields.data;
+  const supabase = supabaseAdmin();
+
+  const { data: existing } = await supabase
       .from('blog_posts')
       .select('slug')
-      .eq('slug', validatedFields.data.slug)
+      .eq('slug', rest.slug)
       .single();
-    if (existingError && existingError.code !== 'PGRST116') {
-      return { errors: { _form: ["Database error while checking existing post."] } };
-    }
-    if (existing) {
+
+  if (existing) {
       return { errors: { slug: ["A blog post with this slug already exists."] } };
-    }
-    const { imageKey, imageUrl, ...rest } = validatedFields.data;
-    const insertPayload: any = {
-      slug: rest.slug,
-      title: rest.title,
-      author: rest.author,
-      content: rest.content,
-      image_key: imageKey,
-      image_url: imageUrl || null,
-      published_at: rest.date,
-    };
-    const { error } = await supabase
-      .from('blog_posts')
-      .insert(insertPayload);
-    if (error) {
-      return { errors: { _form: ["Database Error: Failed to create blog post."] } };
-    }
-  } catch (e) {
+  }
+  
+  const { error } = await supabase.from('blog_posts').insert({
+    slug: rest.slug,
+    title: rest.title,
+    published_at: date ? new Date(date).toISOString() : null,
+    author: rest.author,
+    excerpt: rest.excerpt,
+    image_key: imageKey,
+    image_url: imageUrl,
+    content: rest.content
+  });
+
+  if (error) {
     return { errors: { _form: ["Database Error: Failed to create blog post."] } };
   }
 
@@ -352,24 +362,24 @@ export async function updateBlogPost(slug: string, previousState: any, formData:
     };
   }
 
-  try {
-    const supabase = supabaseAdmin();
-    const payload: any = {};
-    const { imageKey, imageUrl, ...rest } = validatedFields.data as any;
-    if (rest.title !== undefined) payload.title = rest.title;
-    if (rest.author !== undefined) payload.author = rest.author;
-    if (rest.content !== undefined) payload.content = rest.content;
-    if (rest.date !== undefined) payload.published_at = rest.date;
-    if (imageKey !== undefined) payload.image_key = imageKey;
-    if (imageUrl !== undefined) payload.image_url = imageUrl || null;
-    const { error } = await supabase
-      .from('blog_posts')
-      .update(payload)
-      .eq('slug', slug);
-    if (error) {
-      return { errors: { _form: ["Database Error: Failed to update blog post."] } };
-    }
-  } catch (e) {
+  const { imageKey, imageUrl, date, ...rest } = validatedFields.data;
+  const supabase = supabaseAdmin();
+
+  const updatePayload: any = {};
+  if (rest.title !== undefined) updatePayload.title = rest.title;
+  if (rest.author !== undefined) updatePayload.author = rest.author;
+  if (rest.excerpt !== undefined) updatePayload.excerpt = rest.excerpt;
+  if (rest.content !== undefined) updatePayload.content = rest.content;
+  if (date !== undefined) updatePayload.published_at = date ? new Date(date).toISOString() : null;
+  if (imageKey !== undefined) updatePayload.image_key = imageKey;
+  if (imageUrl !== undefined) updatePayload.image_url = imageUrl;
+
+  const { error } = await supabase
+    .from('blog_posts')
+    .update(updatePayload)
+    .eq('slug', slug);
+
+  if (error) {
     return { errors: { _form: ["Database Error: Failed to update blog post."] } };
   }
   
@@ -381,10 +391,7 @@ export async function updateBlogPost(slug: string, previousState: any, formData:
 
 export async function deleteBlogPostAction(slug: string) {
   const supabase = supabaseAdmin();
-  await supabase
-    .from('blog_posts')
-    .delete()
-    .eq('slug', slug);
+  await supabase.from('blog_posts').delete().eq('slug', slug);
   
   revalidatePath("/wb-admin/blogs");
   revalidatePath("/blog");
@@ -399,59 +406,60 @@ export async function updateSiteImage(formData: FormData) {
         return;
     }
 
-    const fileData = await readJsonFile(imagesFilePath) as SiteImageData;
-    const imageIndex = fileData.placeholderImages.findIndex((img: SiteImage) => img.id === validatedFields.data.id);
+    const { id, imageUrl, imageHint, name } = validatedFields.data;
 
-    if (imageIndex === -1) {
-        console.error("Image not found");
-        return;
+    try {
+        const { error } = await supabaseAdmin()
+            .from('site_images')
+            .update({
+                image_url: imageUrl,
+                image_hint: imageHint,
+                name: name
+            })
+            .eq('id', id);
+
+        if (error) throw error;
+
+        revalidatePath(`/`, 'layout');
+    } catch (error) {
+        console.error("Error updating site image:", error);
     }
-    
-    fileData.placeholderImages[imageIndex].imageUrl = validatedFields.data.imageUrl;
-    
-    if (validatedFields.data.imageHint !== undefined) {
-      fileData.placeholderImages[imageIndex].imageHint = validatedFields.data.imageHint;
-    }
-
-    if (validatedFields.data.name !== undefined) {
-        fileData.placeholderImages[imageIndex].name = validatedFields.data.name;
-    }
-
-    await writeJsonFile(imagesFilePath, fileData);
-
-    revalidatePath(`/`, 'layout');
 }
 
 
 export async function createCategory(previousState: any, formData: FormData) {
   const data = Object.fromEntries(formData.entries());
   const validatedFields = categorySchema.safeParse(data);
+
   if (!validatedFields.success) {
-    return { errors: validatedFields.error.flatten().fieldErrors };
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
   }
+
+  const { id, name, imageUrl } = validatedFields.data;
   const supabase = supabaseAdmin();
-  const { data: existing, error: existingError } = await supabase
-    .from('categories')
-    .select('id')
-    .eq('id', validatedFields.data.id)
-    .single();
-  if (existingError && existingError.code !== 'PGRST116') {
-    return { errors: { _form: ["Database error while checking existing category."] } };
-  }
+
+  const { data: existing } = await supabase
+      .from('categories')
+      .select('id')
+      .eq('id', id)
+      .single();
+
   if (existing) {
-    return { errors: { id: ["A category with this ID already exists."] } };
+      return { errors: { id: ["A category with this ID already exists."] } };
   }
-  const insertPayload = {
-    id: validatedFields.data.id,
-    name: validatedFields.data.name,
-    image_url: validatedFields.data.imageUrl,
-    image_hint: validatedFields.data.imageHint,
-    link_url: validatedFields.data.linkUrl || null,
-  };
-  const { error } = await supabase.from('categories').insert(insertPayload);
+  
+  const { error } = await supabase.from('categories').insert({
+    id,
+    name,
+    image_url: imageUrl
+  });
+
   if (error) {
     return { errors: { _form: ["Database Error: Failed to create category."] } };
   }
+
   revalidatePath("/wb-admin/categories");
   revalidatePath("/collections");
   revalidatePath("/", "layout");
@@ -462,22 +470,29 @@ export async function createCategory(previousState: any, formData: FormData) {
 export async function updateCategory(categoryId: string, previousState: any, formData: FormData) {
   const data = Object.fromEntries(formData.entries());
   const validatedFields = categorySchema.partial().safeParse(data);
+
   if (!validatedFields.success) {
-    return { errors: validatedFields.error.flatten().fieldErrors };
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
   }
+
+  const { name, imageUrl } = validatedFields.data;
   const supabase = supabaseAdmin();
-  const payload: any = {};
-  if (validatedFields.data.name !== undefined) payload.name = validatedFields.data.name;
-  if (validatedFields.data.imageUrl !== undefined) payload.image_url = validatedFields.data.imageUrl;
-  if (validatedFields.data.imageHint !== undefined) payload.image_hint = validatedFields.data.imageHint;
-  if (validatedFields.data.linkUrl !== undefined) payload.link_url = validatedFields.data.linkUrl || null;
+
+  const updatePayload: any = {};
+  if (name !== undefined) updatePayload.name = name;
+  if (imageUrl !== undefined) updatePayload.image_url = imageUrl;
+
   const { error } = await supabase
     .from('categories')
-    .update(payload)
+    .update(updatePayload)
     .eq('id', categoryId);
+
   if (error) {
     return { errors: { _form: ["Database Error: Failed to update category."] } };
   }
+  
   revalidatePath(`/wb-admin/categories`);
   revalidatePath(`/collections`);
   revalidatePath(`/collections/${categoryId}`);
@@ -489,67 +504,17 @@ export async function updateCategory(categoryId: string, previousState: any, for
 export async function deleteCategoryAction(formData: FormData) {
   const id = formData.get('id') as string;
   if (!id) return;
+
   const supabase = supabaseAdmin();
   await supabase.from('categories').delete().eq('id', id);
+  
   revalidatePath("/wb-admin/categories");
   revalidatePath("/collections");
   revalidatePath("/", "layout");
 }
 
-const settingsFilePath = path.join(process.cwd(), 'src', 'lib', 'json-seeds', 'site-settings.json');
-const bannersFilePath = path.join(process.cwd(), 'src', 'lib', 'json-seeds', 'banners.json');
-
-const siteSettingsSchema = z.object({
-  logo_url: z.string().url("Must be a valid URL").optional().or(z.literal('')),
-  contact_email: z.string().email("Invalid email address").optional().or(z.literal('')),
-  contact_phone: z.string().optional(),
-  contact_address: z.string().optional(),
-  contact_hours: z.string().optional(),
-  social_facebook: z.string().optional(),
-  social_instagram: z.string().optional(),
-  social_youtube: z.string().optional(),
-  social_linkedin: z.string().optional(),
-  social_twitter: z.string().optional(),
-  home_meta_title: z.string().optional(),
-  home_meta_description: z.string().optional(),
-  google_verification_code: z.string().optional(),
-  google_tag_manager_id: z.string().optional(),
-  invoice_business_name: z.string().optional(),
-  invoice_business_address: z.string().optional(),
-  invoice_logo_url: z.string().optional(),
-  invoice_tax_percent: z.coerce.number().optional(),
-  invoice_currency_symbol: z.string().optional(),
-  invoice_gst_number: z.string().optional(),
-  expected_delivery_min_days: z.coerce.number().optional(),
-  expected_delivery_max_days: z.coerce.number().optional(),
-  free_shipping_threshold: z.coerce.number().optional(),
-  promo_banner_enabled: z.preprocess((val) => val === 'on', z.boolean()).optional(),
-  promo_banner_title: z.string().optional(),
-  promo_banner_subtitle: z.string().optional(),
-  timer_banner_enabled: z.preprocess((val) => val === 'on', z.boolean()).optional(),
-  timer_banner_title: z.string().optional(),
-  timer_banner_image_url: z.string().optional(),
-  timer_banner_end_date: z.string().optional(),
-  theme_background: z.string().optional(),
-  theme_muted: z.string().optional(),
-  redirects: z.string().optional(),
-  maintenance_mode_enabled: z.preprocess((val) => val === 'on', z.boolean()).optional(),
-  maintenance_mode_message: z.string().optional(),
-  advance_payment_enabled: z.preprocess((val) => val === 'on', z.boolean()).optional(),
-  advance_payment_percent: z.coerce.number().optional(),
-});
-
 export async function getSiteSettings(): Promise<SiteSettings> {
-  try {
-    const { data, error } = await supabaseAdmin()
-      .from('site_settings')
-      .select('*')
-      .single();
-    if (error && error.code !== 'PGRST116') throw error;
-    return (data || {}) as SiteSettings;
-  } catch {
-    return {};
-  }
+  return getSiteSettingsFromSupabase();
 }
 
 export async function updateSiteSettings(previousState: any, formData: FormData) {
@@ -563,80 +528,58 @@ export async function updateSiteSettings(previousState: any, formData: FormData)
   }
 
   const mode = formData.get('_mode');
+  const supabase = supabaseAdmin();
 
   try {
-    const supabase = supabaseAdmin();
-    const payload: any = {};
-    const v = validatedFields.data;
+    if (mode === 'bannersOnly') {
+        const { 
+            timer_banner_enabled, 
+            timer_banner_title, 
+            timer_banner_image_url, 
+            timer_banner_end_date 
+        } = validatedFields.data;
+        
+        const { error } = await supabase
+            .from('site_settings')
+            .update({
+                timer_banner_enabled, 
+                timer_banner_title, 
+                timer_banner_image_url, 
+                timer_banner_end_date
+            })
+            .eq('id', 1); // Assuming single row with id 1
 
-    // General & SEO
-    if (v.logo_url !== undefined) payload.logo_url = v.logo_url || null;
-    if (v.contact_email !== undefined) payload.contact_email = v.contact_email || null;
-    if (v.contact_phone !== undefined) payload.contact_phone = v.contact_phone || null;
-    if (v.contact_address !== undefined) payload.contact_address = v.contact_address || null;
-    if (v.contact_hours !== undefined) payload.contact_hours = v.contact_hours || null;
-    if (v.social_facebook !== undefined) payload.social_facebook = v.social_facebook || null;
-    if (v.social_instagram !== undefined) payload.social_instagram = v.social_instagram || null;
-    if (v.social_youtube !== undefined) payload.social_youtube = v.social_youtube || null;
-    if (v.social_linkedin !== undefined) payload.social_linkedin = v.social_linkedin || null;
-    if (v.social_twitter !== undefined) payload.social_twitter = v.social_twitter || null;
-    if (v.home_meta_title !== undefined) payload.home_meta_title = v.home_meta_title || null;
-    if (v.home_meta_description !== undefined) payload.home_meta_description = v.home_meta_description || null;
-    if (v.google_verification_code !== undefined) payload.google_verification_code = v.google_verification_code || null;
-    if (v.google_tag_manager_id !== undefined) payload.google_tag_manager_id = v.google_tag_manager_id || null;
-    if (v.theme_background !== undefined) payload.theme_background = v.theme_background || null;
-    if (v.theme_muted !== undefined) payload.theme_muted = v.theme_muted || null;
-    if (v.free_shipping_threshold !== undefined) payload.free_shipping_threshold = v.free_shipping_threshold ?? null;
-    if (v.promo_banner_enabled !== undefined) payload.promo_banner_enabled = !!v.promo_banner_enabled;
-    if (v.promo_banner_title !== undefined) payload.promo_banner_title = v.promo_banner_title || null;
-    if (v.promo_banner_subtitle !== undefined) payload.promo_banner_subtitle = v.promo_banner_subtitle || null;
+        if (error) throw error;
 
-    // Invoice
-    if (v.invoice_business_name !== undefined) payload.invoice_business_name = v.invoice_business_name || null;
-    if (v.invoice_business_address !== undefined) payload.invoice_business_address = v.invoice_business_address || null;
-    if (v.invoice_logo_url !== undefined) payload.invoice_logo_url = v.invoice_logo_url || null;
-    if (v.invoice_tax_percent !== undefined) payload.invoice_tax_percent = v.invoice_tax_percent ?? null;
-    if (v.invoice_currency_symbol !== undefined) payload.invoice_currency_symbol = v.invoice_currency_symbol || null;
-    if (v.invoice_gst_number !== undefined) payload.invoice_gst_number = v.invoice_gst_number || null;
-
-    // Delivery
-    if (v.expected_delivery_min_days !== undefined) payload.expected_delivery_min_days = v.expected_delivery_min_days ?? null;
-    if (v.expected_delivery_max_days !== undefined) payload.expected_delivery_max_days = v.expected_delivery_max_days ?? null;
-
-    // Redirects
-    if (v.redirects !== undefined) payload.redirects = v.redirects || null;
-
-    // Maintenance
-    if (v.maintenance_mode_enabled !== undefined) payload.maintenance_mode_enabled = !!v.maintenance_mode_enabled;
-    if (v.maintenance_mode_message !== undefined) payload.maintenance_mode_message = v.maintenance_mode_message || null;
-
-    // Advance payment
-    if (v.advance_payment_enabled !== undefined) payload.advance_payment_enabled = !!v.advance_payment_enabled;
-    if (v.advance_payment_percent !== undefined) payload.advance_payment_percent = v.advance_payment_percent ?? null;
-
-    // Timer banner (bannersOnly or general)
-    if (mode === 'bannersOnly' || mode === 'all' || !mode) {
-      if (v.timer_banner_enabled !== undefined) payload.timer_banner_enabled = !!v.timer_banner_enabled;
-      if (v.timer_banner_title !== undefined) payload.timer_banner_title = v.timer_banner_title || null;
-      if (v.timer_banner_image_url !== undefined) payload.timer_banner_image_url = v.timer_banner_image_url || null;
-      if (v.timer_banner_end_date !== undefined) payload.timer_banner_end_date = v.timer_banner_end_date || null;
+        revalidatePath('/', 'layout');
+        return { success: true, message: 'Banner settings updated successfully' };
     }
 
-    // Upsert single row
+    // Exclude banner settings from main settings update if desired, or just update whatever is passed
+    const { 
+        timer_banner_enabled, 
+        timer_banner_title, 
+        timer_banner_image_url, 
+        timer_banner_end_date, 
+        ...otherSettings 
+    } = validatedFields.data;
+
     const { error } = await supabase
-      .from('site_settings')
-      .upsert(payload, { onConflict: 'id' });
-    if (error) {
-      return { message: 'Database Error: Failed to update settings.' };
-    }
-    revalidatePath('/', 'layout');
+        .from('site_settings')
+        .update(otherSettings)
+        .eq('id', 1); // Assuming single row with id 1
+
+    if (error) throw error;
+
+    revalidatePath('/', 'layout'); 
     return { success: true, message: 'Settings updated successfully' };
   } catch (error) {
+    console.error("Error updating settings:", error);
     return { message: 'Database Error: Failed to update settings.' };
   }
 }
 
-const couponsFilePath = path.join(process.cwd(), 'src', 'lib', 'coupons.json');
+
 
 const couponSchema = z.object({
   code: z.string().min(1, "Code is required").toUpperCase(),
@@ -793,6 +736,81 @@ export async function toggleCouponStatus(code: string) {
     }
 }
 
+const navigationLinkSchema = z.object({
+  id: z.coerce.number().optional(),
+  area: z.enum(['header', 'footer']),
+  section: z.string().optional(),
+  href: z.string().min(1),
+  label: z.string().min(1),
+  sort_order: z.coerce.number().optional(),
+  is_mega_menu: z.coerce.boolean().optional(),
+  special: z.coerce.boolean().optional(),
+});
+
+export async function createNavigationLink(previousState: any, formData: FormData) {
+  const data = Object.fromEntries(formData.entries());
+  const validated = navigationLinkSchema.safeParse(data);
+  if (!validated.success) {
+    return { errors: validated.error.flatten().fieldErrors };
+  }
+  const payload: any = {
+    area: validated.data.area,
+    href: validated.data.href,
+    label: validated.data.label,
+    sort_order: validated.data.sort_order ?? 0,
+    is_mega_menu: validated.data.is_mega_menu ?? false,
+    special: validated.data.special ?? false,
+  };
+  if (validated.data.area === 'footer') {
+    payload.section = validated.data.section || 'Links';
+  }
+  const supabase = supabaseAdmin();
+  const { error } = await supabase.from('navigation_links').insert(payload);
+  if (error) {
+    return { message: 'Database Error: Failed to create navigation link.' };
+  }
+  revalidatePath('/wb-admin/navigation');
+  revalidatePath('/');
+  return { success: true };
+}
+
+export async function updateNavigationLink(linkId: number, previousState: any, formData: FormData) {
+  const data = Object.fromEntries(formData.entries());
+  const validated = navigationLinkSchema.partial().safeParse(data);
+  if (!validated.success) {
+    return { errors: validated.error.flatten().fieldErrors };
+  }
+  const payload: any = {};
+  const fields = ['area','section','href','label','sort_order','is_mega_menu','special'] as const;
+  for (const f of fields) {
+    if ((validated.data as any)[f] !== undefined) payload[f] = (validated.data as any)[f];
+  }
+  const supabase = supabaseAdmin();
+  const { error } = await supabase.from('navigation_links').update(payload).eq('id', linkId);
+  if (error) {
+    return { message: 'Database Error: Failed to update navigation link.' };
+  }
+  revalidatePath('/wb-admin/navigation');
+  revalidatePath('/');
+  return { success: true };
+}
+
+export async function deleteNavigationLink(formData: FormData) {
+  const idRaw = formData.get('id');
+  const id = idRaw ? Number(idRaw) : NaN;
+  if (!id || Number.isNaN(id)) {
+    return { message: 'Invalid link id' };
+  }
+  const supabase = supabaseAdmin();
+  const { error } = await supabase.from('navigation_links').delete().eq('id', id);
+  if (error) {
+    return { message: 'Database Error: Failed to delete navigation link.' };
+  }
+  revalidatePath('/wb-admin/navigation');
+  revalidatePath('/');
+  return { success: true };
+}
+
 
 export async function bulkUpdateProductPrices(previousState: any, formData: FormData) {
   const idsRaw = String(formData.get('ids') || '').trim();
@@ -912,16 +930,7 @@ export async function sendBulkSimpleWhatsappMessages(data: {
 
 
 export async function getTagsList(): Promise<string[]> {
-  try {
-    const { data, error } = await supabaseAdmin()
-      .from('tags')
-      .select('name')
-      .order('name');
-    if (error) throw error;
-    return (data || []).map(t => t.name);
-  } catch {
-    return [];
-  }
+  return getTagsFromSupabase();
 }
 
 export async function addTag(previousState: any, formData: FormData) {
@@ -929,76 +938,90 @@ export async function addTag(previousState: any, formData: FormData) {
   if (!name) {
     return { success: false, message: 'Tag name is required' };
   }
-  try {
-    const supabase = supabaseAdmin();
-    const { data: existing, error: existingError } = await supabase
-      .from('tags')
-      .select('name')
-      .eq('name', name)
-      .single();
-    if (existingError && existingError.code !== 'PGRST116') {
-      return { success: false, message: 'Database Error while checking tag.' };
-    }
-    if (existing) {
-      return { success: false, message: 'Tag already exists' };
-    }
-    const { error } = await supabase
-      .from('tags')
-      .insert({ name });
-    if (error) {
-      return { success: false, message: 'Database Error: Failed to create tag.' };
-    }
-    revalidatePath('/wb-admin/tags');
-    return { success: true };
-  } catch {
-    return { success: false, message: 'Database Error: Failed to create tag.' };
+  
+  const supabase = supabaseAdmin();
+  const { data: existing } = await supabase
+    .from('tags')
+    .select('name')
+    .ilike('name', name)
+    .single();
+
+  if (existing) {
+    return { success: false, message: 'Tag already exists' };
   }
+
+  const { error } = await supabase
+    .from('tags')
+    .insert({ name });
+
+  if (error) {
+    console.error("Error adding tag:", error);
+    return { success: false, message: 'Database Error: Failed to add tag.' };
+  }
+
+  revalidatePath('/wb-admin/tags');
+  return { success: true };
 }
 
 export async function deleteTag(previousState: any, formData: FormData) {
   const name = String(formData.get('name') || '').trim();
   if (!name) return { success: false };
-  try {
-    const supabase = supabaseAdmin();
-    const { error } = await supabase
-      .from('tags')
-      .delete()
-      .eq('name', name);
-    if (error) {
-      return { success: false };
-    }
-    revalidatePath('/wb-admin/tags');
-    return { success: true };
-  } catch {
-    return { success: false };
+
+  const supabase = supabaseAdmin();
+  const { error } = await supabase
+    .from('tags')
+    .delete()
+    .eq('name', name);
+
+  if (error) {
+    console.error("Error deleting tag:", error);
+    return { success: false, message: 'Database Error: Failed to delete tag.' };
   }
+
+  revalidatePath('/wb-admin/tags');
+  return { success: true };
 }
 
 export async function bulkAddTagToProducts(previousState: any, formData: FormData) {
   const idsRaw = String(formData.get('ids') || '').trim();
   const tag = String(formData.get('tag') || '').trim();
+  
   if (!idsRaw) return { success: false, message: 'No products selected' };
   if (!tag) return { success: false, message: 'Select a tag' };
+  
   const ids: string[] = idsRaw.includes(',') ? idsRaw.split(',').map(s => s.trim()).filter(Boolean) : JSON.parse(idsRaw);
   const supabase = supabaseAdmin();
-  let updatedCount = 0;
-  for (const id of ids) {
-    const { data: prod, error: fetchErr } = await supabase
-      .from('products')
-      .select('id,tags')
-      .eq('id', id)
-      .single();
-    if (fetchErr) continue;
-    const current: string[] = Array.isArray((prod as any)?.tags) ? (prod as any).tags : [];
-    const exists = current.map(t => t.toLowerCase()).includes(tag.toLowerCase());
-    if (exists) continue;
-    const next = [...current, tag];
-    const { error: upErr } = await supabase
-      .from('products')
-      .update({ tags: next })
-      .eq('id', id);
-    if (!upErr) updatedCount++;
+  
+  // 1. Fetch products to get current tags
+  const { data: products, error } = await supabase
+    .from('products')
+    .select('id, tags')
+    .in('id', ids);
+
+  if (error || !products) {
+    return { success: false, message: 'Failed to fetch products' };
   }
+
+  let updatedCount = 0;
+
+  // 2. Update each product if needed
+  for (const p of products) {
+    const currentTags = Array.isArray(p.tags) ? p.tags : [];
+    // Check case-insensitive existence
+    if (!currentTags.some((t: string) => t.toLowerCase() === tag.toLowerCase())) {
+      const newTags = [...currentTags, tag];
+      
+      const { error: updateError } = await supabase
+        .from('products')
+        .update({ tags: newTags })
+        .eq('id', p.id);
+        
+      if (!updateError) {
+        updatedCount++;
+      }
+    }
+  }
+
   revalidatePath('/wb-admin/products');
   revalidatePath('/collections');
   revalidatePath('/');

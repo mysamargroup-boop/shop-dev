@@ -17,7 +17,6 @@ const getCashfreeConfig = () => {
 
 export async function POST(req: NextRequest) {
   try {
-    let createdOrderItems: any[] = [];
     const { orderId, amount, customerName, customerPhone, returnUrl, items } =
       await req.json();
 
@@ -74,13 +73,11 @@ export async function POST(req: NextRequest) {
           image_hint: item.imageHint
         }));
 
-        const { data: insertedItems, error: itemsError } = await supabase
+        const { error: itemsError } = await supabase
           .from('order_items')
-          .insert(orderItems)
-          .select('*');
+          .insert(orderItems);
 
         if (itemsError) throw itemsError;
-        createdOrderItems = insertedItems || [];
       }
 
     } catch (saveError) {
@@ -132,7 +129,6 @@ export async function POST(req: NextRequest) {
       order_id: data.order_id,
       payment_session_id: data.payment_session_id,
       env,
-      order_items: createdOrderItems
     });
   } catch (error: any) {
     return NextResponse.json(

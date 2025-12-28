@@ -19,7 +19,8 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const normalize = (s?: string) => String(s || '').trim();
+const FAKE_USER_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "admin@woody.co.in";
+const FAKE_USER = { email: FAKE_USER_EMAIL };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -38,15 +39,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signIn = useCallback(async (email: string, pass: string) => {
     setLoading(true);
-    const adminEmail = normalize(process.env.NEXT_PUBLIC_ADMIN_EMAIL);
-    const adminPassword = normalize(process.env.NEXT_PUBLIC_ADMIN_PASSWORD);
-    const inputEmail = normalize(email).toLowerCase();
-    const inputPassword = normalize(pass);
+    const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+    const adminPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
     
-    if (adminEmail && adminPassword && inputEmail === adminEmail.toLowerCase() && inputPassword === adminPassword) {
-      const loggedUser = { email: adminEmail };
-      sessionStorage.setItem("woody-business-admin-user", JSON.stringify(loggedUser));
-      setUser(loggedUser);
+    if (email === adminEmail && pass === adminPassword) {
+      sessionStorage.setItem("woody-business-admin-user", JSON.stringify(FAKE_USER));
+      setUser(FAKE_USER);
       setLoading(false);
     } else {
       setLoading(false);
