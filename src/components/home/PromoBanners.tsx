@@ -1,11 +1,10 @@
 
 "use client";
 
-import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
-import { BLUR_DATA_URL } from '@/lib/constants';
 import { useEffect, useState } from 'react';
 import type { SiteSettings, SiteImage } from '@/lib/types';
+import { Truck } from 'lucide-react';
 
 interface PromoBannersProps {
   siteImages: SiteImage[];
@@ -13,8 +12,6 @@ interface PromoBannersProps {
 
 export default function PromoBanners({ siteImages }: PromoBannersProps) {
   const [settings, setSettings] = useState<SiteSettings | null>(null);
-  
-  const deliveryBannerImage = siteImages.find(img => img.id === 'promo-banner-delivery') || { imageUrl: 'https://picsum.photos/seed/delivery/300/200', imageHint: 'delivery scooter' };
 
 
   useEffect(() => {
@@ -48,17 +45,10 @@ export default function PromoBanners({ siteImages }: PromoBannersProps) {
             <h3 className="text-xl md:text-2xl font-bold">{title}</h3>
             <p className="text-white/80 text-sm">{subtitle}</p>
           </div>
-          <div className="relative h-28 w-40 flex-shrink-0">
-            <Image
-              src={deliveryBannerImage.imageUrl}
-              alt="Free Delivery"
-              fill
-              className="object-contain"
-              data-ai-hint={deliveryBannerImage.imageHint}
-              placeholder="blur"
-              blurDataURL={BLUR_DATA_URL}
-              sizes="160px"
-            />
+          <div className="w-28 aspect-square flex-shrink-0 flex items-center justify-center">
+            <div className="h-20 w-20 rounded-lg bg-white/15 backdrop-blur-sm flex items-center justify-center">
+              <Truck className="h-12 w-12 text-white" />
+            </div>
           </div>
         </CardContent>
       </Card>
