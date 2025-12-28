@@ -533,3 +533,11 @@ begin
     return true;
 end;
 $$ language plpgsql security definer;
+
+insert into videos (id, type, url, thumbnail_url) values
+('video1','youtube','https://www.youtube.com/watch?v=dQw4w9WgXcQ','https://img.youtube.com/vi/dQw4w9WgXcQ/0.jpg')
+on conflict (id) do nothing;
+
+insert into videos (id, type, url, thumbnail_url) values
+('video2','instagram','https://www.instagram.com/p/Cx1234567/','https://picsum.photos/seed/insta/400/600')
+on conflict (id) do nothing;

@@ -3,6 +3,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Carousel,
@@ -14,20 +15,37 @@ import {
 import Autoplay from "embla-carousel-autoplay";
 import { Youtube, Instagram } from 'lucide-react';
 import { BLUR_DATA_URL } from '@/lib/constants';
+import type { Video } from '@/lib/types';
 
-const videos = [
-    {
-      "id": "video1",
-      "type": "youtube",
-      "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      "thumbnailUrl": "https://img.youtube.com/vi/dQw4w9WgXcQ/0.jpg"
-    }
+const defaultVideos: Video[] = [
+  {
+    id: 'video1',
+    type: 'youtube',
+    url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    thumbnailUrl: 'https://img.youtube.com/vi/dQw4w9WgXcQ/0.jpg',
+  },
 ];
 
 const VideoGallery = () => {
-    if (!videos || videos.length === 0) {
-        return null;
-    }
+    const [videos, setVideos] = useState<Video[]>([]);
+
+    useEffect(() => {
+      let active = true;
+      (async () => {
+        try {
+          const res = await fetch('/api/videos', { cache: 'no-store' });
+          const data = await res.json();
+          if (!active) return;
+          setVideos(Array.isArray(data) && data.length > 0 ? data : defaultVideos);
+        } catch {
+          if (!active) return;
+          setVideos(defaultVideos);
+        }
+      })();
+      return () => { active = false; };
+    }, []);
+
+    if (!videos || videos.length === 0) return null;
 
     return (
         <section className="mt-16 pt-12 border-t">

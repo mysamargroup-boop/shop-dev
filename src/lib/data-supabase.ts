@@ -1,6 +1,6 @@
 'use server';
 import { supabaseAdmin } from './supabase';
-import type { Category, Product, ProductsData, BlogPost, SiteSettings, SiteImage } from './types';
+import type { Category, Product, ProductsData, BlogPost, SiteSettings, SiteImage, Video } from './types';
 
 export async function getCategories(): Promise<Category[]> {
   try {
@@ -222,6 +222,39 @@ export async function getFooterLinkSections(): Promise<any[]> {
     return Object.values(bySection);
   } catch (error) {
     console.error('Error fetching footer links:', error);
+    return [];
+  }
+}
+
+export async function getSiteVideos(): Promise<Video[]> {
+  try {
+    const { data, error } = await supabaseAdmin()
+      .from('videos')
+      .select('*')
+      .order('created_at');
+    if (error) throw error;
+    return (data || []).map(v => {
+      let thumb = v.thumbnail_url || '';
+      if (!thumb && v.type === 'youtube') {
+        const vid = (() => {
+          try {
+            const u = new URL(v.url);
+            return u.searchParams.get('v') || '';
+          } catch {
+            return '';
+          }
+        })();
+        if (vid) thumb = `https://img.youtube.com/vi/${vid}/0.jpg`;
+      }
+      return {
+        id: String(v.id),
+        type: v.type,
+        url: v.url,
+        thumbnailUrl: thumb,
+      } as Video;
+    });
+  } catch (error) {
+    console.error('Error fetching site videos:', error);
     return [];
   }
 }
