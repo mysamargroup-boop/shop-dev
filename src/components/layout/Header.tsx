@@ -30,15 +30,7 @@ import { useTheme } from 'next-themes';
 import { Label } from '../ui/label';
 import { Switch } from '../ui/switch';
 
-const defaultNavLinks = [
-  { href: '/collections', label: 'Categories', icon: <LayoutGrid />, isMegaMenu: true },
-  { href: '/collections/keychains', label: 'Keychains', icon: <KeyRound /> },
-  { href: '/collections/wall-hangings', label: 'Wall Hanging', icon: <ImageIcon /> },
-  { href: '/collections/mobile-stands', label: 'Mobile Stand', icon: <Smartphone /> },
-  { href: '/shop', label: 'All Gifts', icon: <ShoppingBag />, special: true },
-  { href: '/our-story', label: 'Our Story', icon: <Info />, special: true },
-  { href: '/connect', label: 'Contact Us', icon: <Mail /> },
-];
+ 
 
 const Marquee = () => {
     const messages = ["🎉 Great discount offer depends on quantity 💰", "Custom Engraving Available on All Products", "Handcrafted with Love"];
@@ -90,8 +82,8 @@ const Header = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [allCategories, setAllCategories] = useState<Category[]>([]);
-  const [headerLinks, setHeaderLinks] = useState<any[]>(defaultNavLinks);
-  const pathname = usePathname();
+  const [headerLinks, setHeaderLinks] = useState<any[]>([]);
+  const pathname = usePathname() || '';
 
   useEffect(() => {
     async function fetchData() {

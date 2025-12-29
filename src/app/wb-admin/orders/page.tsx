@@ -31,8 +31,18 @@ export default function OrdersPage() {
       setLoading(true);
       const response = await fetch('/api/orders');
       if (!response.ok) throw new Error('Failed to fetch orders');
-      const data = await response.json();
-      setOrders(data);
+      const rows = await response.json();
+      const mapped: Order[] = (rows || []).map((row: any) => ({
+        id: row.id,
+        amount: Number(row.total_amount ?? 0),
+        customerName: row.customer_name || '',
+        customerPhone: row.customer_phone || '',
+        status: row.status || 'PENDING',
+        createdAt: row.created_at || new Date().toISOString(),
+        updatedAt: row.updated_at || row.created_at || new Date().toISOString(),
+        transactionId: row.transaction_id || undefined,
+      }));
+      setOrders(mapped);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
@@ -114,7 +124,7 @@ export default function OrdersPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right font-medium">
-                        ₹{order.amount.toFixed(2)}
+                        ₹{Number(order.amount || 0).toFixed(2)}
                       </TableCell>
                     </TableRow>
                   ))}

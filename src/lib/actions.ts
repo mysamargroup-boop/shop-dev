@@ -531,6 +531,21 @@ export async function updateSiteSettings(previousState: any, formData: FormData)
   const supabase = supabaseAdmin();
 
   try {
+    const { data: existingRow } = await supabase
+      .from('site_settings')
+      .select('id')
+      .limit(1)
+      .single();
+    let settingsId = existingRow?.id;
+    if (!settingsId) {
+      const { data: inserted } = await supabase
+        .from('site_settings')
+        .insert({})
+        .select('id')
+        .single();
+      settingsId = inserted?.id;
+    }
+
     if (mode === 'bannersOnly') {
         const { 
             timer_banner_enabled, 
@@ -547,7 +562,7 @@ export async function updateSiteSettings(previousState: any, formData: FormData)
                 timer_banner_image_url, 
                 timer_banner_end_date
             })
-            .eq('id', 1); // Assuming single row with id 1
+            .eq('id', settingsId);
 
         if (error) throw error;
 
@@ -567,7 +582,7 @@ export async function updateSiteSettings(previousState: any, formData: FormData)
     const { error } = await supabase
         .from('site_settings')
         .update(otherSettings)
-        .eq('id', 1); // Assuming single row with id 1
+        .eq('id', settingsId);
 
     if (error) throw error;
 

@@ -13,6 +13,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Switch } from "../ui/switch";
 import { Textarea } from "../ui/textarea";
 import { CheckCircle, AlertCircle } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
 const initialState = {
   errors: {},
@@ -316,11 +319,7 @@ export default function SettingsForm({ settings, mode = 'all' }: { settings: Sit
                 <Label htmlFor="timer_banner_image_url">Banner Image URL</Label>
                 <Input id="timer_banner_image_url" name="timer_banner_image_url" type="url" defaultValue={settings.timer_banner_image_url || ''} placeholder="https://..." />
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="timer_banner_end_date">Timer End Date</Label>
-                <Input id="timer_banner_end_date" name="timer_banner_end_date" type="datetime-local" defaultValue={settings.timer_banner_end_date || ''} />
-                <p className="text-xs text-muted-foreground">Set a date and time for the countdown to end.</p>
-              </div>
+              <DateTimeField defaultValue={settings.timer_banner_end_date || ''} />
             </CardContent>
           </Card>
         )}
@@ -402,5 +401,91 @@ export default function SettingsForm({ settings, mode = 'all' }: { settings: Sit
         </div>
       </div>
     </form>
+  );
+}
+
+function formatDateTimeLocal(date: Date, hour: number, minute: number) {
+  const d = new Date(date);
+  d.setHours(hour);
+  d.setMinutes(minute);
+  d.setSeconds(0);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  const mm = pad(d.getMonth() + 1);
+  const dd = pad(d.getDate());
+  const hh = pad(d.getHours());
+  const mi = pad(d.getMinutes());
+  return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
+}
+
+function DateTimeField({ defaultValue }: { defaultValue: string }) {
+  const initial = (() => {
+    try {
+      return defaultValue ? new Date(defaultValue) : new Date();
+    } catch {
+      return new Date();
+    }
+  })();
+  const [date, setDate] = useState<Date>(initial);
+  const [hour, setHour] = useState<number>(initial.getHours());
+  const [minute, setMinute] = useState<number>(initial.getMinutes());
+  const display = `${date.toLocaleDateString()} ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+
+  return (
+    <div className="grid gap-2">
+      <Label>Timer End Date</Label>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="outline" className="justify-between">
+            {display}
+            <span className="ml-2 text-muted-foreground">Change</span>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-4">
+          <div className="grid grid-cols-2 gap-4">
+            <Calendar
+              selected={date}
+              onSelect={(d: Date | undefined) => d && setDate(d)}
+            />
+            <div className="space-y-3">
+              <div className="grid gap-2">
+                <Label>Hour</Label>
+                <Select value={String(hour)} onValueChange={(v) => setHour(Number(v))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="HH" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 24 }).map((_, i) => (
+                      <SelectItem key={i} value={String(i)}>{String(i).padStart(2, '0')}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label>Minute</Label>
+                <Select value={String(minute)} onValueChange={(v) => setMinute(Number(v))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="MM" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 60 }).map((_, i) => (
+                      <SelectItem key={i} value={String(i)}>{String(i).padStart(2, '0')}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
+      <input
+        type="hidden"
+        id="timer_banner_end_date"
+        name="timer_banner_end_date"
+        value={formatDateTimeLocal(date, hour, minute)}
+        readOnly
+      />
+      <p className="text-xs text-muted-foreground">Pick date and time for countdown end.</p>
+    </div>
   );
 }

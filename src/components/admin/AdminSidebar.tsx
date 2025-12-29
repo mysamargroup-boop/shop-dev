@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Package, LogOut, Megaphone, Send, PenSquare, ImageIcon, LayoutGrid, Settings, BookText, TicketPercent, Tag as TagIcon, Gift, ShoppingBag, ArrowRightLeft, Users } from "lucide-react";
+import { LayoutDashboard, Package, LogOut, Megaphone, Send, PenSquare, ImageIcon, LayoutGrid, Settings, BookText, TicketPercent, Tag as TagIcon, Gift, ShoppingBag, ArrowRightLeft, Users, List } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import Logo from "../icons/Logo";
 import { Button } from "../ui/button";
@@ -21,6 +21,7 @@ const navItems = [
   { href: "/wb-admin/tags", label: "Tags", icon: TagIcon },
   { href: "/wb-admin/blogs", label: "Blogs", icon: PenSquare },
   { href: "/wb-admin/coupons", label: "Coupons", icon: TicketPercent },
+  { href: "/wb-admin/navigation", label: "Navigation", icon: List },
   { href: "/wb-admin/banners", label: "Banners", icon: Gift },
   { href: "/wb-admin/site-images", label: "Site Images", icon: ImageIcon },
   { href: "/wb-admin/marketing", label: "Marketing", icon: Send },

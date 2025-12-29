@@ -19,7 +19,7 @@ export default function OrderManagementActions({ orderId, currentStatus, amount 
   const [isLoading, setIsLoading] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [returnReason, setReturnReason] = useState('');
-  const [refundAmount, setRefundAmount] = useState(amount.toString());
+  const [refundAmount, setRefundAmount] = useState(String(typeof amount === 'number' ? amount : 0));
   const [refundReason, setRefundReason] = useState('');
   const [adminNote, setAdminNote] = useState('');
 
@@ -170,7 +170,7 @@ export default function OrderManagementActions({ orderId, currentStatus, amount 
                   onChange={(e) => setRefundAmount(e.target.value)}
                 />
                 <p className="text-sm text-muted-foreground mt-1">
-                  Maximum refundable amount: ₹{amount.toFixed(2)}
+                  Maximum refundable amount: ₹{Number(amount || 0).toFixed(2)}
                 </p>
               </div>
               <div>

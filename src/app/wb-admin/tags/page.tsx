@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { getTags } from '@/lib/data';
+import { getTags } from '@/lib/data-async';
 import { addTag, deleteTag } from '@/lib/actions';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';

@@ -10,7 +10,12 @@ export async function getCategories(): Promise<Category[]> {
       .order('name');
     
     if (error) throw error;
-    return data || [];
+    return (data || []).map(cat => ({
+      id: cat.id,
+      name: cat.name,
+      imageUrl: cat.image_url || 'https://placehold.co/96x96?text=Category',
+      imageHint: cat.image_hint || ''
+    }));
   } catch (error) {
     console.error('Error fetching categories:', error);
     return [];
@@ -44,6 +49,8 @@ export async function getProducts(): Promise<ProductsData> {
       reviewCount: product.review_count,
       // Map price fields
       price: product.sale_price || product.regular_price,
+      regularPrice: product.regular_price ?? undefined,
+      salePrice: product.sale_price ?? undefined,
       // Map category
       category: product.category_id
     }));
@@ -82,6 +89,8 @@ export async function getProductById(id: string): Promise<Product | null> {
       specificDescription: data.specific_description,
       reviewCount: data.review_count,
       price: data.sale_price || data.regular_price,
+      regularPrice: data.regular_price ?? undefined,
+      salePrice: data.sale_price ?? undefined,
       category: data.category_id
     };
   } catch (error) {
@@ -125,7 +134,7 @@ export async function getBlogPosts(): Promise<BlogPost[]> {
     const { data, error } = await supabaseAdmin()
       .from('blog_posts')
       .select('*')
-      .not('published_at', 'is', null) // Corrected filter syntax if needed, or stick to previous if valid
+      .not('published_at', 'is', null)
       .order('published_at', { ascending: false });
     
     if (error) throw error;
@@ -143,6 +152,32 @@ export async function getBlogPosts(): Promise<BlogPost[]> {
     }));
   } catch (error) {
     console.error('Error fetching blog posts:', error);
+    return [];
+  }
+}
+
+export async function getBlogPostsAdmin(): Promise<BlogPost[]> {
+  try {
+    const { data, error } = await supabaseAdmin()
+      .from('blog_posts')
+      .select('*')
+      .order('published_at', { ascending: false });
+    
+    if (error) throw error;
+    
+    return (data || []).map(post => ({
+      slug: post.slug,
+      title: post.title,
+      date: post.published_at ? new Date(post.published_at).toISOString().split('T')[0] : '',
+      author: post.author,
+      excerpt: post.excerpt,
+      imageKey: post.image_key,
+      imageUrl: post.image_url,
+      imageHint: post.image_hint,
+      content: post.content
+    }));
+  } catch (error) {
+    console.error('Error fetching blog posts (admin):', error);
     return [];
   }
 }

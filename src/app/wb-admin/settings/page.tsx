@@ -9,7 +9,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: { t
   const settings = await getSiteSettings();
   const tab = searchParams.tab || 'general';
 
-  const validTabs = ['general', 'invoice', 'redirects', 'tests'];
+  const validTabs = ['general', 'invoice', 'redirects', 'banners', 'tests'];
   if (!validTabs.includes(tab)) {
       notFound();
   }
@@ -26,6 +26,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: { t
           <TabsTrigger value="general">General & SEO</TabsTrigger>
           <TabsTrigger value="invoice">Invoice</TabsTrigger>
           <TabsTrigger value="redirects">Redirects</TabsTrigger>
+          <TabsTrigger value="banners">Banners</TabsTrigger>
           <TabsTrigger value="tests">Tests</TabsTrigger>
         </TabsList>
         <TabsContent value="general">
@@ -36,6 +37,9 @@ export default async function SettingsPage({ searchParams }: { searchParams: { t
         </TabsContent>
         <TabsContent value="redirects">
           <SettingsForm settings={settings} mode="redirectsOnly" />
+        </TabsContent>
+        <TabsContent value="banners">
+          <SettingsForm settings={settings} mode="bannersOnly" />
         </TabsContent>
         <TabsContent value="tests">
           <TestsTab />

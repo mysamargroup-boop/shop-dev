@@ -10,6 +10,7 @@ import {
   getOrders as getOrdersFromSupabase, 
   getSiteSettings as getSiteSettingsFromSupabase, 
   getBlogPosts as getBlogPostsFromSupabase, 
+  getBlogPostsAdmin as getBlogPostsAdminFromSupabase,
   getTags as getTagsFromSupabase,
   getSiteImages as getSiteImagesFromSupabase
 } from './data-supabase';
@@ -43,6 +44,11 @@ export async function getProductById(id: string): Promise<Product | undefined> {
 export async function getBlogPosts(): Promise<BlogPost[]> {
   noStore();
   return getBlogPostsFromSupabase();
+}
+
+export async function getAllBlogPosts(): Promise<BlogPost[]> {
+  noStore();
+  return getBlogPostsAdminFromSupabase();
 }
 
 export async function getBlogPostBySlug(slug: string): Promise<BlogPost | undefined> {

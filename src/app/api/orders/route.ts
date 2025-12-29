@@ -3,7 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 
 export async function GET() {
   try {
-    const { data: orders, error } = await supabaseAdmin
+    const { data: orders, error } = await supabaseAdmin()
       .from('orders')
       .select('*')
       .order('created_at', { ascending: false });
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
   try {
     const orderData = await req.json();
     
-    const { data: order, error } = await supabaseAdmin
+    const { data: order, error } = await supabaseAdmin()
       .from('orders')
       .insert(orderData)
       .select()

@@ -5,19 +5,39 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { User, Phone, Calendar, IndianRupee, Hash, CheckCircle, AlertCircle, Clock, ShoppingCart } from 'lucide-react';
+import { User, Phone, Calendar, IndianRupee, Hash, CheckCircle, AlertCircle, Clock, ShoppingCart, RotateCcw, DollarSign } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BLUR_DATA_URL } from "@/lib/constants";
 import OrderManagementActions from '@/components/order-management-actions';
 
 async function getOrder(orderId: string) {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/orders`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/orders/${orderId}`, {
       cache: 'no-store'
     });
     if (!response.ok) throw new Error('Failed to fetch order');
-    const orders = await response.json();
-    return orders.find((o: any) => o.id === orderId);
+    const row = await response.json();
+    if (!row || row.error) throw new Error(row?.error || 'Order not found');
+    const mapped = {
+      id: row.id,
+      amount: Number(row.total_amount ?? 0),
+      customerName: row.customer_name || '',
+      customerPhone: row.customer_phone || '',
+      status: row.status || 'PENDING',
+      createdAt: row.created_at || new Date().toISOString(),
+      updatedAt: row.updated_at || row.created_at || new Date().toISOString(),
+      transactionId: row.transaction_id || undefined,
+      paymentStatus: row.payment_status || undefined,
+      items: (row.order_items || []).map((it: any) => ({
+        id: it.product_id || it.sku,
+        name: it.product_name || it.sku,
+        quantity: Number(it.quantity || 0),
+        price: Number(it.unit_price || 0),
+        imageUrl: it.image_url || null,
+        imageHint: it.image_hint || null
+      }))
+    };
+    return mapped;
   } catch (error) {
     console.error('Error fetching order:', error);
     return null;
@@ -30,8 +50,18 @@ async function getProductById(productId: string) {
       cache: 'no-store'
     });
     if (!response.ok) throw new Error('Failed to fetch products');
-    const data = await response.json();
-    return data.products?.find((p: any) => p.id === productId);
+    const rows = await response.json();
+    const p = (rows || []).find((x: any) => x.id === productId);
+    if (!p) return null;
+    return {
+      id: p.id,
+      name: p.name,
+      imageUrl: p.image_url,
+      imageHint: p.image_hint,
+      category: p.category_id || '',
+      regularPrice: p.regular_price ?? undefined,
+      salePrice: p.sale_price ?? undefined
+    };
   } catch (error) {
     console.error('Error fetching product:', error);
     return null;
@@ -59,11 +89,12 @@ export default async function OrderDetailPage({ params }: { params: { orderId: s
 
     const itemsWithDetails = await Promise.all(
         (order.items || []).map(async (item: any) => {
-            const product = await getProductById(item.id);
+            const product = item.id ? await getProductById(item.id) : null;
             return {
                 ...item,
-                imageUrl: product?.imageUrl || 'https://picsum.photos/seed/placeholder/100',
-                imageHint: product?.imageHint || 'product image',
+                name: item.name || product?.name || item.id,
+                imageUrl: item.imageUrl || product?.imageUrl || 'https://picsum.photos/seed/placeholder/100',
+                imageHint: item.imageHint || product?.imageHint || 'product image',
                 category: product?.category || ''
             };
         })
@@ -74,7 +105,7 @@ export default async function OrderDetailPage({ params }: { params: { orderId: s
         <div className="space-y-6">
             <div>
                 <h1 className="text-3xl font-bold tracking-tight">Order Details</h1>
-                <p className="text-muted-foreground">Viewing information for order <span className="font-mono">{order.id}</span></p>
+                <p className="text-muted-foreground">Viewing information for order <span className="px-2 py-0.5 rounded bg-muted font-mono">{order.id}</span></p>
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -114,7 +145,7 @@ export default async function OrderDetailPage({ params }: { params: { orderId: s
                                                     <p className="text-xs text-muted-foreground font-mono">{item.id}</p>
                                                 </TableCell>
                                                 <TableCell className="text-center">{item.quantity}</TableCell>
-                                                <TableCell className="text-right">₹{item.price.toFixed(2)}</TableCell>
+                                                <TableCell className="text-right">₹{Number(item.price || 0).toFixed(2)}</TableCell>
                                             </TableRow>
                                         )})}
                                     </TableBody>
@@ -155,7 +186,7 @@ export default async function OrderDetailPage({ params }: { params: { orderId: s
                                 <Hash className="h-5 w-5 text-muted-foreground mt-1" />
                                 <div>
                                     <p className="text-xs text-muted-foreground">Order ID</p>
-                                    <p className="font-semibold font-mono text-sm">{order.id}</p>
+                                    <p className="font-semibold font-mono text-sm px-2 py-0.5 rounded bg-muted inline-block">{order.id}</p>
                                     {order.transactionId && (
                                         <p className="text-xs text-muted-foreground mt-1">Transaction ID: {order.transactionId}</p>
                                     )}
@@ -165,7 +196,7 @@ export default async function OrderDetailPage({ params }: { params: { orderId: s
                                 <IndianRupee className="h-5 w-5 text-muted-foreground mt-1" />
                                 <div>
                                     <p className="text-xs text-muted-foreground">Amount</p>
-                                    <p className="font-semibold text-sm">₹{order.amount.toFixed(2)}</p>
+                                    <p className="font-semibold text-sm">₹{Number(order.amount || 0).toFixed(2)}</p>
                                 </div>
                             </div>
                             <div className="flex items-start gap-3">
