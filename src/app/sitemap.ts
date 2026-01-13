@@ -1,6 +1,7 @@
 
 import { MetadataRoute } from 'next';
 import { getProducts, getCategories, getBlogPosts, getTags } from '@/lib/data-async';
+import { slugify } from '@/lib/utils';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://business.woody.co.in';
@@ -27,7 +28,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const productRoutes = products.map(product => {
     const categorySlug = product.category.split(',')[0].trim().toLowerCase().replace(/ /g, '-');
     return {
-      url: `${siteUrl}/collections/${categorySlug}/${product.id}`,
+      url: `${siteUrl}/collections/${categorySlug}/${slugify(product.name)}`,
       lastModified: new Date(),
     }
   });
