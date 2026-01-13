@@ -65,3 +65,13 @@ SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 37) Run complete_migration.sql in Supabase
 38) Test order management features in admin panel
 39) Migrate existing data to Supabase
+
+
+If Cloudflare Workers:
+
+Supabase Edge Functions Deno par chalte hain, jo ki Cloudflare Workers ke environment se bahut milta-julta hai. Agar aapko future me Cloudflare par move karna ho, to aapko bas yeh karna hoga:
+
+Copy-Paste: Supabase function (index.ts) ke code ko copy karke Cloudflare Worker ke file me paste karein.
+Secrets Set Karein: Jaise Supabase me secrets daale, waise hi Cloudflare dashboard me bhi daalne honge.
+Minor Adjustments: Ho sakta hai ki request/response handle karne ke tarike me 1-2 line ka chhota sa badlaav karna pade, par poora logic (payment, signature, WhatsApp) waisa ka waisa hi rahega.
+Vercel se nikalna mushkil tha. Ab ek serverless platform (Supabase) se doosre (Cloudflare) par jaana bahut aasan hai.

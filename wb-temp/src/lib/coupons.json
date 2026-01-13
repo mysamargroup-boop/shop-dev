@@ -1,0 +1,22 @@
+{
+  "coupons": [
+    {
+      "code": "WOODY10",
+      "type": "percent",
+      "value": 10,
+      "active": true
+    },
+    {
+      "code": "WELCOME50",
+      "type": "flat",
+      "value": 50,
+      "active": true
+    },
+    {
+      "code": "SUMMER99",
+      "type": "percent",
+      "value": 99,
+      "active": true
+    }
+  ]
+}

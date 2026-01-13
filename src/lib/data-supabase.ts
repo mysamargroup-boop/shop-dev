@@ -119,7 +119,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     const { data, error } = await supabaseAdmin()
       .from('site_settings')
       .select('*')
-      .single();
+      .maybeSingle();
     
     if (error) throw error;
     return data || {};

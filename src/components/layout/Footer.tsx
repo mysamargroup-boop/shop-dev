@@ -37,6 +37,7 @@ const Footer = async () => {
             { href: '/privacy', label: 'Privacy Policy' },
             { href: '/shipping', label: 'Shipping Policy' },
             { href: '/pricing', label: 'Pricing' },
+            { href: '/returns-and-refunds', label: 'Returns & Refunds' },
         ],
       },
   ];
@@ -48,13 +49,14 @@ const Footer = async () => {
   return (
     <footer className="bg-primary/5 border-t mt-auto pb-20 md:pb-0">
       <div className="container mx-auto px-4 pt-16 pb-8">
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8 border-b pb-8">
             <div className="lg:col-span-2 flex flex-col items-center text-center md:items-start md:text-left">
                 <Logo />
                 <p className="text-sm text-muted-foreground mt-4 max-w-md">Exquisite Personalized Wooden Gifts. Handcrafted with love, designed to capture your most cherished memories.</p>
             </div>
             <div className='flex flex-col items-center text-center md:items-end md:text-right'>
-                 <h3 className="font-semibold text-foreground mb-4">Our Portals</h3>
+                 <h3 className="font-bold text-lg text-foreground mb-4">Our Portals</h3>
                  <ul className="space-y-2 text-sm">
                     <li><a href="https://woody.co.in" target="_blank" rel="noopener noreferrer" className="font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent hover:underline">Retail Site (Woody)</a></li>
                     <li><a href="https://business.woody.co.in" target="_blank" rel="noopener noreferrer" className="font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent hover:underline">B2B / Bulk Site</a></li>

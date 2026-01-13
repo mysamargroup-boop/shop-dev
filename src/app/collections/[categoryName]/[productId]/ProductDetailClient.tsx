@@ -191,14 +191,13 @@ export default function ProductDetailClient({ product }: { product: Product }) {
   const areActionsDisabled =
     (product.options && product.options.length > 0 && !selectedVariant) ||
     (product.allowImageUpload && customImages.length === 0) ||
-    finalQuantity <= 0 ||
-    (isKeychainCategory && finalQuantity < 100);
+    finalQuantity <= 0;
 
   const discountedSubtotal = product.price * finalQuantity;
   const shippingCost = discountedSubtotal > 2999 ? 0 : 99;
   const totalCost = discountedSubtotal + shippingCost;
 
-  const presetQuantities = isKeychainCategory ? [100, 200, 500] : [25, 50, 100];
+  const presetQuantities = [1, 2, 5, 10];
 
   const [deliveryMinDays, setDeliveryMinDays] = useState<number>(7);
   const [deliveryMaxDays, setDeliveryMaxDays] = useState<number>(15);

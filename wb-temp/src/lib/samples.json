@@ -1,0 +1,54 @@
+
+{
+  "samples": [
+    {
+      "id": "sample-001",
+      "imageUrl": "https://woody.co.in/wp-content/uploads/2024/12/Panda-Hanging.webp",
+      "productName": "Wall Hanging Panda",
+      "customerName": "Riya S.",
+      "category": "Wall Decor"
+    },
+    {
+      "id": "sample-002",
+      "imageUrl": "https://woody.co.in/wp-content/uploads/2025/04/Elephant-Pen-Holder-2.webp",
+      "productName": "Elephant Pen Holder",
+      "customerName": "Amit K.",
+      "category": "Desk Accessories"
+    },
+    {
+      "id": "sample-003",
+      "imageUrl": "https://woody.co.in/wp-content/uploads/2024/12/Panda-with-Grass-Key-Ring.webp",
+      "productName": "Cute Panda Keychain",
+      "customerName": "Pooja M.",
+      "category": "Keychains"
+    },
+    {
+      "id": "sample-004",
+      "imageUrl": "https://woody.co.in/wp-content/uploads/2025/02/1000212210.jpg",
+      "productName": "Lifetime Calendar For Desk",
+      "customerName": "Vikas P.",
+      "category": "Desk Accessories"
+    },
+    {
+      "id": "sample-005",
+      "imageUrl": "https://woody.co.in/wp-content/uploads/2025/02/Gullak-1.jpg",
+      "productName": "Wooden Money Box",
+      "customerName": "Anjali G.",
+      "category": "Gifts"
+    },
+    {
+      "id": "sample-006",
+      "imageUrl": "https://woody.co.in/wp-content/uploads/2025/05/1000271747.jpg",
+      "productName": "Customized Photo Frame (6x8inch)",
+      "customerName": "Rohan & Tina",
+      "category": "Photo Frame"
+    },
+    {
+      "id": "sample-007",
+      "imageUrl": "https://woody.co.in/wp-content/uploads/2025/02/1000204205.jpg",
+      "productName": "Pen Holder Memento",
+      "customerName": "Corporate Client",
+      "category": "Desk Accessories"
+    }
+  ]
+}

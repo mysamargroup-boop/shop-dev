@@ -6,8 +6,8 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { ArrowRight } from 'lucide-react';
 import { BLUR_DATA_URL } from '@/lib/constants';
 
-export default function BlogPage() {
-  const posts = getBlogPosts();
+export default async function BlogPage() {
+  const posts = await getBlogPosts();
 
   return (
     <div className="container mx-auto px-4 py-12">

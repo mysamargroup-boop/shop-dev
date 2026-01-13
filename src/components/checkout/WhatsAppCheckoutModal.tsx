@@ -88,7 +88,7 @@ const OrderSummary = ({
 
          {mode === 'payment' && (
           <div className="flex justify-between font-bold text-primary pt-2 border-t">
-            <span>{advancePercent > 0 ? `Advance Payable (${advancePercent}%)` : `Amount Payable (Full)`}:</span>
+            <span>Amount Payable (Full):</span>
             <span>₹{advanceAmount.toFixed(2)}</span>
           </div>
         )}
@@ -147,18 +147,12 @@ const WhatsAppCheckoutModal = ({ isOpen, onOpenChange, checkoutInput, checkoutMo
     return total < 0 ? 0 : total;
   }, [baseTotal, couponDiscount]);
 
-  const advancePercent = useMemo(() => {
-    const enabled = !!siteSettings.advance_payment_enabled;
-    const percent = enabled ? Number(siteSettings.advance_payment_percent ?? 0) : 0;
-    return Math.max(0, Math.min(100, isNaN(percent) ? 0 : percent));
-  }, [siteSettings]);
+  const advancePercent = 0;
 
   const advanceAmount = useMemo(() => {
-    const amount = checkoutMode === 'payment'
-      ? (advancePercent > 0 ? finalTotal * (advancePercent / 100) : finalTotal)
-      : 0;
+    const amount = checkoutMode === 'payment' ? finalTotal : 0;
     return Math.max(1, parseFloat(amount.toFixed(2)));
-  }, [finalTotal, checkoutMode, advancePercent]);
+  }, [finalTotal, checkoutMode]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -300,7 +294,7 @@ const WhatsAppCheckoutModal = ({ isOpen, onOpenChange, checkoutInput, checkoutMo
 
         // Upload any selected images to the first matching order_item
         try {
-          if (selectedUploadFiles.length > 0 && Array.isArray(res.order_items) && res.order_items.length > 0) {
+          if (selectedUploadFiles.length > 0 && 'order_items' in res && Array.isArray(res.order_items) && res.order_items.length > 0) {
             const uploadableIds = checkoutInput.uploadProductIds || [];
             const targetItem = res.order_items.find((it: any) => uploadableIds.includes(it.product_id));
             if (targetItem) {
