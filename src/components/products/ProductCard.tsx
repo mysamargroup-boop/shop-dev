@@ -28,7 +28,12 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [checkoutMode, setCheckoutMode] = useState<'whatsapp' | 'payment'>('payment');
   const [settings, setSettings] = useState<SiteSettings | null>(null);
+  const [isClient, setIsClient] = useState(false);
   
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   const categorySlug = product.category ? slugify(product.category.split(',')[0].trim()) : 'uncategorized';
   const productUrl = `/collections/${categorySlug}/${slugify(product.name)}`;
   const imageUrl = product.imageUrl || '/placeholder-image.svg';
@@ -42,9 +47,11 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
   const handleBuyNow = (e: React.MouseEvent) => {
     e.preventDefault();
-    const effectiveCheckoutMode = settings?.whatsapp_only_checkout_enabled ? 'whatsapp' : 'payment';
-    setCheckoutMode(effectiveCheckoutMode);
-    setIsModalOpen(true);
+    if (isClient) {
+        const effectiveCheckoutMode = settings?.whatsapp_only_checkout_enabled ? 'whatsapp' : 'payment';
+        setCheckoutMode(effectiveCheckoutMode);
+        setIsModalOpen(true);
+    }
   };
   
   const isInWishlist = wishlist.some(item => item.id === product.id);

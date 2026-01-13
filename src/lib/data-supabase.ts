@@ -1,6 +1,8 @@
+
 'use server';
 import { supabaseAdmin } from './supabase';
 import type { Category, Product, ProductsData, BlogPost, SiteSettings, SiteImage, Video } from './types';
+import { slugify } from './utils';
 
 export async function getCategories(): Promise<Category[]> {
   try {
@@ -98,6 +100,44 @@ export async function getProductById(id: string): Promise<Product | null> {
     return null;
   }
 }
+
+export async function getProductByName(name: string): Promise<Product | null> {
+    try {
+        const { data, error } = await supabaseAdmin()
+            .from('products')
+            .select('*');
+        if (error) throw error;
+        
+        const product = (data || []).find(p => slugify(p.name) === name);
+        if (!product) return null;
+
+        return {
+          ...product,
+          imageUrl: product.image_url,
+          imageAlt: product.image_alt,
+          imageHint: product.image_hint,
+          galleryImages: product.gallery_images,
+          videoUrl: product.video_url,
+          imageAttribution: product.image_attribution,
+          allowImageUpload: product.allow_image_upload,
+          weightGrams: product.weight_grams,
+          dimensionsLength: product.dimensions_length,
+          dimensionsWidth: product.dimensions_width,
+          dimensionsHeight: product.dimensions_height,
+          specificDescription: product.specific_description,
+          reviewCount: product.review_count,
+          price: product.sale_price || product.regular_price,
+          regularPrice: product.regular_price ?? undefined,
+          salePrice: product.sale_price ?? undefined,
+          category: product.category_id
+        };
+
+    } catch (error) {
+        console.error('Error fetching product by name:', error);
+        return null;
+    }
+}
+
 
 export async function getOrders(): Promise<any[]> {
   try {
@@ -293,3 +333,5 @@ export async function getSiteVideos(): Promise<Video[]> {
     return [];
   }
 }
+
+    
