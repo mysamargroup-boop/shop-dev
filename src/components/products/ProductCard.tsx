@@ -95,8 +95,8 @@ const ProductCard = ({ product }: ProductCardProps) => {
           </Button>
       </CardHeader>
       <CardContent className="flex-1 p-3 space-y-2 flex flex-col justify-between">
-        <Link href={productUrl}>
-            <h3 className="font-headline font-bold text-base leading-tight group-hover:text-accent transition-colors line-clamp-2 min-h-[2.5rem]">
+        <Link href={productUrl} className="flex-1">
+            <h3 className="font-headline font-bold text-base leading-tight group-hover:text-primary transition-colors line-clamp-2 min-h-[2.5rem]">
             {product.name}
             </h3>
         </Link>
@@ -128,7 +128,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
         )}
         <Button 
           onClick={handleBuyNow} 
-          className="w-full rounded-lg bg-blue-600 hover:bg-blue-700 text-white"
+          className="w-full rounded-lg bg-gradient-to-r from-green-600 to-teal-700 hover:from-green-700 hover:to-teal-800 text-white shine-effect"
           disabled={product.inventory === 0}
           size="sm"
         >

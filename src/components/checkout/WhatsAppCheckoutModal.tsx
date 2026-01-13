@@ -530,14 +530,14 @@ const WhatsAppCheckoutModal = ({ isOpen, onOpenChange, checkoutInput, checkoutMo
             </div>
             <DialogFooter className="mt-6">
                {checkoutMode === 'payment' ? (
-                 <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+                 <Button type="submit" className="w-full bg-gradient-to-r from-green-600 to-teal-700 hover:from-green-700 hover:to-teal-800 text-white">
                     <FileText className="mr-2 h-4 w-4" />
                     Proceed to Pay ₹{advanceAmount.toFixed(2)}
                  </Button>
                ) : (
                  <Button type="submit" className="w-full">
-                    <Zap className="mr-2 h-4 w-4" />
-                    Confirm Order
+                    <Phone className="mr-2 h-4 w-4" />
+                    Confirm on WhatsApp
                  </Button>
                )}
             </DialogFooter>
