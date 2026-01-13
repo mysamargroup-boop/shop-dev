@@ -2,19 +2,19 @@
 
 'use client';
 import Link from 'next/link';
-import { Box, Brush, Gift, Package2, Heart } from 'lucide-react';
+import { Heart } from 'lucide-react';
 
 const iconCategories = [
   {
-    name: "Wall Art",
-    icon: <Brush className="h-8 w-8 text-primary-foreground group-hover:text-white" />,
-    href: "/collections/wall-decor",
+    name: "Under ₹9",
+    icon: <div className="text-sm font-bold text-center text-primary-foreground group-hover:text-white">Under<br/>₹9</div>,
+    href: "/shop?price=9",
     color: 'bg-primary'
   },
   {
-    name: "Desk Items",
-    icon: <Gift className="h-8 w-8 text-primary-foreground group-hover:text-white" />,
-    href: "/collections/desk-accessories",
+    name: "Under ₹19",
+    icon: <div className="text-sm font-bold text-center text-primary-foreground group-hover:text-white">Under<br/>₹19</div>,
+    href: "/shop?price=19",
     color: 'bg-foreground'
   },
   {
@@ -24,15 +24,15 @@ const iconCategories = [
     color: 'bg-primary'
   },
   {
-    name: "Under ₹499",
-    icon: <div className="text-sm font-bold text-center text-primary-foreground">Under<br/>₹499</div>,
-    href: "/shop?price=499",
+    name: "Under ₹49",
+    icon: <div className="text-sm font-bold text-center text-primary-foreground group-hover:text-white">Under<br/>₹49</div>,
+    href: "/shop?price=49",
     color: 'bg-foreground'
   },
   {
-    name: "All Products",
-    icon: <Package2 className="h-8 w-8 text-primary-foreground group-hover:text-white" />,
-    href: "/shop",
+    name: "Under ₹199",
+    icon: <div className="text-sm font-bold text-center text-primary-foreground group-hover:text-white">Under<br/>₹199</div>,
+    href: "/shop?price=199",
     color: 'bg-primary'
   },
   {

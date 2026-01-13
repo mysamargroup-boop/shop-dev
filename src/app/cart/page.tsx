@@ -4,7 +4,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from 'react';
-import { Minus, Plus, Trash2, ShoppingCart, Loader2, FileText } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingCart, Loader2, FileText, ArrowLeft } from "lucide-react";
 import useCart from "@/hooks/use-cart";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +13,7 @@ import type { WhatsAppCheckoutInput } from "@/ai/flows/whatsapp-checkout-message
 import { BLUR_DATA_URL } from "@/lib/constants";
 import type { OrderItem, SiteSettings } from "@/lib/types";
 import { getSiteSettings } from "@/lib/data-async";
+import { slugify } from "@/lib/utils";
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, cartTotal, isLoaded } = useCart();
@@ -73,14 +74,20 @@ export default function CartPage() {
     shippingCost: shippingCost,
     totalCost: totalCost,
     productImages: cart.map(item => item.product.imageUrl),
-    productUrls: baseUrl ? cart.map(item => `${baseUrl}/collections/${item.product.category.toLowerCase().replace(/ /g, '-')}/${item.product.id}`) : [],
+    productUrls: baseUrl ? cart.map(item => `${baseUrl}/collections/${slugify(item.product.category)}/${slugify(item.product.name)}`) : [],
     products: productsForCheckout,
   } : null;
 
   return (
     <>
       <div className="container mx-auto px-4 py-12">
-        <h1 className="text-4xl font-headline font-bold mb-8 text-center">Your Cart</h1>
+        <div className="flex items-center justify-between mb-8">
+            <Button variant="outline" asChild>
+                <Link href="/"><ArrowLeft className="mr-2 h-4 w-4" /> Back to Shopping</Link>
+            </Button>
+            <h1 className="text-4xl font-headline font-bold text-center">Your Cart</h1>
+            <div className="w-24"></div>
+        </div>
         {cart.length === 0 ? (
           <div className="text-center py-16 border-dashed border-2 rounded-lg">
             <ShoppingCart className="mx-auto h-12 w-12 text-muted-foreground" />
@@ -93,14 +100,18 @@ export default function CartPage() {
         ) : (
           <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
             <div className="lg:col-span-2 space-y-4">
-              {cart.map(({ product, quantity }) => (
+              {cart.map(({ product, quantity }) => {
+                const productUrl = `/collections/${slugify(product.category)}/${slugify(product.name)}`;
+                return (
                 <Card key={product.id} className="flex items-center p-4 overflow-hidden">
-                    <div className="relative h-20 w-20 sm:h-24 sm:w-24 flex-shrink-0 rounded-lg overflow-hidden">
+                    <Link href={productUrl} className="relative h-20 w-20 sm:h-24 sm:w-24 flex-shrink-0 rounded-lg overflow-hidden">
                         <Image src={product.imageUrl} alt={product.name} fill className="object-cover" data-ai-hint={product.imageHint} placeholder="blur" blurDataURL={BLUR_DATA_URL} sizes="(max-width: 640px) 20vw, 96px" />
-                    </div>
+                    </Link>
                     <div className="ml-4 flex-1 grid grid-cols-1 sm:grid-cols-3 items-center gap-4">
                         <div className="sm:col-span-1">
-                            <h3 className="font-semibold text-lg leading-tight">{product.name}</h3>
+                            <h3 className="font-semibold text-lg leading-tight hover:text-primary">
+                               <Link href={productUrl}>{product.name}</Link>
+                            </h3>
                             <p className="text-muted-foreground text-sm sm:hidden">₹{product.price.toFixed(2)}</p>
                         </div>
                         <div className="flex items-center gap-2">
@@ -123,7 +134,7 @@ export default function CartPage() {
                         <Trash2 className="h-5 w-5"/>
                     </Button>
                 </Card>
-              ))}
+              )})}
             </div>
             <div>
               <Card>
@@ -163,3 +174,4 @@ export default function CartPage() {
     </>
   );
 }
+

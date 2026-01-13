@@ -2,7 +2,7 @@
 
 'use server';
 import path from 'path';
-import type { Category, Product, ProductsData, BlogPost, SiteSettings, SiteImage, Sample, Order } from './types';
+import type { Category, Product, ProductsData, BlogPost, SiteSettings, Sample, Order } from './types';
 import { unstable_noStore as noStore } from 'next/cache';
 // Import from Supabase instead of JSON files
 import { 
@@ -13,19 +13,21 @@ import {
   getBlogPosts as getBlogPostsFromSupabase, 
   getBlogPostsAdmin as getBlogPostsAdminFromSupabase, 
   getTags as getTagsFromSupabase,
-  getSiteImages as getSiteImagesFromSupabase
+  getSiteImages as getSiteImagesFromSupabase,
+  getCategories as getCategoriesFromSupabase
 } from './data-supabase';
 
-import { getCategories as getCategoriesFromJson } from './data';
-import fs from 'fs/promises';
+import { slugify } from './utils';
+
+const fs = require('fs').promises;
 
 const settingsFilePath = path.join(process.cwd(), 'src', 'lib', 'site-settings.json');
 const bannersFilePath = path.join(process.cwd(), 'src', 'lib', 'banners.json');
 
-
+// This function now uses the Supabase client
 export async function getCategories(): Promise<Category[]> {
   noStore();
-  return getCategoriesFromJson();
+  return getCategoriesFromSupabase();
 }
 
 export async function getProducts(): Promise<Product[]> {
@@ -39,7 +41,6 @@ export async function getOrders(): Promise<Order[]> {
   return getOrdersFromSupabase();
 }
 
-
 export async function getProductById(id: string): Promise<Product | undefined> {
     noStore();
     const res = await getProductByIdFromSupabase(id);
@@ -48,9 +49,7 @@ export async function getProductById(id: string): Promise<Product | undefined> {
 
 export async function getProductByName(name: string): Promise<Product | undefined> {
     noStore();
-    const products = await getProducts();
-    const slugify = (text: string) => text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
-    return products.find(p => slugify(p.name) === name);
+    return await getProductByNameFromSupabase(name);
 }
 
 export async function getBlogPosts(): Promise<BlogPost[]> {
@@ -76,13 +75,8 @@ export async function getTags(): Promise<string[]> {
 export async function getSiteSettings(): Promise<SiteSettings> {
   noStore();
   try {
-    const [settingsContent, bannersContent] = await Promise.all([
-      fs.readFile(settingsFilePath, 'utf-8').catch(() => '{}'),
-      fs.readFile(bannersFilePath, 'utf-8').catch(() => '{}'),
-    ]);
-    const settings = JSON.parse(settingsContent);
-    const banners = JSON.parse(bannersContent);
-    return { ...settings, ...banners };
+    const fileContent = await fs.readFile(settingsFilePath, 'utf-8');
+    return JSON.parse(fileContent);
   } catch (error) {
     console.error("Error reading settings file:", error);
     return {};
@@ -113,8 +107,6 @@ export async function getSamples(): Promise<Sample[]> {
 
 export async function generateStaticParams() {
     const products = await getProducts();
-    const slugify = (text: string) => text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
-
     return products.map((product) => ({
       categoryName: slugify(product.category.split(',')[0].trim()),
       productName: slugify(product.name),
