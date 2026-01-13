@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import Link from 'next/link';
@@ -133,11 +134,10 @@ const Header = () => {
   const isCountsLoaded = cartLoaded && wishlistLoaded;
 
   const MobileNavContent = () => {
-    const [mobileSearchQuery, setMobileSearchQuery] = useState('');
     
-    useEffect(() => {
-      handleSearch(mobileSearchQuery);
-    }, [mobileSearchQuery]);
+    const handleMobileSearch = (query: string) => {
+        handleSearch(query);
+    }
       
     return (
     <div className="flex flex-col h-full">
@@ -146,9 +146,9 @@ const Header = () => {
             <Input 
               placeholder="Search For Gifts..." 
               className="pl-10 bg-muted"
-              value={mobileSearchQuery}
-              onChange={(e) => setMobileSearchQuery(e.target.value)}
-              onFocus={(e) => handleSearch(e.target.value)}
+              defaultValue={searchQuery}
+              onChange={(e) => handleMobileSearch(e.target.value)}
+              onFocus={(e) => handleMobileSearch(e.target.value)}
             />
             {isSearchOpen && searchResults.length > 0 && (
               <div className="absolute top-full mt-2 w-full p-2 bg-popover border rounded-md shadow-lg z-20">
