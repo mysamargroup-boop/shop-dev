@@ -132,15 +132,22 @@ const Header = () => {
 
   const isCountsLoaded = cartLoaded && wishlistLoaded;
 
-  const MobileNavContent = () => (
+  const MobileNavContent = () => {
+    const [mobileSearchQuery, setMobileSearchQuery] = useState('');
+    
+    useEffect(() => {
+      handleSearch(mobileSearchQuery);
+    }, [mobileSearchQuery]);
+      
+    return (
     <div className="flex flex-col h-full">
         <div className="relative mb-4">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"/>
             <Input 
               placeholder="Search For Gifts..." 
               className="pl-10 bg-muted"
-              value={searchQuery}
-              onChange={(e) => handleSearch(e.target.value)}
+              value={mobileSearchQuery}
+              onChange={(e) => setMobileSearchQuery(e.target.value)}
               onFocus={(e) => handleSearch(e.target.value)}
             />
             {isSearchOpen && searchResults.length > 0 && (
@@ -262,7 +269,7 @@ const Header = () => {
             <DarkModeToggle />
         </div>
     </div>
-  );
+  )};
 
   const DesktopNavContent = () => {
     const isCollectionsActive = pathname === '/collections';

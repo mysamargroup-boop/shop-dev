@@ -115,9 +115,10 @@ export default function ProductDetailClient({ product }: { product: Product }) {
   const [quantityType, setQuantityType] = useState<'preset' | 'custom'>('preset');
   const [customQuantity, setCustomQuantity] = useState<number | string>(1);
   const [settings, setSettings] = useState<SiteSettings | null>(null);
+  const [isClient, setIsClient] = useState(false);
   
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
-  const currentUrl = baseUrl ? `${baseUrl}${pathname}` : '';
+  const currentUrl = isClient ? window.location.href : (baseUrl ? `${baseUrl}${pathname}` : '');
 
   const { addToCart } = useCart();
   const { wishlist, addToWishlist, removeFromWishlist } = useWishlist();
@@ -126,6 +127,7 @@ export default function ProductDetailClient({ product }: { product: Product }) {
   const [selectedVariant, setSelectedVariant] = useState(product?.options && product.options.length > 0 ? undefined : product?.options?.[0]?.value);
   
   useEffect(() => {
+    setIsClient(true);
     getSiteSettings().then(setSettings);
   }, []);
 
@@ -177,6 +179,7 @@ export default function ProductDetailClient({ product }: { product: Product }) {
   };
 
   const handleBuyNow = () => {
+    if (!isClient) return;
     const effectiveCheckoutMode = settings?.whatsapp_only_checkout_enabled ? 'whatsapp' : 'payment';
     setCheckoutMode(effectiveCheckoutMode);
     setIsModalOpen(true);
@@ -388,7 +391,7 @@ export default function ProductDetailClient({ product }: { product: Product }) {
                                 <tr className="border-b">
                                     <td className="py-2 text-muted-foreground">Manufacturer</td>
                                     <td className="py-2 font-semibold text-right">
-                                        Shreeji Art Creation, Woody Business. Retail: <a href="https://woody.co.in" target="_blank" rel="noopener noreferrer" className="text-primary underline">Woody</a>
+                                        Nemaonline
                                     </td>
                                 </tr>
                                 {product.weight && (
