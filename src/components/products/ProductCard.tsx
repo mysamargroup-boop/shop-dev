@@ -4,7 +4,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { ShoppingCart, Star, Zap, Heart } from 'lucide-react';
-import type { Product } from '@/lib/types';
+import type { Product, SiteSettings } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { cn, slugify } from '@/lib/utils';
@@ -12,9 +12,10 @@ import useCart from '@/hooks/use-cart';
 import useWishlist from '@/hooks/use-wishlist';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import WhatsAppCheckoutModal from '../checkout/WhatsAppCheckoutModal';
 import { BLUR_DATA_URL } from '@/lib/constants';
+import { getSiteSettings } from '@/lib/actions';
 
 interface ProductCardProps {
   product: Product;
@@ -26,6 +27,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const { toast } = useToast();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [checkoutMode, setCheckoutMode] = useState<'whatsapp' | 'payment'>('payment');
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
   
   const categorySlug = product.category ? slugify(product.category.split(',')[0].trim()) : 'uncategorized';
   const productUrl = `/collections/${categorySlug}/${slugify(product.name)}`;
@@ -34,9 +36,14 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
   const currentUrl = baseUrl ? `${baseUrl}${productUrl}` : '';
 
+  useEffect(() => {
+    getSiteSettings().then(setSettings);
+  }, []);
+
   const handleBuyNow = (e: React.MouseEvent) => {
     e.preventDefault();
-    setCheckoutMode('payment');
+    const effectiveCheckoutMode = settings?.whatsapp_only_checkout_enabled ? 'whatsapp' : 'payment';
+    setCheckoutMode(effectiveCheckoutMode);
     setIsModalOpen(true);
   };
   
@@ -59,7 +66,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
   };
   
   const discountedSubtotal = product.price;
-  const shippingCost = discountedSubtotal > 2999 ? 0 : 99;
+  const shippingCost = discountedSubtotal > (settings?.free_shipping_threshold ?? 2999) ? 0 : 99;
   const totalCost = discountedSubtotal + shippingCost;
 
 
