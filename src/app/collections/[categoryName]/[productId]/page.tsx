@@ -23,16 +23,16 @@ const Breadcrumbs = async ({ product }: { product: any }) => {
                 <Home className="h-4 w-4" />
                 Home
             </Link>
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-4 w-4 flex-shrink-0" />
             {category && (
                 <>
-                    <Link href={`/collections/${category.id}`} className="hover:text-primary">
+                    <Link href={`/collections/${category.id}`} className="hover:text-primary whitespace-nowrap">
                         {category.name}
                     </Link>
-                    <ChevronRight className="h-4 w-4" />
+                    <ChevronRight className="h-4 w-4 flex-shrink-0" />
                 </>
             )}
-            <span className="font-semibold text-foreground">{product.name}</span>
+            <span className="font-semibold text-foreground truncate" title={product.name}>{product.name}</span>
         </nav>
     </div>
   );

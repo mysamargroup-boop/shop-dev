@@ -467,7 +467,10 @@ export default function ProductDetailClient({ product }: { product: Product }) {
               <Button onClick={() => addToCart(product, finalQuantity)} variant="outline" className="hidden xs:inline-flex rounded-lg" disabled={areActionsDisabled}>
                  Add to Cart
               </Button>
-              <Button onClick={handleBuyNow} className="rounded-lg bg-green-600 hover:bg-green-700" disabled={areActionsDisabled}>
+               <Button onClick={handleBuyNow} size="icon" className="xs:hidden rounded-lg bg-green-600 hover:bg-green-700" disabled={areActionsDisabled}>
+                <Zap className="h-4 w-4 text-yellow-300" />
+              </Button>
+               <Button onClick={handleBuyNow} className="hidden xs:inline-flex rounded-lg bg-green-600 hover:bg-green-700" disabled={areActionsDisabled}>
                 <Zap className="mr-2 h-4 w-4 text-yellow-300" /> Buy Now
               </Button>
                <Button onClick={() => addToCart(product, finalQuantity)} size="icon" className="xs:hidden" disabled={areActionsDisabled}>
@@ -481,3 +484,4 @@ export default function ProductDetailClient({ product }: { product: Product }) {
     </>
   );
 }
+
