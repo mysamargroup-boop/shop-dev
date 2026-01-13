@@ -15,8 +15,3 @@ export async function getCategories(): Promise<Category[]> {
 export async function getImageData() {
     return imageData;
 }
-
-export async function getTags(): Promise<string[]> {
-    noStore();
-    return getTagsFromSupabase();
-}

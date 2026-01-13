@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Heart } from 'lucide-react';
 import ProductCard from '@/components/products/ProductCard';
 import { Button } from '@/components/ui/button';
@@ -14,31 +14,13 @@ import {
 } from '@/components/ui/carousel';
 import { cn } from '@/lib/utils';
 import type { Product } from '@/lib/types';
-import { getTags } from '@/lib/data';
 
-const ShopByOccasion = ({ products }: { products: Product[] }) => {
-  const [selectedTag, setSelectedTag] = useState('');
-  const [occasionTags, setOccasionTags] = useState<string[]>([]);
-  const allProducts = products;
+const ShopByOccasion = ({ products, tags }: { products: Product[], tags: string[] }) => {
+  const [selectedTag, setSelectedTag] = useState(tags[0] || '');
 
-  useEffect(() => {
-    async function fetchTags() {
-      try {
-        const tags = await getTags();
-        setOccasionTags(tags);
-        if (tags.length > 0) {
-          setSelectedTag(tags[0]);
-        }
-      } catch (error) {
-        console.error("Failed to fetch tags", error);
-      }
-    }
-    fetchTags();
-  }, []);
+  const filteredProducts = products.filter(p => p.tags?.includes(selectedTag));
 
-  const filteredProducts = allProducts.filter(p => p.tags?.includes(selectedTag));
-
-  if (occasionTags.length === 0) {
+  if (tags.length === 0) {
     return null;
   }
 
@@ -57,7 +39,7 @@ const ShopByOccasion = ({ products }: { products: Product[] }) => {
       </div>
 
       <div className="flex justify-center gap-2 mb-8 flex-wrap">
-        {occasionTags.map((tag) => (
+        {tags.map((tag) => (
           <Button
             key={tag}
             variant={selectedTag === tag ? 'default' : 'outline'}

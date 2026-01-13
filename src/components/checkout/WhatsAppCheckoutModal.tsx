@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
@@ -468,6 +469,7 @@ const WhatsAppCheckoutModal = ({ isOpen, onOpenChange, checkoutInput, checkoutMo
                       onChange={(e) => setCustomerEmail(e.target.value)}
                       placeholder="e.g., priya@example.com"
                     />
+                    <p className="text-xs text-muted-foreground">If left blank, an email like '1234567890@nemaone.com' will be used.</p>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="address">Shipping Address</Label>
@@ -575,3 +577,5 @@ const WhatsAppCheckoutModal = ({ isOpen, onOpenChange, checkoutInput, checkoutMo
 };
 
 export default WhatsAppCheckoutModal;
+
+    

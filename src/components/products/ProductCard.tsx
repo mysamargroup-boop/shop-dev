@@ -7,7 +7,7 @@ import { ShoppingCart, Star, Zap, Heart } from 'lucide-react';
 import type { Product } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
+import { cn, slugify } from '@/lib/utils';
 import useCart from '@/hooks/use-cart';
 import useWishlist from '@/hooks/use-wishlist';
 import { Badge } from '@/components/ui/badge';
@@ -15,7 +15,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import WhatsAppCheckoutModal from '../checkout/WhatsAppCheckoutModal';
 import { BLUR_DATA_URL } from '@/lib/constants';
-import { slugify } from '@/lib/utils';
 
 interface ProductCardProps {
   product: Product;
@@ -159,3 +158,5 @@ const ProductCard = ({ product }: ProductCardProps) => {
 };
 
 export default ProductCard;
+
+    

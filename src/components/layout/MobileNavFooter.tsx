@@ -2,6 +2,7 @@
 "use client";
 
 import Link from "next/link";
+import React from 'react';
 import { Home, LayoutGrid, ShoppingBag, Sparkles } from "lucide-react";
 import { usePathname } from 'next/navigation';
 import { cn } from "@/lib/utils";
