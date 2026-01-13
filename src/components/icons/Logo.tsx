@@ -1,12 +1,10 @@
 
-
 'use client';
 
 import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
 import { getSiteSettings } from '@/lib/data-async';
 import type { SiteSettings } from '@/lib/types';
-import Link from 'next/link';
 
 const Logo = ({ className }: { className?: string }) => {
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
@@ -39,11 +37,11 @@ const Logo = ({ className }: { className?: string }) => {
   }
 
   return (
-    <Link href="/" className={cn("text-2xl md:text-3xl font-bold tracking-tight", className)}>
+    <div className={cn("text-2xl md:text-3xl font-bold tracking-tight whitespace-nowrap", className)}>
       <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
         Nema One
       </span>
-    </Link>
+    </div>
   );
 };
 
