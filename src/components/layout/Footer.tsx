@@ -69,11 +69,11 @@ const Footer = async () => {
             <div className="hidden md:grid md:grid-cols-3 col-span-3 gap-8">
               {linkSections.map((section: any) => (
                 <div key={section.title}>
-                    <h3 className="font-semibold text-foreground mb-4">{section.title}</h3>
+                    <h3 className="font-bold text-lg text-foreground mb-4">{section.title}</h3>
                     <ul className="space-y-2 text-sm">
                     {section.links.map((link: any) => (
                         <li key={link.href}>
-                        <Link href={link.href} className="text-muted-foreground hover:text-primary">{link.label}</Link>
+                        <Link href={link.href} className="text-muted-foreground hover:text-primary font-medium">{link.label}</Link>
                         </li>
                     ))}
                     </ul>
@@ -86,12 +86,12 @@ const Footer = async () => {
                 <Accordion type="single" collapsible className="w-full">
                     {linkSections.map((section: any) => (
                         <AccordionItem value={section.title} key={section.title}>
-                            <AccordionTrigger className="font-semibold text-foreground">{section.title}</AccordionTrigger>
+                            <AccordionTrigger className="font-bold text-lg text-foreground">{section.title}</AccordionTrigger>
                             <AccordionContent>
                                 <ul className="space-y-3 pt-2">
                                 {section.links.map((link: any) => (
                                     <li key={link.href}>
-                                        <Link href={link.href} className="text-muted-foreground hover:text-primary">{link.label}</Link>
+                                        <Link href={link.href} className="text-muted-foreground hover:text-primary font-medium">{link.label}</Link>
                                     </li>
                                 ))}
                                 </ul>
@@ -102,7 +102,7 @@ const Footer = async () => {
             </div>
 
               <div className="md:col-span-1">
-                <h3 className="font-semibold text-foreground mb-4">Newsletter</h3>
+                <h3 className="font-bold text-lg text-foreground mb-4">Newsletter</h3>
                 <p className="text-sm text-muted-foreground mb-4">Subscribe for special offers, and new product announcements.</p>
                 <form className="flex">
                   <Input type="email" placeholder="Your e-mail" className="rounded-r-none focus-visible:ring-0 focus-visible:ring-offset-0 border-r-0" />

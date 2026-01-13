@@ -22,7 +22,7 @@ import confetti from 'canvas-confetti';
 import { createPaymentLink } from '@/lib/payment';
 import ImageUploadHandler from '@/components/checkout/ImageUploadHandler';
 import Link from 'next/link';
-import type { Coupon, OrderItem, Product, SiteSettings } from '@/lib/types';
+import type { Coupon, OrderItem, Product, SiteSettings } from "@/lib/types";
 import { BLUR_DATA_URL } from '@/lib/constants';
 
 interface WhatsAppCheckoutModalProps {
@@ -530,7 +530,7 @@ const WhatsAppCheckoutModal = ({ isOpen, onOpenChange, checkoutInput, checkoutMo
             </div>
             <DialogFooter className="mt-6">
                {checkoutMode === 'payment' ? (
-                 <Button type="submit" className="w-full">
+                 <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white">
                     <FileText className="mr-2 h-4 w-4" />
                     Proceed to Pay ₹{advanceAmount.toFixed(2)}
                  </Button>

@@ -94,21 +94,18 @@ const ProductCard = ({ product }: ProductCardProps) => {
             <Heart className={cn("h-4 w-4 text-foreground", isInWishlist && "fill-destructive text-destructive")} />
           </Button>
       </CardHeader>
-      <CardContent className="flex-1 p-3 space-y-2 flex flex-col">
-        <div className="flex-1 space-y-1">
-            <Link href={productUrl}>
-                <h3 className="font-headline font-bold text-base leading-tight group-hover:text-accent transition-colors line-clamp-2 min-h-[2.5rem]">
-                {product.name}
-                </h3>
-            </Link>
-             <div className="flex items-baseline gap-2">
-                 <p className="text-lg font-bold text-primary">
-                    {typeof product.price === 'number' ? `₹${product.price.toFixed(0)}` : 'Price not available'}
-                 </p>
-            </div>
-            {product.specificDescription && <p className="text-xs text-muted-foreground font-semibold">{product.specificDescription}</p>}
+      <CardContent className="flex-1 p-3 space-y-2 flex flex-col justify-between">
+        <Link href={productUrl}>
+            <h3 className="font-headline font-bold text-base leading-tight group-hover:text-accent transition-colors line-clamp-2 min-h-[2.5rem]">
+            {product.name}
+            </h3>
+        </Link>
+        <div className="flex items-baseline gap-2">
+            <p className="text-lg font-bold text-primary">
+              {typeof product.price === 'number' ? `₹${product.price.toFixed(0)}` : 'Price not available'}
+            </p>
         </div>
-        
+        {product.specificDescription && <p className="text-xs text-muted-foreground font-semibold">{product.specificDescription}</p>}
       </CardContent>
       <CardFooter className="p-2 pt-0 mt-auto flex flex-col items-stretch gap-2">
          {product.rating && product.reviewCount && (
@@ -131,7 +128,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
         )}
         <Button 
           onClick={handleBuyNow} 
-          className="w-full rounded-lg"
+          className="w-full rounded-lg bg-blue-600 hover:bg-blue-700 text-white"
           disabled={product.inventory === 0}
           size="sm"
         >
