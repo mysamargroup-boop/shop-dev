@@ -2,7 +2,6 @@
 "use client";
 
 import Link from 'next/link';
-import React from 'react';
 import { ShoppingCart, Menu, Search, Gift, Box, Brush, Info, ShoppingBag, LayoutGrid, Heart, Mail, KeyRound, Smartphone, ImageIcon, Moon, Sun, Sparkles, User, LogOut, Facebook, Instagram, Youtube, Linkedin, Twitter } from 'lucide-react';
 import Logo from '@/components/icons/Logo';
 import { Button } from '@/components/ui/button';
@@ -110,7 +109,13 @@ const Header = () => {
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
     if (query.trim().length > 1) {
-      const results = allProducts.filter(p => p.name.toLowerCase().includes(query.toLowerCase()));
+      const lowerCaseQuery = query.toLowerCase();
+      const results = allProducts.filter(p => 
+        p.name.toLowerCase().includes(lowerCaseQuery) ||
+        (p.description && p.description.toLowerCase().includes(lowerCaseQuery)) ||
+        p.category.toLowerCase().includes(lowerCaseQuery) ||
+        (p.tags && p.tags.some(tag => tag.toLowerCase().includes(lowerCaseQuery)))
+      );
       setSearchResults(results);
       setIsSearchOpen(true);
     } else {
@@ -176,7 +181,7 @@ const Header = () => {
                 <AccordionContent>
                     <div className="pl-6 space-y-0.5">
                       {allCategories.map(category => (
-                          <Link key={category.id} href={`/collections/${category.id}`} className="flex items-center gap-3 py-2 rounded-md hover:bg-muted/50" onClick={() => setIsSheetOpen(false)}>
+                          <Link key={category.id} href={category.linkUrl || `/collections/${category.id}`} className="flex items-center gap-3 py-2 rounded-md hover:bg-muted/50" onClick={() => setIsSheetOpen(false)}>
                             <Image src={category.imageUrl} alt={category.name} width={24} height={24} className="rounded-md object-cover w-6 h-6"/>
                             <p className="font-medium text-sm text-muted-foreground">{category.name}</p>
                           </Link>
@@ -221,27 +226,27 @@ const Header = () => {
                  <div className="flex items-center justify-center gap-6 mt-4">
                   {siteSettings.social_facebook && (
                     <Link href={siteSettings.social_facebook} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
-                      <Facebook size={22} />
+                      <Facebook size={20} />
                     </Link>
                   )}
                   {siteSettings.social_instagram && (
                     <Link href={siteSettings.social_instagram} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
-                      <Instagram size={22} />
+                      <Instagram size={20} />
                     </Link>
                   )}
                   {siteSettings.social_youtube && (
                     <Link href={siteSettings.social_youtube} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
-                      <Youtube size={22} />
+                      <Youtube size={20} />
                     </Link>
                   )}
                   {siteSettings.social_linkedin && (
                     <Link href={siteSettings.social_linkedin} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
-                      <Linkedin size={22} />
+                      <Linkedin size={20} />
                     </Link>
                   )}
                   {siteSettings.social_twitter && (
                     <Link href={siteSettings.social_twitter} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
-                      <Twitter size={22} />
+                      <Twitter size={20} />
                     </Link>
                   )}
                 </div>
@@ -282,7 +287,7 @@ const Header = () => {
                     <NavigationMenuContent>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 w-screen max-w-sm md:max-w-xl lg:max-w-3xl">
                             {allCategories.map(category => (
-                            <Link key={category.id} href={`/collections/${category.id}`} className="group block rounded-lg p-2 hover:bg-muted/50">
+                            <Link key={category.id} href={category.linkUrl || `/collections/${category.id}`} className="group block rounded-lg p-2 hover:bg-muted/50">
                                 <div className="aspect-video relative mb-2 overflow-hidden rounded-md">
                                     <Image 
                                         src={category.imageUrl} 
@@ -423,5 +428,3 @@ const Header = () => {
 };
 
 export default Header;
-
-    
