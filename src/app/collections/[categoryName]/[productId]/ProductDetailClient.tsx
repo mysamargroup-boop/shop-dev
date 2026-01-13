@@ -49,7 +49,6 @@ const ImageUpload = ({ onFilesChange }: { onFilesChange: (files: File[]) => void
   const handleRemoveFile = (index: number) => {
     const newFiles = selectedFiles.filter((_, i) => i !== index);
     setSelectedFiles(newFiles);
-    onFilesChange(newFiles);
     if (fileInputRef.current) {
         fileInputRef.current.value = '';
     }
@@ -242,7 +241,7 @@ export default function ProductDetailClient({ product }: { product: Product }) {
 
         <div className="space-y-2">
             <div className="flex items-baseline gap-2">
-                <p className="text-3xl font-bold text-foreground">₹{product.price.toFixed(0)}<span className="text-base font-normal text-muted-foreground">/piece</span></p>
+                <p className="text-3xl font-bold text-foreground">₹{product.price.toFixed(0)}</p>
                  <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -485,3 +484,4 @@ export default function ProductDetailClient({ product }: { product: Product }) {
   );
 }
 
+    

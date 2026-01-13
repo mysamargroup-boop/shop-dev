@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import React from 'react';
-import { ShoppingCart, Menu, Search, Gift, Box, Brush, Info, ShoppingBag, LayoutGrid, Heart, Mail, KeyRound, Smartphone, ImageIcon, Moon, Sun, Sparkles, User, LogOut } from 'lucide-react';
+import { ShoppingCart, Menu, Search, Gift, Box, Brush, Info, ShoppingBag, LayoutGrid, Heart, Mail, KeyRound, Smartphone, ImageIcon, Moon, Sun, Sparkles, User, LogOut, Facebook, Instagram, Youtube, Linkedin, Twitter } from 'lucide-react';
 import Logo from '@/components/icons/Logo';
 import { Button } from '@/components/ui/button';
 import useCart from '@/hooks/use-cart';
@@ -29,7 +29,8 @@ import { BLUR_DATA_URL } from '@/lib/constants';
 import { useTheme } from 'next-themes';
 import { Label } from '../ui/label';
 import { Switch } from '../ui/switch';
-import { getProducts, getCategories } from '@/lib/data-async';
+import { getProducts, getCategories, getSiteSettings as getSettings } from '@/lib/data-async';
+import { getHeaderLinks as getNavLinks } from '@/lib/data-supabase';
 import { useAuth } from '@/lib/auth';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 
@@ -93,8 +94,8 @@ const Header = () => {
         const [products, categories, settings, navLinks] = await Promise.all([
           getProducts(),
           getCategories(),
-          fetch('/api/settings').then(res => res.json()),
-          fetch('/api/navigation?area=header').then(res => res.json())
+          getSettings(),
+          getNavLinks()
         ]);
         
         setAllProducts(products);
@@ -216,6 +217,36 @@ const Header = () => {
           </nav>
         </ScrollArea>
         <div className="mt-auto space-y-4 pt-4 border-t">
+            {siteSettings.social_instagram || siteSettings.social_facebook ? (
+                 <div className="flex items-center justify-center gap-6 mt-4">
+                  {siteSettings.social_facebook && (
+                    <Link href={siteSettings.social_facebook} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+                      <Facebook size={22} />
+                    </Link>
+                  )}
+                  {siteSettings.social_instagram && (
+                    <Link href={siteSettings.social_instagram} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+                      <Instagram size={22} />
+                    </Link>
+                  )}
+                  {siteSettings.social_youtube && (
+                    <Link href={siteSettings.social_youtube} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+                      <Youtube size={22} />
+                    </Link>
+                  )}
+                  {siteSettings.social_linkedin && (
+                    <Link href={siteSettings.social_linkedin} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+                      <Linkedin size={22} />
+                    </Link>
+                  )}
+                  {siteSettings.social_twitter && (
+                    <Link href={siteSettings.social_twitter} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+                      <Twitter size={22} />
+                    </Link>
+                  )}
+                </div>
+            ) : null}
+
             {user && (
               <Button variant="outline" asChild className="w-full justify-start">
                   <Link href="/wb-admin" className="flex items-center gap-2">
@@ -392,3 +423,5 @@ const Header = () => {
 };
 
 export default Header;
+
+    
