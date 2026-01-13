@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import Link from 'next/link';
@@ -321,9 +322,7 @@ const Header = () => {
           </div>
 
           <div className="flex justify-center w-auto md:w-1/3">
-            <Link href="/">
-              <Logo />
-            </Link>
+            <Logo />
           </div>
 
           <div className="flex items-center justify-end w-1/3">

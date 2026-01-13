@@ -1,4 +1,5 @@
 
+
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import './globals.css';
@@ -20,7 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const googleVerification = process.env.GOOGLE_SITE_VERIFICATION;
   
   return {
-    title: settings.home_meta_title || 'Woody Business',
+    title: settings.home_meta_title || 'Nema One',
     description: settings.home_meta_description || 'Exquisite Personalized Wooden Gifts',
     manifest: '/manifest.webmanifest',
     icons: { icon: '/favicon.svg' },

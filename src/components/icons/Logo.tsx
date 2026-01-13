@@ -1,15 +1,15 @@
 
+
 'use client';
 
 import { cn } from '@/lib/utils';
-import Image from 'next/image';
-import { BLUR_DATA_URL } from '@/lib/constants';
 import { useEffect, useState } from 'react';
 import { getSiteSettings } from '@/lib/data-async';
 import type { SiteSettings } from '@/lib/types';
+import Link from 'next/link';
 
 const Logo = ({ className }: { className?: string }) => {
-  const [logoUrl, setLogoUrl] = useState("https://woody.co.in/wp-content/uploads/2024/08/woody-logo.png");
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchLogo() {
@@ -25,20 +25,25 @@ const Logo = ({ className }: { className?: string }) => {
     fetchLogo();
   }, []);
   
+  if (logoUrl) {
+    return (
+      <div className={cn('flex items-center gap-2', className)}>
+        <img
+          src={logoUrl}
+          alt="Nema One Logo"
+          className="h-10 w-auto"
+          style={{ height: '40px' }}
+        />
+      </div>
+    );
+  }
 
   return (
-    <div className={cn('flex items-center gap-2', className)}>
-      <Image
-        src={logoUrl}
-        alt="Woody Business Logo"
-        width={120}
-        height={40}
-        className="h-10 w-auto"
-        style={{ width: 'auto', height: '40px' }}
-        unoptimized
-        priority
-      />
-    </div>
+    <Link href="/" className={cn("text-2xl md:text-3xl font-bold tracking-tight", className)}>
+      <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+        Nema One
+      </span>
+    </Link>
   );
 };
 

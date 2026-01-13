@@ -13,12 +13,14 @@ import { Button } from '@/components/ui/button';
 import IconCategoryGrid from '@/components/home/IconCategoryGrid';
 import SubscriptionPopup from '@/components/home/SubscriptionPopup';
 import VideoGallery from '@/components/home/VideoGallery';
-import WholesaleNotice from '@/components/home/WholesaleNotice';
+import AnnouncementBanner from '@/components/home/AnnouncementBanner';
 import FeaturedCategories from '@/components/home/FeaturedCategories';
 import PopularProducts from '@/components/home/PopularProducts';
 import ImageGrid from '@/components/home/ImageGrid';
 import TimerBanner from '@/components/home/TimerBanner';
 import { SiteSettings } from '@/lib/types';
+import Image from 'next/image';
+import { BLUR_DATA_URL } from '@/lib/constants';
 
 export default async function Home() {
   const products = await getProducts();
@@ -26,13 +28,17 @@ export default async function Home() {
   const settings: SiteSettings = await getSiteSettings();
   const siteImages = await getSiteImages();
 
+  const homeBanner1 = siteImages.find(img => img.id === 'home-banner-1') || { imageUrl: 'https://picsum.photos/seed/hb1/1200/600', imageHint: 'office products' };
+  const homeBanner2 = siteImages.find(img => img.id === 'home-banner-2') || { imageUrl: 'https://picsum.photos/seed/hb2/1200/600', imageHint: 'custom gifts' };
+
+
   const displayCategoryNames = ["Wall Decor", "Keychains", "Desk Accessories", "Personal Accessories", "Wall Hangings"];
   const categories = allCategories.filter(c => displayCategoryNames.includes(c.name));
 
 
   return (
     <>
-      <WholesaleNotice />
+      <AnnouncementBanner />
       <div className="container mx-auto px-4 pt-4 md:hidden">
         <form action="/shop" method="get" className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -53,6 +59,28 @@ export default async function Home() {
         <TimerBanner settings={settings} />
         <IconCategoryGrid />
         <PopularProducts products={products} />
+        
+        <div className="my-12 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Link href="/collections/corporate-gifts" className="group block">
+              <div className="relative aspect-video w-full rounded-lg overflow-hidden shadow-lg">
+                  <Image src={homeBanner1.imageUrl} alt="Corporate Gifting Solutions" fill className="object-cover transition-transform duration-300 group-hover:scale-105" data-ai-hint={homeBanner1.imageHint} placeholder="blur" blurDataURL={BLUR_DATA_URL} sizes="(max-width: 768px) 100vw, 50vw"/>
+                  <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-center text-white p-4 text-center">
+                      <h3 className="text-2xl font-bold font-headline">Corporate Gifting</h3>
+                      <p className="text-sm mt-1">Elevate your brand with custom engraved gifts.</p>
+                  </div>
+              </div>
+          </Link>
+          <Link href="/collections/personalized" className="group block">
+              <div className="relative aspect-video w-full rounded-lg overflow-hidden shadow-lg">
+                  <Image src={homeBanner2.imageUrl} alt="Personalized Gifts" fill className="object-cover transition-transform duration-300 group-hover:scale-105" data-ai-hint={homeBanner2.imageHint} placeholder="blur" blurDataURL={BLUR_DATA_URL} sizes="(max-width: 768px) 100vw, 50vw"/>
+                   <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-center text-white p-4 text-center">
+                      <h3 className="text-2xl font-bold font-headline">Fully Personalized Gifts</h3>
+                      <p className="text-sm mt-1">Create something truly unique for your loved ones.</p>
+                  </div>
+              </div>
+          </Link>
+        </div>
+
         <FeaturedCategories siteImages={siteImages} />
 
         {categories.map(category => {
@@ -82,21 +110,6 @@ export default async function Home() {
 
         <PromoSlider siteImages={siteImages} />
         <ShopByOccasion products={products} />
-
-        <div className="rounded-lg border border-primary/20 bg-primary/5 p-8 my-16">
-            <h3 className="text-2xl font-bold font-headline text-primary mb-3 text-center">Retail & Corporate Gifting</h3>
-            <p className="text-center text-muted-foreground max-w-2xl mx-auto mb-6">
-              Explore our full collection on our retail site, Woody, or inquire about special pricing and customization for bulk and corporate orders through our B2B portal.
-            </p>
-            <div className="text-center flex flex-wrap justify-center gap-4">
-                 <Button asChild>
-                    <a href="https://woody.co.in" target="_blank" rel="noopener noreferrer">Visit Woody (Retail)</a>
-                </Button>
-                <Button asChild className="bg-accent text-accent-foreground hover:bg-primary">
-                    <a href="https://business.woody.co.in" target="_blank" rel="noopener noreferrer">Visit B2B Portal</a>
-                </Button>
-            </div>
-          </div>
 
         <ReviewsCarousel />
 
