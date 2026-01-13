@@ -22,6 +22,7 @@ import { slugify } from './utils';
 const fs = require('fs').promises;
 
 const settingsFilePath = path.join(process.cwd(), 'src', 'lib', 'site-settings.json');
+const tagsFilePath = path.join(process.cwd(), 'src', 'lib', 'tags.json');
 const bannersFilePath = path.join(process.cwd(), 'src', 'lib', 'banners.json');
 
 // This function now uses the Supabase client
@@ -69,7 +70,15 @@ export async function getBlogPostBySlug(slug: string): Promise<BlogPost | undefi
 }
 
 export async function getTags(): Promise<string[]> {
-    return getTagsFromSupabase();
+  noStore();
+  try {
+    const fileContent = await fs.readFile(tagsFilePath, 'utf-8');
+    const data = JSON.parse(fileContent);
+    return data.tags || [];
+  } catch (error) {
+    console.error("Error reading tags file:", error);
+    return [];
+  }
 }
 
 export async function getSiteSettings(): Promise<SiteSettings> {

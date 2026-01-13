@@ -3,7 +3,6 @@
 
 import { useState, useEffect } from 'react';
 import { Heart } from 'lucide-react';
-import { getTags } from '@/lib/data';
 import ProductCard from '@/components/products/ProductCard';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,10 +22,17 @@ const ShopByOccasion = ({ products }: { products: Product[] }) => {
 
   useEffect(() => {
     async function fetchTags() {
-      const tags = await getTags();
-      setOccasionTags(tags);
-      if (tags.length > 0) {
-        setSelectedTag(tags[0]);
+      try {
+        const res = await fetch('/api/tags');
+        if (res.ok) {
+          const data = await res.json();
+          setOccasionTags(data.tags);
+          if (data.tags.length > 0) {
+            setSelectedTag(data.tags[0]);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch tags", error);
       }
     }
     fetchTags();
@@ -48,7 +54,7 @@ const ShopByOccasion = ({ products }: { products: Product[] }) => {
         </div>
       <div className="relative text-center mb-8">
         <h2 className="mb-2 text-3xl font-headline font-bold md:text-4xl inline-flex items-center gap-2">
-          Shop By <span className="text-red-500"><Heart className="inline-block h-8 w-8" /></span> Occasion
+          Shop By <span className="text-accent"><Heart className="inline-block h-8 w-8" /></span> Occasion
         </h2>
       </div>
 
@@ -60,7 +66,7 @@ const ShopByOccasion = ({ products }: { products: Product[] }) => {
             onClick={() => setSelectedTag(tag)}
             className={cn(
                 selectedTag === tag 
-                ? 'bg-red-700 hover:bg-red-800 text-white' 
+                ? 'bg-accent hover:bg-accent/80 text-accent-foreground' 
                 : 'bg-orange-100 border-orange-200 text-foreground hover:bg-orange-200 hover:text-foreground'
             )}
           >

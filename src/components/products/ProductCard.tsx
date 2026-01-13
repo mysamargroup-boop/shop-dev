@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import WhatsAppCheckoutModal from '../checkout/WhatsAppCheckoutModal';
 import { BLUR_DATA_URL } from '@/lib/constants';
+import { slugify } from '@/lib/utils';
 
 interface ProductCardProps {
   product: Product;
@@ -27,8 +28,8 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [checkoutMode, setCheckoutMode] = useState<'whatsapp' | 'payment'>('payment');
   
-  const categorySlug = product.category ? product.category.split(',')[0].trim().toLowerCase().replace(/ /g, '-') : 'uncategorized';
-  const productUrl = `/collections/${categorySlug}/${product.id}`;
+  const categorySlug = product.category ? slugify(product.category.split(',')[0].trim()) : 'uncategorized';
+  const productUrl = `/collections/${categorySlug}/${slugify(product.name)}`;
   const imageUrl = product.imageUrl || '/placeholder-image.svg';
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
@@ -79,13 +80,6 @@ const ProductCard = ({ product }: ProductCardProps) => {
             />
           </div>
         </Link>
-        <div className="absolute top-2 left-2 flex flex-col gap-1">
-          {product.tags?.map(tag => (
-             <Badge key={tag} className="bg-primary text-primary-foreground">
-               {tag}
-            </Badge>
-          ))}
-        </div>
          <Button
             size="icon"
             className="absolute top-2 right-2 h-8 w-8 rounded-full bg-background/70 backdrop-blur-sm hover:bg-background"
@@ -100,6 +94,12 @@ const ProductCard = ({ product }: ProductCardProps) => {
             {product.name}
             </h3>
         </Link>
+        <div className="flex flex-wrap items-center gap-1 text-xs">
+            <Badge variant="outline">{product.category.split(',')[0]}</Badge>
+            {product.tags?.slice(0, 2).map(tag => (
+                <Badge key={tag} variant="secondary">{tag}</Badge>
+            ))}
+        </div>
         <div className="flex items-baseline gap-2 mt-auto">
             <p className="text-lg font-bold text-primary">
               {typeof product.price === 'number' ? `₹${product.price.toFixed(0)}` : 'Price not available'}
@@ -128,7 +128,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
         )}
         <Button 
           onClick={handleBuyNow} 
-          className="w-full rounded-lg bg-gradient-to-r from-green-600 to-teal-700 hover:from-green-700 hover:to-teal-800 text-white shine-effect"
+          className="w-full rounded-lg bg-gradient-to-r from-green-700 to-green-900 hover:from-green-800 hover:to-green-900 text-white shine-effect"
           disabled={product.inventory === 0}
           size="sm"
         >
@@ -142,6 +142,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
         onOpenChange={setIsModalOpen}
         checkoutMode={checkoutMode}
         checkoutInput={{
+            sku: product.id,
             productName: `${product.name}${product.options?.find(o => o.value)?.label ? ` (${product.options?.find(o => o.value)?.label})` : ''}`,
             productDescription: product.description,
             originalPrice: totalCost,

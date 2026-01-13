@@ -4,12 +4,7 @@
 import type { Category } from './types';
 import categoriesJson from './categories.json';
 import imageData from './placeholder-images.json';
-import tagsJson from './tags.json';
 
-export async function getTags(): Promise<string[]> {
-    const data = tagsJson as { tags: string[] };
-    return Array.isArray(data.tags) ? data.tags : [];
-}
 
 export async function getCategories(): Promise<Category[]> {
     const data = categoriesJson as { categories: Category[] };
