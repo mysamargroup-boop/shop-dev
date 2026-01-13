@@ -21,19 +21,19 @@ export default function SandboxButton() {
         return;
       }
       const orderId = `WB-TEST-${Date.now()}`;
-      const res = await fetch('/api/create-payment-link', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      // Use Supabase Edge Function directly
+      const { supabase } = await import('@/lib/supabase');
+      const { data, error } = await supabase().functions.invoke('create-order', {
+        body: {
           orderId,
           amount: 10,
           customerName: 'Sandbox User',
           customerPhone: '919999999999',
           returnUrl: `${window.location.origin}/order-confirmation`
-        }),
+        }
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to create sandbox payment session');
+      
+      if (error) throw new Error(error.message || 'Failed to create sandbox payment session');
 
       if ((window as any).Cashfree && data.payment_session_id) {
         const cfModeEnv = (process.env.NEXT_PUBLIC_CASHFREE_ENV || 'SANDBOX').toUpperCase();

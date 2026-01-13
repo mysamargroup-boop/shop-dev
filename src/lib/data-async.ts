@@ -75,13 +75,8 @@ export async function getTags(): Promise<string[]> {
 
 export async function getSiteSettings(): Promise<SiteSettings> {
   noStore();
-  try {
-    const fileContent = await fs.readFile(settingsFilePath, 'utf-8');
-    return JSON.parse(fileContent);
-  } catch (error) {
-    console.error("Error reading settings file:", error);
-    return {};
-  }
+  const data = await readJsonFile(settingsFilePath);
+  return data || {};
 }
 
 export async function getSiteImages(): Promise<SiteImage[]> {

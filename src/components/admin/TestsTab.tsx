@@ -54,22 +54,21 @@ export default function TestsTab() {
 
   const testPayment = async () => {
     const orderId = `WB-TEST-${Date.now()}`;
-    const res = await fetch('/api/create-payment-link', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    // Use Supabase Edge Function directly
+    const { supabase } = await import('@/lib/supabase');
+    const { data, error } = await supabase().functions.invoke('create-order', {
+      body: {
         orderId,
         amount: 1,
         customerName: 'Test Customer',
         customerPhone: '9999999999',
         returnUrl: `${window.location.origin}/order-confirmation`,
         items: [{ name: 'Test Item', quantity: 1, price: 1 }]
-      }),
+      }
     });
 
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || 'Failed to create payment link.');
+    if (error) {
+      throw new Error(error.message || 'Failed to create payment link.');
     }
     
     // Store dummy data for confirmation page

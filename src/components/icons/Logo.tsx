@@ -10,10 +10,11 @@ const Logo = ({ className }: { className?: string }) => {
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
     async function fetchLogo() {
         try {
             const settings: SiteSettings = await getSiteSettings();
-            if (settings.logo_url) {
+            if (isMounted && settings.logo_url) {
                 setLogoUrl(settings.logo_url);
             }
         } catch (error) {
@@ -21,6 +22,7 @@ const Logo = ({ className }: { className?: string }) => {
         }
     }
     fetchLogo();
+    return () => { isMounted = false; };
   }, []);
   
   if (logoUrl) {
@@ -39,7 +41,7 @@ const Logo = ({ className }: { className?: string }) => {
   return (
     <div className={cn("text-2xl md:text-3xl font-bold tracking-tight whitespace-nowrap", className)}>
       <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-        Nema One
+        Samar Store
       </span>
     </div>
   );

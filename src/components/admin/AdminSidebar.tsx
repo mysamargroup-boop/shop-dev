@@ -18,7 +18,7 @@ const navItems = [
   { href: "/sr-admin/orders", label: "Orders", icon: ShoppingBag },
   { href: "/sr-admin/products", label: "Products", icon: Package },
   { href: "/sr-admin/categories", label: "Categories", icon: LayoutGrid },
-  { href: "/sr-admin/tags", label: "Tags", icon: TagIcon },
+  // Tags page removed, tags are managed within products
   { href: "/sr-admin/blogs", label: "Blogs", icon: PenSquare },
   { href: "/sr-admin/coupons", label: "Coupons", icon: TicketPercent },
   { href: "/sr-admin/banners", label: "Banners", icon: Gift },

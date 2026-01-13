@@ -244,7 +244,18 @@ export default function ProductDetailClient({ product }: { product: Product }) {
 
         <div className="space-y-2">
             <div className="flex items-baseline gap-2">
-                <p className="text-3xl font-bold text-foreground">₹{product.price.toFixed(0)}</p>
+                {typeof product.salePrice === 'number' && typeof product.regularPrice === 'number' && product.salePrice < product.regularPrice ? (
+                  <>
+                    <p className="text-3xl font-bold text-accent">₹{product.salePrice.toFixed(0)}</p>
+                    <p className="text-lg line-through text-muted-foreground">₹{product.regularPrice.toFixed(0)}</p>
+                  </>
+                ) : (
+                  <p className="text-3xl font-bold text-foreground">
+                    {typeof product.regularPrice === 'number'
+                      ? `₹${product.regularPrice.toFixed(0)}`
+                      : `₹${product.price.toFixed(0)}`}
+                  </p>
+                )}
                  <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -444,7 +455,18 @@ export default function ProductDetailClient({ product }: { product: Product }) {
                   <Image src={product.imageUrl} alt={product.imageAlt || product.name} width={40} height={40} className="rounded-md object-cover flex-shrink-0" data-ai-hint={product.imageHint} placeholder="blur" blurDataURL={BLUR_DATA_URL} sizes="40px" />
                   <div className="overflow-hidden">
                       <p className="font-semibold text-sm truncate">{product.name}</p>
-                      <p className="text-muted-foreground text-xs">₹{product.price.toFixed(2)}</p>
+                      {typeof product.salePrice === 'number' && typeof product.regularPrice === 'number' && product.salePrice < product.regularPrice ? (
+                        <div className="flex items-center gap-2">
+                          <p className="text-accent text-xs font-semibold">₹{product.salePrice.toFixed(2)}</p>
+                          <p className="text-muted-foreground text-[11px] line-through">₹{product.regularPrice.toFixed(2)}</p>
+                        </div>
+                      ) : (
+                        <p className="text-muted-foreground text-xs">
+                          {typeof product.regularPrice === 'number'
+                            ? `₹${product.regularPrice.toFixed(2)}`
+                            : `₹${product.price.toFixed(2)}`}
+                        </p>
+                      )}
                   </div>
               </div>
             <div className="flex items-center gap-2 flex-shrink-0">

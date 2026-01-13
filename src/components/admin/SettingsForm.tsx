@@ -196,6 +196,22 @@ export default function SettingsForm({ settings, mode = 'all' }: { settings: Sit
                 <Label htmlFor="contact_hours">Business Hours</Label>
                 <Textarea id="contact_hours" name="contact_hours" defaultValue={settings.contact_hours || ''} placeholder="Monday - Friday: 9am - 5pm\nSaturday: 10am - 2pm" />
               </div>
+              <div className="grid gap-2">
+                  <Label htmlFor="product_id_prefix">Product ID Prefix</Label>
+                  <Input 
+                    id="product_id_prefix" 
+                    name="product_id_prefix" 
+                    defaultValue={settings.product_id_prefix || ''} 
+                    placeholder="e.g. WB" 
+                    maxLength={2}
+                    className="uppercase"
+                    onChange={(e) => {
+                      e.target.value = e.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 2);
+                    }}
+                  />
+                  <p className="text-xs text-muted-foreground">Must be exactly 2 Capital Letters (e.g., SR, WB).</p>
+                  {state?.errors?.product_id_prefix && <p className="text-sm text-red-500">{state.errors.product_id_prefix}</p>}
+              </div>
             </CardContent>
           </Card>
         )}

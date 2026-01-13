@@ -5,8 +5,9 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import AdminSidebar from "@/components/admin/AdminSidebar";
-import { Loader2, PanelLeft } from "lucide-react";
+import { Loader2, PanelLeft, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import AdminFooter from "@/components/admin/AdminFooter";
 
 export default function AdminAuthLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -48,15 +49,23 @@ export default function AdminAuthLayout({ children }: { children: React.ReactNod
       <div className="flex min-h-screen bg-background">
         <AdminSidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
         <main className="flex-1 flex flex-col overflow-x-hidden">
-            <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-6 lg:hidden flex-shrink-0">
-              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setIsSidebarOpen(true)}>
-                <PanelLeft className="h-4 w-4" />
-                <span className="sr-only">Toggle Menu</span>
-              </Button>
+            <header className="flex h-14 items-center justify-between gap-4 border-b bg-muted/40 px-6 flex-shrink-0">
+              <div className="flex items-center gap-4">
+                  <Button variant="outline" size="icon" className="h-8 w-8 lg:hidden" onClick={() => setIsSidebarOpen(true)}>
+                    <PanelLeft className="h-4 w-4" />
+                    <span className="sr-only">Toggle Menu</span>
+                  </Button>
+                  <h1 className="font-semibold text-lg">Admin Console</h1>
+              </div>
+              <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground hidden sm:inline">{user.email}</span>
+                  <UserCircle className="h-6 w-6 text-muted-foreground" />
+              </div>
             </header>
             <div className="flex-1 p-4 sm:p-8 overflow-y-auto">
               {children}
             </div>
+            <AdminFooter />
         </main>
       </div>
     );

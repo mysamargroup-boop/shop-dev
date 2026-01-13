@@ -43,10 +43,6 @@ export async function getProducts(): Promise<ProductsData> {
       videoUrl: product.video_url,
       imageAttribution: product.image_attribution,
       allowImageUpload: product.allow_image_upload,
-      weightGrams: product.weight_grams,
-      dimensionsLength: product.dimensions_length,
-      dimensionsWidth: product.dimensions_width,
-      dimensionsHeight: product.dimensions_height,
       specificDescription: product.specific_description,
       reviewCount: product.review_count,
       // Map price fields
@@ -84,10 +80,6 @@ export async function getProductById(id: string): Promise<Product | null> {
       videoUrl: data.video_url,
       imageAttribution: data.image_attribution,
       allowImageUpload: data.allow_image_upload,
-      weightGrams: data.weight_grams,
-      dimensionsLength: data.dimensions_length,
-      dimensionsWidth: data.dimensions_width,
-      dimensionsHeight: data.dimensions_height,
       specificDescription: data.specific_description,
       reviewCount: data.review_count,
       price: data.sale_price || data.regular_price,
@@ -120,10 +112,6 @@ export async function getProductByName(name: string): Promise<Product | null> {
           videoUrl: product.video_url,
           imageAttribution: product.image_attribution,
           allowImageUpload: product.allow_image_upload,
-          weightGrams: product.weight_grams,
-          dimensionsLength: product.dimensions_length,
-          dimensionsWidth: product.dimensions_width,
-          dimensionsHeight: product.dimensions_height,
           specificDescription: product.specific_description,
           reviewCount: product.review_count,
           price: product.sale_price || product.regular_price,
@@ -224,13 +212,11 @@ export async function getBlogPostsAdmin(): Promise<BlogPost[]> {
 
 export async function getTags(): Promise<string[]> {
   try {
-    const { data, error } = await supabaseAdmin()
-      .from('tags')
-      .select('name')
-      .order('name');
+    const { data, error } = await supabaseAdmin().rpc('get_unique_tags');
     
     if (error) throw error;
-    return data?.map(tag => tag.name) || [];
+    // RPC returns an array of objects like [{ tag: 'tag1' }, { tag: 'tag2' }]
+    return data?.map((item: any) => item.tag) || [];
   } catch (error) {
     console.error('Error fetching tags:', error);
     return [];

@@ -23,6 +23,7 @@ type ProductFormProps = {
   product?: Product | null;
   buttonText: string;
   initialState: any;
+  defaultIdPrefix?: string;
 };
 
 const SeoScoreIndicator = ({ score, text }: { score: number; text: string;}) => {
@@ -178,13 +179,13 @@ const RichTextEditor = ({ value, onChange }: { value: string; onChange: (value: 
 };
 
 
-export function ProductForm({ action, product, buttonText, initialState }: ProductFormProps) {
+export function ProductForm({ action, product, buttonText, initialState, defaultIdPrefix }: ProductFormProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [allTags, setAllTags] = useState<string[]>([]);
   const [description, setDescription] = useState(product?.description || '');
   const [name, setName] = useState(product?.name || '');
   const [shortDescription, setShortDescription] = useState(product?.shortDescription || '');
-  const [productId, setProductId] = useState(product?.id || '');
+  const [productId, setProductId] = useState(product?.id || defaultIdPrefix || '');
   const [imageUrl, setImageUrl] = useState(product?.imageUrl || '');
   const [imageAlt, setImageAlt] = useState(product?.imageAlt || '');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -525,28 +526,7 @@ export function ProductForm({ action, product, buttonText, initialState }: Produ
                     </div>
                 </div>
 
-                <div className="md:col-span-2">
-                    <h3 className="text-lg font-medium font-headline border-t pt-6 mt-4">Specifications</h3>
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="weightGrams">Weight (grams)</Label>
-                    <Input id="weightGrams" name="weightGrams" type="number" step="1" defaultValue={product?.weightGrams} />
-                    <p className="text-xs text-muted-foreground">Enter numeric grams, e.g., 250</p>
-                </div>
-                <div className="grid grid-cols-3 gap-3">
-                    <div className="space-y-2">
-                    <Label htmlFor="lengthCm">Length (cm)</Label>
-                    <Input id="lengthCm" name="lengthCm" type="number" step="0.1" defaultValue={product?.dimensionsCm?.length} />
-                    </div>
-                    <div className="space-y-2">
-                    <Label htmlFor="widthCm">Width (cm)</Label>
-                    <Input id="widthCm" name="widthCm" type="number" step="0.1" defaultValue={product?.dimensionsCm?.width} />
-                    </div>
-                    <div className="space-y-2">
-                    <Label htmlFor="heightCm">Height (cm)</Label>
-                    <Input id="heightCm" name="heightCm" type="number" step="0.1" defaultValue={product?.dimensionsCm?.height} />
-                    </div>
-                </div>
+
                 
                 <div className="md:col-span-2 space-y-2">
                     <Label htmlFor="videoUrl">Product Video URL (optional)</Label>

@@ -24,21 +24,19 @@ type PaymentInput = {
     items: OrderItem[];
 };
 
+import { supabase } from './supabase';
+
 async function getCashfreePaymentLink(orderId: string, amount: number, customerName: string, customerPhone: string, returnUrl: string, items: OrderItem[]) {
-    const response = await fetch('/api/create-payment-link', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ orderId, amount, customerName, customerPhone, returnUrl, items }),
+    const { data, error } = await supabase().functions.invoke('create-order', {
+        body: { orderId, amount, customerName, customerPhone, returnUrl, items }
     });
 
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to create payment link');
+    if (error) {
+        console.error("Supabase Function Error:", error);
+        throw new Error(error.message || 'Failed to create payment link');
     }
 
-    return response.json();
+    return data;
 }
 
 

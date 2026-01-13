@@ -50,12 +50,6 @@ create table if not exists products (
   badge text,
   specific_description text,
   features text[],
-  weight_grams integer,
-  dimensions_length numeric(6,2),
-  dimensions_width numeric(6,2),
-  dimensions_height numeric(6,2),
-  weight text,
-  dimensions text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -402,7 +396,7 @@ create trigger set_updated_at_videos before update on videos for each row execut
 create trigger set_updated_at_order_status_history before update on order_status_history for each row execute procedure set_updated_at();
 create trigger set_updated_at_lead_analytics before update on lead_analytics for each row execute procedure set_updated_at();
 create trigger set_updated_at_payments before update on payments for each row execute procedure set_updated_at();
-create trigger set_updated_at_site_settings before update on site_settings for each row execute procedure set_updated_at();
+
 create trigger set_updated_at_blog_posts before update on blog_posts for each row execute procedure set_updated_at();
 create trigger set_updated_at_product_options before update on product_options for each row execute procedure set_updated_at();
 create trigger set_updated_at_order_items before update on order_items for each row execute procedure set_updated_at();
@@ -423,14 +417,13 @@ alter table order_items enable row level security;
 alter table banners enable row level security;
 alter table payments enable row level security;
 alter table coupon_redemptions enable row level security;
-alter table site_settings enable row level security;
+
 alter table site_images enable row level security;
 alter table blog_posts enable row level security;
 alter table marketing_campaigns enable row level security;
 alter table whatsapp_messages enable row level security;
-alter table tags enable row level security;
-alter table subscriptions enable row level security;
-alter table videos enable row level security;
+
+alter table subscriptions enable row level security;alter table videos enable row level security;
 alter table order_status_history enable row level security;
 alter table lead_analytics enable row level security;
 
@@ -541,3 +534,4 @@ on conflict (id) do nothing;
 insert into videos (id, type, url, thumbnail_url) values
 ('video2','instagram','https://www.instagram.com/p/Cx1234567/','https://picsum.photos/seed/insta/400/600')
 on conflict (id) do nothing;
+

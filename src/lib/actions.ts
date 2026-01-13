@@ -49,6 +49,8 @@ const siteSettingsSchema = z.object({
   theme_background: z.string().optional(),
   theme_muted: z.string().optional(),
   redirects: z.string().optional(),
+  whatsapp_only_checkout_enabled: z.coerce.boolean().optional(),
+  product_id_prefix: z.string().regex(/^[A-Z]{2}$/, "Must be exactly 2 capital letters").optional(),
 });
 
 const productSchema = z.object({
@@ -75,13 +77,6 @@ const productSchema = z.object({
   color: z.string().optional(),
   badge: z.string().optional(),
   allowImageUpload: z.enum(['on', 'off']).optional(),
-  weightGrams: z.coerce.number().optional(),
-  lengthCm: z.coerce.number().optional(),
-  widthCm: z.coerce.number().optional(),
-  heightCm: z.coerce.number().optional(),
-  /** legacy */
-  weight: z.string().optional(),
-  dimensions: z.string().optional(),
 });
 
 
@@ -170,7 +165,7 @@ export async function createProduct(previousState: any, formData: FormData) {
     };
   }
 
-  const { features, galleryImages, tags, allowImageUpload, lengthCm, widthCm, heightCm, ...rest } = validatedFields.data;
+  const { features, galleryImages, tags, allowImageUpload, ...rest } = validatedFields.data;
 
   const supabase = supabaseAdmin();
   const { data: existing, error: existingError } = await supabase
@@ -209,12 +204,7 @@ export async function createProduct(previousState: any, formData: FormData) {
     badge: rest.badge || null,
     specific_description: rest.specificDescription || null,
     features: toArray(features),
-    weight_grams: rest.weightGrams || null,
-    dimensions_length: lengthCm ? Number(lengthCm) : null,
-    dimensions_width: widthCm ? Number(widthCm) : null,
-    dimensions_height: heightCm ? Number(heightCm) : null,
-    weight: rest.weight || null,
-    dimensions: rest.dimensions || null,
+    price: rest.salePrice || rest.regularPrice,
   };
 
   const { error } = await supabase
@@ -269,8 +259,6 @@ export async function updateProduct(productId: string, previousState: any, formD
   if (lengthCm !== undefined) payload.dimensions_length = lengthCm ? Number(lengthCm) : null;
   if (widthCm !== undefined) payload.dimensions_width = widthCm ? Number(widthCm) : null;
   if (heightCm !== undefined) payload.dimensions_height = heightCm ? Number(heightCm) : null;
-  if (rest.weight !== undefined) payload.weight = rest.weight || null;
-  if (rest.dimensions !== undefined) payload.dimensions = rest.dimensions || null;
 
   const { error } = await supabase
     .from('products')
@@ -278,18 +266,6 @@ export async function updateProduct(productId: string, previousState: any, formD
     .eq('id', productId);
   if (error) {
     return { errors: { _form: ["Database Error: Failed to update product."] } };
-  }
-  
-  // Update tags if new tags are present
-  const updatedTagsArr = tags !== undefined ? toArray(tags) : undefined;
-  if (updatedTagsArr && updatedTagsArr.length > 0) {
-      const { error: tagsError } = await supabase
-        .from('tags')
-        .upsert(updatedTagsArr.map(t => ({ name: t })), { onConflict: 'name', ignoreDuplicates: true });
-        
-      if (tagsError) {
-          console.error("Error updating tags:", tagsError);
-      }
   }
   
   revalidatePath(`/sr-admin/products`);
@@ -902,55 +878,6 @@ export async function sendBulkSimpleWhatsappMessages(data: {
 
 export async function getTagsList(): Promise<string[]> {
   return getTagsFromSupabase();
-}
-
-export async function addTag(previousState: any, formData: FormData) {
-  const name = String(formData.get('name') || '').trim();
-  if (!name) {
-    return { success: false, message: 'Tag name is required' };
-  }
-  
-  const supabase = supabaseAdmin();
-  const { data: existing } = await supabase
-    .from('tags')
-    .select('name')
-    .ilike('name', name)
-    .single();
-
-  if (existing) {
-    return { success: false, message: 'Tag already exists' };
-  }
-
-  const { error } = await supabase
-    .from('tags')
-    .insert({ name });
-
-  if (error) {
-    console.error("Error adding tag:", error);
-    return { success: false, message: 'Database Error: Failed to add tag.' };
-  }
-
-  revalidatePath('/sr-admin/tags');
-  return { success: true };
-}
-
-export async function deleteTag(previousState: any, formData: FormData) {
-  const name = String(formData.get('name') || '').trim();
-  if (!name) return { success: false };
-
-  const supabase = supabaseAdmin();
-  const { error } = await supabase
-    .from('tags')
-    .delete()
-    .eq('name', name);
-
-  if (error) {
-    console.error("Error deleting tag:", error);
-    return { success: false, message: 'Database Error: Failed to delete tag.' };
-  }
-
-  revalidatePath('/sr-admin/tags');
-  return { success: true };
 }
 
 export async function bulkAddTagToProducts(previousState: any, formData: FormData) {

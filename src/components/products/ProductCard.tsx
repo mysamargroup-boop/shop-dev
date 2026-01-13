@@ -119,9 +119,24 @@ const ProductCard = ({ product }: ProductCardProps) => {
             ))}
         </div>
         <div className="flex items-baseline gap-2 mt-auto">
-            <p className="text-lg font-bold text-primary">
-              {typeof product.price === 'number' ? `₹${product.price.toFixed(0)}` : 'Price not available'}
-            </p>
+            {typeof product.salePrice === 'number' && typeof product.regularPrice === 'number' && product.salePrice < product.regularPrice ? (
+              <>
+                <p className="text-lg font-bold text-accent">
+                  ₹{product.salePrice.toFixed(0)}
+                </p>
+                <p className="text-sm line-through text-muted-foreground">
+                  ₹{product.regularPrice.toFixed(0)}
+                </p>
+              </>
+            ) : (
+              <p className="text-lg font-bold text-primary">
+                {typeof product.regularPrice === 'number'
+                  ? `₹${product.regularPrice.toFixed(0)}`
+                  : typeof product.price === 'number'
+                  ? `₹${product.price.toFixed(0)}`
+                  : 'Price not available'}
+              </p>
+            )}
         </div>
         {product.specificDescription && <p className="text-xs text-muted-foreground font-semibold">{product.specificDescription}</p>}
       </CardContent>

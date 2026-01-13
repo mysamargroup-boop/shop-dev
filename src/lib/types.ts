@@ -37,9 +37,6 @@ export interface Product {
   allowImageUpload?: boolean;
   weightGrams?: number;
   dimensionsCm?: { length: number; width: number; height: number };
-  /** legacy */
-  weight?: string;
-  dimensions?: string;
 }
 
 export interface Category {
@@ -154,6 +151,7 @@ export interface SiteSettings {
   theme_muted?: string;
   redirects?: string;
   whatsapp_only_checkout_enabled?: boolean;
+  product_id_prefix?: string;
 }
 
 export interface Coupon {
