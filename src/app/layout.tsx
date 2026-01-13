@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { usePathname } from 'next/navigation';
@@ -61,11 +60,11 @@ export default function RootLayout({
       `}
     </style>
   ) : <style>{`body { background-image: linear-gradient(to bottom, #ffffff, #e0f2fe); } .dark body { background-image: linear-gradient(to bottom, hsl(var(--background)), #0c1e35); }`}</style>;
-
+  
   if (isAdminPage) {
     return (
        <html lang="en" suppressHydrationWarning>
-        <body>
+        <body className={cn('min-h-screen font-body antialiased admin-bg')}>
            <ThemeProvider
               attribute="class"
               defaultTheme="system"
@@ -84,6 +83,7 @@ export default function RootLayout({
       </html>
     )
   }
+
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -107,8 +107,7 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.webmanifest" />
       </head>
       <body className={cn(
-        'min-h-screen bg-background font-body antialiased flex flex-col',
-        isAdminPage && 'admin-page'
+        'min-h-screen bg-background font-body antialiased flex flex-col'
       )}>
         <ThemeProvider
             attribute="class"
@@ -130,10 +129,10 @@ export default function RootLayout({
                 <ProgressBar />
             </Suspense>
             <AuthProvider>
-                {!isAdminPage && <Header />}
-                <main className={cn("flex-1", !isAdminPage && "pb-20 md:pb-0")}>{children}</main>
-                {!isAdminPage && <Footer />}
-                {!isAdminPage && <MobileNavFooter />}
+                <Header />
+                <main className="flex-1 pb-20 md:pb-0">{children}</main>
+                <Footer />
+                <MobileNavFooter />
                 <Toaster />
             </AuthProvider>
             <Script id="cashfree-js" src="https://sdk.cashfree.com/js/v3/cashfree.js" strategy="lazyOnload" />
