@@ -55,8 +55,8 @@ const Footer = async () => {
             <div className='flex flex-col items-center text-center md:items-end md:text-right'>
                  <h3 className="font-bold text-lg text-foreground mb-4">Our Portals</h3>
                  <ul className="space-y-2 text-sm">
-                    <li><a href="https://woody.co.in" target="_blank" rel="noopener noreferrer" className="font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent hover:underline">Retail Site (Woody)</a></li>
-                    <li><a href="https://business.woody.co.in" target="_blank" rel="noopener noreferrer" className="font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent hover:underline">B2B / Bulk Site</a></li>
+                    <li><a href="https://woody.co.in" target="_blank" rel="noopener noreferrer" className="font-bold text-primary hover:underline">Retail Site (Woody)</a></li>
+                    <li><a href="https://business.woody.co.in" target="_blank" rel="noopener noreferrer" className="font-bold text-primary hover:underline">B2B / Bulk Site</a></li>
                 </ul>
             </div>
         </div>
@@ -142,7 +142,7 @@ const Footer = async () => {
             &copy; {new Date().getFullYear()} {settings.invoice_business_name || 'Woody Business'}. All rights reserved.
           </p>
            <p className="text-xs mt-2">
-            Designed by <a href="https://instagram.com/shubham__nema" target="_blank" rel="noopener noreferrer" className="font-semibold bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent hover:underline">Samar</a>
+            Designed by <a href="https://instagram.com/shubham__nema" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary hover:underline">Samar</a>
           </p>
         </div>
       </div>

@@ -94,13 +94,13 @@ const ProductCard = ({ product }: ProductCardProps) => {
             <Heart className={cn("h-4 w-4 text-foreground", isInWishlist && "fill-destructive text-destructive")} />
           </Button>
       </CardHeader>
-      <CardContent className="flex-1 p-3 space-y-2 flex flex-col justify-between">
+      <CardContent className="flex-1 p-3 space-y-2 flex flex-col">
         <Link href={productUrl} className="flex-1">
-            <h3 className="font-headline font-bold text-base leading-tight group-hover:text-primary transition-colors line-clamp-2 min-h-[2.5rem]">
+            <h3 className="font-headline font-bold text-base leading-tight group-hover:text-primary transition-colors line-clamp-2 min-h-[40px]">
             {product.name}
             </h3>
         </Link>
-        <div className="flex items-baseline gap-2">
+        <div className="flex items-baseline gap-2 mt-auto">
             <p className="text-lg font-bold text-primary">
               {typeof product.price === 'number' ? `₹${product.price.toFixed(0)}` : 'Price not available'}
             </p>
