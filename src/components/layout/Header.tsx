@@ -182,7 +182,7 @@ const HeaderContent = () => {
               </AccordionItem>
             </Accordion>
             {
-              headerLinks.filter(l => !l.isMegaMenu && l.label !== 'Shop' && l.label !== 'Our Story' && l.label !== 'Contact Us').map((link) => {
+              headerLinks.filter(l => !l.isMegaMenu && l.label !== 'Our Story' && l.label !== 'Contact Us').map((link) => {
                 const isActive = pathname.startsWith(link.href);
                 const Icon = link.href.includes('keychains') ? KeyRound :
                             link.href.includes('wall-hangings') ? ImageIcon :
@@ -201,12 +201,6 @@ const HeaderContent = () => {
                 )
               })
             }
-            <Button variant="ghost" asChild className="h-auto p-2 hover:bg-transparent group justify-start">
-              <Link href="/shop" className="flex items-center gap-3">
-                <div className="h-6 w-6 flex items-center justify-center text-primary"><ShoppingBag className="h-5 w-5" /></div>
-                <span className="text-sm font-semibold uppercase bg-gradient-to-r from-red-600 to-orange-500 bg-clip-text text-transparent">Shop</span>
-              </Link>
-            </Button>
             <Button variant="ghost" asChild className="h-auto p-2 hover:bg-transparent group justify-start">
               <Link href="/our-story" className="flex items-center gap-3">
                 <div className="h-6 w-6 flex items-center justify-center text-primary"><Info className="h-5 w-5" /></div>
@@ -255,10 +249,10 @@ const HeaderContent = () => {
                          <span className={cn(isCollectionsActive && "stylish-underline")}>{link.label}</span>
                     </NavigationMenuTrigger>
                     <NavigationMenuContent>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 w-screen max-w-sm md:max-w-xl lg:max-w-3xl">
+                    <div className="grid grid-cols-4 gap-4 p-6 w-screen max-w-2xl">
                         {allCategories.map(category => (
-                        <Link key={category.id} href={`/collections/${category.id}`} className="group block rounded-lg p-2 hover:bg-muted/50">
-                            <div className="aspect-square relative mb-2 overflow-hidden rounded-md">
+                        <Link key={category.id} href={category.linkUrl || `/collections/${category.id}`} className="group block rounded-lg p-2 hover:bg-muted/50">
+                            <div className="aspect-video relative mb-2 overflow-hidden rounded-md">
                                 <Image 
                                     src={category.imageUrl} 
                                     alt={category.name} 
@@ -361,7 +355,6 @@ const HeaderContent = () => {
           <div className="flex justify-center w-auto md:w-1/3">
             <Link href="/" className="flex items-center gap-2">
               <Logo />
-              <span className="font-bold text-xl hidden sm:inline-block">Woody</span>
             </Link>
           </div>
 
