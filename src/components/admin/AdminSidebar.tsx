@@ -21,7 +21,6 @@ const navItems = [
   { href: "/wb-admin/tags", label: "Tags", icon: TagIcon },
   { href: "/wb-admin/blogs", label: "Blogs", icon: PenSquare },
   { href: "/wb-admin/coupons", label: "Coupons", icon: TicketPercent },
-  { href: "/wb-admin/navigation", label: "Navigation", icon: List },
   { href: "/wb-admin/banners", label: "Banners", icon: Gift },
   { href: "/wb-admin/site-images", label: "Site Images", icon: ImageIcon },
   { href: "/wb-admin/marketing", label: "Marketing", icon: Send },
