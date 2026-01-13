@@ -1,21 +1,7 @@
 import { NextResponse } from "next/server";
-import path from 'path';
-import fs from 'fs/promises';
-
-const categoriesFilePath = path.join(process.cwd(), 'src', 'lib', 'categories.json');
-
-async function getCategories() {
-  try {
-    const fileContent = await fs.readFile(categoriesFilePath, 'utf-8');
-    const data = JSON.parse(fileContent);
-    return data.categories || [];
-  } catch (error) {
-    console.error("Error reading categories file:", error);
-    return [];
-  }
-}
+import { getCategories as getCategoriesFromSupabase } from '@/lib/data-supabase';
 
 export async function GET() {
-  const categories = await getCategories();
+  const categories = await getCategoriesFromSupabase();
   return NextResponse.json(categories);
 }
