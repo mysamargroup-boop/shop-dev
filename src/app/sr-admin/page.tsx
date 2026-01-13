@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect } from 'react';
@@ -9,7 +8,7 @@ export default function AdminRootPage() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace('/wb-admin/dashboard');
+    router.replace('/sr-admin/dashboard');
   }, [router]);
 
   return (

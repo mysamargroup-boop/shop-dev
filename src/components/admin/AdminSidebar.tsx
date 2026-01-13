@@ -10,23 +10,23 @@ import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ScrollArea } from "../ui/scroll-area";
 
 const navItems = [
-  { href: "/wb-admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/wb-admin/orders", label: "Orders", icon: ShoppingBag },
-  { href: "/wb-admin/products", label: "Products", icon: Package },
-  { href: "/wb-admin/categories", label: "Categories", icon: LayoutGrid },
-  { href: "/wb-admin/tags", label: "Tags", icon: TagIcon },
-  { href: "/wb-admin/blogs", label: "Blogs", icon: PenSquare },
-  { href: "/wb-admin/coupons", label: "Coupons", icon: TicketPercent },
-  { href: "/wb-admin/banners", label: "Banners", icon: Gift },
-  { href: "/wb-admin/site-images", label: "Site Images", icon: ImageIcon },
-  { href: "/wb-admin/marketing", label: "Marketing", icon: Send },
-  { href: "/wb-admin/leads", label: "Leads", icon: Users },
-  { href: "/wb-admin/settings", label: "Settings", icon: Settings },
-  { href: "/wb-admin/instructions", label: "Instructions", icon: BookText },
+  { href: "/sr-admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/sr-admin/orders", label: "Orders", icon: ShoppingBag },
+  { href: "/sr-admin/products", label: "Products", icon: Package },
+  { href: "/sr-admin/categories", label: "Categories", icon: LayoutGrid },
+  { href: "/sr-admin/tags", label: "Tags", icon: TagIcon },
+  { href: "/sr-admin/blogs", label: "Blogs", icon: PenSquare },
+  { href: "/sr-admin/coupons", label: "Coupons", icon: TicketPercent },
+  { href: "/sr-admin/banners", label: "Banners", icon: Gift },
+  { href: "/sr-admin/site-images", label: "Site Images", icon: ImageIcon },
+  { href: "/sr-admin/marketing", label: "Marketing", icon: Send },
+  { href: "/sr-admin/leads", label: "Leads", icon: Users },
+  { href: "/sr-admin/settings", label: "Settings", icon: Settings },
+  { href: "/sr-admin/instructions", label: "Instructions", icon: BookText },
 ];
 
 const getInitials = (email: string | undefined) => {

@@ -236,3 +236,11 @@ body {
     border-radius: 2px;
   }
 }
+
+.admin-bg {
+  background-color: #f4f4f5; /* zinc-100 */
+}
+
+.dark .admin-bg {
+  background-color: #18181b; /* zinc-900 */
+}

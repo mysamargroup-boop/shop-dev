@@ -6,8 +6,12 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { Product, BlogPost, Category, SiteImageData, SiteImage, Coupon, Subscription, SiteSettings } from "./types";
 import { supabaseAdmin } from "./supabase";
-import { getSiteSettings as getSiteSettingsFromSupabase, getTags as getTagsFromSupabase } from './data-supabase';
+import { getTags as getTagsFromSupabase } from './data-supabase';
 import { sendWhatsAppTemplateMessage, sendWhatsAppTextMessage } from "./whatsapp-cloud";
+import path from 'path';
+const fs = require('fs').promises;
+
+const settingsFilePath = path.join(process.cwd(), 'src', 'lib', 'site-settings.json');
 
 const siteSettingsSchema = z.object({
   logo_url: z.string().optional(),
@@ -151,7 +155,7 @@ export async function createSubscription(input: { name: string; phone: string; s
     return { success: false };
   }
 
-  revalidatePath('/wb-admin/marketing');
+  revalidatePath('/sr-admin/marketing');
   return { success: true };
 }
 
@@ -220,7 +224,7 @@ export async function createProduct(previousState: any, formData: FormData) {
     return { errors: { _form: ["Database Error: Failed to create product."] } };
   }
 
-  revalidatePath("/wb-admin/products");
+  revalidatePath("/sr-admin/products");
   revalidatePath("/");
   return { success: true };
 }
@@ -288,8 +292,8 @@ export async function updateProduct(productId: string, previousState: any, formD
       }
   }
   
-  revalidatePath(`/wb-admin/products`);
-  revalidatePath(`/wb-admin/products/${productId}/edit`);
+  revalidatePath(`/sr-admin/products`);
+  revalidatePath(`/sr-admin/products/${productId}/edit`);
   revalidatePath(`/collections`);
   revalidatePath("/");
   return { success: true };
@@ -303,7 +307,7 @@ export async function deleteProductAction(formData: FormData) {
   const supabase = supabaseAdmin();
   await supabase.from('products').delete().eq('id', productId);
   
-  revalidatePath("/wb-admin/products");
+  revalidatePath("/sr-admin/products");
   revalidatePath(`/collections`);
   revalidatePath("/");
 }
@@ -347,7 +351,7 @@ export async function createBlogPost(previousState: any, formData: FormData) {
     return { errors: { _form: ["Database Error: Failed to create blog post."] } };
   }
 
-  revalidatePath("/wb-admin/blogs");
+  revalidatePath("/sr-admin/blogs");
   revalidatePath("/blog");
   return { success: true };
 }
@@ -383,7 +387,7 @@ export async function updateBlogPost(slug: string, previousState: any, formData:
     return { errors: { _form: ["Database Error: Failed to update blog post."] } };
   }
   
-  revalidatePath(`/wb-admin/blogs`);
+  revalidatePath(`/sr-admin/blogs`);
   revalidatePath(`/blog`);
   revalidatePath(`/blog/${slug}`);
   return { success: true };
@@ -393,7 +397,7 @@ export async function deleteBlogPostAction(slug: string) {
   const supabase = supabaseAdmin();
   await supabase.from('blog_posts').delete().eq('slug', slug);
   
-  revalidatePath("/wb-admin/blogs");
+  revalidatePath("/sr-admin/blogs");
   revalidatePath("/blog");
 }
 
@@ -460,7 +464,7 @@ export async function createCategory(previousState: any, formData: FormData) {
     return { errors: { _form: ["Database Error: Failed to create category."] } };
   }
 
-  revalidatePath("/wb-admin/categories");
+  revalidatePath("/sr-admin/categories");
   revalidatePath("/collections");
   revalidatePath("/", "layout");
   return { success: true };
@@ -493,7 +497,7 @@ export async function updateCategory(categoryId: string, previousState: any, for
     return { errors: { _form: ["Database Error: Failed to update category."] } };
   }
   
-  revalidatePath(`/wb-admin/categories`);
+  revalidatePath(`/sr-admin/categories`);
   revalidatePath(`/collections`);
   revalidatePath(`/collections/${categoryId}`);
   revalidatePath("/", "layout");
@@ -508,90 +512,42 @@ export async function deleteCategoryAction(formData: FormData) {
   const supabase = supabaseAdmin();
   await supabase.from('categories').delete().eq('id', id);
   
-  revalidatePath("/wb-admin/categories");
+  revalidatePath("/sr-admin/categories");
   revalidatePath("/collections");
   revalidatePath("/", "layout");
 }
 
 export async function getSiteSettings(): Promise<SiteSettings> {
-  return getSiteSettingsFromSupabase();
+  try {
+    const fileContent = await fs.readFile(settingsFilePath, 'utf-8');
+    return JSON.parse(fileContent);
+  } catch (error) {
+    console.error("Error reading settings file:", error);
+    return {};
+  }
 }
 
 export async function updateSiteSettings(previousState: any, formData: FormData) {
-  const data = Object.fromEntries(formData.entries());
-  const validatedFields = siteSettingsSchema.safeParse(data);
+    const data = Object.fromEntries(formData.entries());
+    const validatedFields = siteSettingsSchema.safeParse(data);
 
-  if (!validatedFields.success) {
-    return {
-      errors: validatedFields.error.flatten().fieldErrors,
-    };
-  }
-
-  const mode = formData.get('_mode');
-  const supabase = supabaseAdmin();
-
-  try {
-    const { data: existingRow } = await supabase
-      .from('site_settings')
-      .select('id')
-      .limit(1)
-      .single();
-    let settingsId = existingRow?.id;
-    if (!settingsId) {
-      const { data: inserted } = await supabase
-        .from('site_settings')
-        .insert({})
-        .select('id')
-        .single();
-      settingsId = inserted?.id;
+    if (!validatedFields.success) {
+        return {
+            errors: validatedFields.error.flatten().fieldErrors,
+        };
     }
 
-    if (mode === 'bannersOnly') {
-        const { 
-            timer_banner_enabled, 
-            timer_banner_title, 
-            timer_banner_image_url, 
-            timer_banner_end_date 
-        } = validatedFields.data;
-        
-        const { error } = await supabase
-            .from('site_settings')
-            .update({
-                timer_banner_enabled, 
-                timer_banner_title, 
-                timer_banner_image_url, 
-                timer_banner_end_date
-            })
-            .eq('id', settingsId);
-
-        if (error) throw error;
+    try {
+        const currentSettings = await getSiteSettings();
+        const updatedSettings = { ...currentSettings, ...validatedFields.data };
+        await fs.writeFile(settingsFilePath, JSON.stringify(updatedSettings, null, 2));
 
         revalidatePath('/', 'layout');
-        return { success: true, message: 'Banner settings updated successfully' };
+        return { success: true, message: 'Settings updated successfully' };
+    } catch (error) {
+        console.error("Error writing settings file:", error);
+        return { message: 'File System Error: Failed to update settings.' };
     }
-
-    // Exclude banner settings from main settings update if desired, or just update whatever is passed
-    const { 
-        timer_banner_enabled, 
-        timer_banner_title, 
-        timer_banner_image_url, 
-        timer_banner_end_date, 
-        ...otherSettings 
-    } = validatedFields.data;
-
-    const { error } = await supabase
-        .from('site_settings')
-        .update(otherSettings)
-        .eq('id', settingsId);
-
-    if (error) throw error;
-
-    revalidatePath('/', 'layout'); 
-    return { success: true, message: 'Settings updated successfully' };
-  } catch (error) {
-    console.error("Error updating settings:", error);
-    return { message: 'Database Error: Failed to update settings.' };
-  }
 }
 
 
@@ -656,7 +612,7 @@ export async function createCoupon(previousState: any, formData: FormData) {
     if (error) {
       return { message: 'Database Error: Failed to create coupon.', success: false };
     }
-    revalidatePath('/wb-admin/coupons');
+    revalidatePath('/sr-admin/coupons');
     return { success: true, message: 'Coupon created successfully' };
   } catch (error) {
     return { message: 'Database Error: Failed to create coupon.', success: false };
@@ -700,7 +656,7 @@ export async function updateCoupon(previousState: any, formData: FormData) {
         if (error) {
           return { message: 'Database Error: Failed to update coupon.', success: false };
         }
-        revalidatePath('/wb-admin/coupons');
+        revalidatePath('/sr-admin/coupons');
         return { success: true, message: 'Coupon updated successfully.' };
     } catch (error) {
         return { message: 'Database Error: Failed to update coupon.', success: false };
@@ -718,7 +674,7 @@ export async function deleteCoupon(code: string) {
     if (error) {
       return { message: 'Database Error: Failed to delete coupon.' };
     }
-    revalidatePath('/wb-admin/coupons');
+    revalidatePath('/sr-admin/coupons');
     return { success: true, message: 'Coupon deleted successfully' };
   } catch (error) {
     return { message: 'Database Error: Failed to delete coupon.' };
@@ -744,7 +700,7 @@ export async function toggleCouponStatus(code: string) {
         if (error) {
           return { message: 'Database Error: Failed to update coupon.' };
         }
-        revalidatePath('/wb-admin/coupons');
+        revalidatePath('/sr-admin/coupons');
         return { success: true, message: 'Coupon status updated' };
     } catch (error) {
         return { message: 'Database Error: Failed to update coupon.' };
@@ -784,7 +740,7 @@ export async function createNavigationLink(previousState: any, formData: FormDat
   if (error) {
     return { message: 'Database Error: Failed to create navigation link.' };
   }
-  revalidatePath('/wb-admin/navigation');
+  revalidatePath('/sr-admin/navigation');
   revalidatePath('/');
   return { success: true };
 }
@@ -805,7 +761,7 @@ export async function updateNavigationLink(linkId: number, previousState: any, f
   if (error) {
     return { message: 'Database Error: Failed to update navigation link.' };
   }
-  revalidatePath('/wb-admin/navigation');
+  revalidatePath('/sr-admin/navigation');
   revalidatePath('/');
   return { success: true };
 }
@@ -821,7 +777,7 @@ export async function deleteNavigationLink(formData: FormData) {
   if (error) {
     return { message: 'Database Error: Failed to delete navigation link.' };
   }
-  revalidatePath('/wb-admin/navigation');
+  revalidatePath('/sr-admin/navigation');
   revalidatePath('/');
   return { success: true };
 }
@@ -862,7 +818,7 @@ export async function bulkUpdateProductPrices(previousState: any, formData: Form
       .eq('id', p.id);
     if (!upErr) updatedCount++;
   }
-  revalidatePath('/wb-admin/products');
+  revalidatePath('/sr-admin/products');
   revalidatePath('/collections');
   revalidatePath('/');
   return { success: true, updatedCount };
@@ -974,7 +930,7 @@ export async function addTag(previousState: any, formData: FormData) {
     return { success: false, message: 'Database Error: Failed to add tag.' };
   }
 
-  revalidatePath('/wb-admin/tags');
+  revalidatePath('/sr-admin/tags');
   return { success: true };
 }
 
@@ -993,7 +949,7 @@ export async function deleteTag(previousState: any, formData: FormData) {
     return { success: false, message: 'Database Error: Failed to delete tag.' };
   }
 
-  revalidatePath('/wb-admin/tags');
+  revalidatePath('/sr-admin/tags');
   return { success: true };
 }
 
@@ -1037,7 +993,7 @@ export async function bulkAddTagToProducts(previousState: any, formData: FormDat
     }
   }
 
-  revalidatePath('/wb-admin/products');
+  revalidatePath('/sr-admin/products');
   revalidatePath('/collections');
   revalidatePath('/');
   return { success: true, updatedCount };

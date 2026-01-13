@@ -57,7 +57,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     sessionStorage.removeItem("woody-business-admin-user");
     setUser(null);
     setLoading(false);
-    router.push("/wb-admin/login");
+    router.push("/sr-admin/login");
     toast({ title: "Logged Out", description: "You have been successfully signed out." });
   }, [router, toast]);
 

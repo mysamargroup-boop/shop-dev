@@ -22,14 +22,6 @@ export default function AdminRootLayout({
       <head>
         <title>Woody Business Admin</title>
         <link rel="icon" href="/favicon.svg" />
-        <style>{`
-          .admin-bg {
-            background-color: #f4f4f5; /* zinc-100 */
-          }
-          .dark .admin-bg {
-            background-color: #18181b; /* zinc-900 */
-          }
-        `}</style>
       </head>
       <body className={cn('min-h-screen font-body antialiased admin-bg')}>
         <ThemeProvider

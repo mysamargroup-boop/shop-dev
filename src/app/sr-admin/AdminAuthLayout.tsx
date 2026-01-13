@@ -13,7 +13,7 @@ export default function AdminAuthLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const isLoginRoute = pathname === "/wb-admin/login";
+  const isLoginRoute = pathname === "/sr-admin/login";
 
   useEffect(() => {
     if (loading) {
@@ -21,9 +21,9 @@ export default function AdminAuthLayout({ children }: { children: React.ReactNod
     }
     
     if (!user && !isLoginRoute) {
-      router.push("/wb-admin/login");
+      router.push("/sr-admin/login");
     } else if (user && isLoginRoute) {
-      router.push("/wb-admin/dashboard");
+      router.push("/sr-admin/dashboard");
     }
 
   }, [user, loading, router, pathname, isLoginRoute]);

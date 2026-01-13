@@ -35,7 +35,7 @@ export default function BlogsClient({ posts }: { posts: BlogPost[] }) {
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-headline font-bold text-center flex-1">Blog Posts</h1>
         <Button asChild>
-          <Link href="/wb-admin/blogs/new"><PlusCircle className="mr-2 h-4 w-4"/> Add Post</Link>
+          <Link href="/sr-admin/blogs/new"><PlusCircle className="mr-2 h-4 w-4"/> Add Post</Link>
         </Button>
       </div>
       <div className="flex items-center gap-3 mb-4">
@@ -90,7 +90,7 @@ export default function BlogsClient({ posts }: { posts: BlogPost[] }) {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem asChild>
-                        <Link href={`/wb-admin/blogs/${post.slug}/edit`}>Edit</Link>
+                        <Link href={`/sr-admin/blogs/${post.slug}/edit`}>Edit</Link>
                       </DropdownMenuItem>
                        <form action={deleteBlogPostAction.bind(null, post.slug)}>
                          <DropdownMenuItem asChild>

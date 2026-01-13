@@ -35,7 +35,7 @@ export default function EditCategoryPage({ params }: { params: { categoryId: str
   useEffect(() => {
     if (state?.success) {
       toast({ title: "Success", description: "Category updated successfully." });
-      router.push("/wb-admin/categories");
+      router.push("/sr-admin/categories");
     }
     if (state?.errors) {
        toast({ title: "Error", description: "Please check the form for errors.", variant: "destructive" });

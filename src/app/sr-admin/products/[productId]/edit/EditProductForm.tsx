@@ -19,7 +19,7 @@ export default function EditProductForm({ product }: { product: Product }) {
   useEffect(() => {
     if (state?.success) {
       toast({ title: "Success", description: "Product updated successfully." });
-      router.push("/wb-admin/products");
+      router.push("/sr-admin/products");
     }
     if (state?.errors) {
        toast({ title: "Error", description: "Please check the form for errors.", variant: "destructive" });

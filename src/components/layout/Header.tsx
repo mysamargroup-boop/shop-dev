@@ -261,7 +261,7 @@ const Header = () => {
 
             {user && (
               <Button variant="outline" asChild className="w-full justify-start">
-                  <Link href="/wb-admin" className="flex items-center gap-2">
+                  <Link href="/sr-admin" className="flex items-center gap-2">
                     <User className="h-5 w-5" /> Admin Panel
                   </Link>
               </Button>

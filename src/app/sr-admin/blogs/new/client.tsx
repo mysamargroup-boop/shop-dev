@@ -16,7 +16,7 @@ export default function NewBlogClient({ siteImages }: { siteImages: SiteImage[] 
   useEffect(() => {
     if (state?.success) {
       toast({ title: "Success", description: "Blog post created successfully." });
-      router.push("/wb-admin/blogs");
+      router.push("/sr-admin/blogs");
     }
     if (state?.errors) {
        toast({ title: "Error", description: "Please check the form for errors.", variant: "destructive" });

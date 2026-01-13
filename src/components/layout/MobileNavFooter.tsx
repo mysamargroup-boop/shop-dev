@@ -34,7 +34,7 @@ const rightNavItems = [
 export default function MobileNavFooter() {
     const pathname = usePathname();
 
-    const isAdminPage = pathname.startsWith('/wb-admin');
+    const isAdminPage = pathname.startsWith('/sr-admin');
 
     if (isAdminPage) {
         return null;

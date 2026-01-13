@@ -16,7 +16,7 @@ export default function NewCategoryPage() {
   useEffect(() => {
     if (state?.success) {
       toast({ title: "Success", description: "Category created successfully." });
-      router.push("/wb-admin/categories");
+      router.push("/sr-admin/categories");
     }
     if (state?.errors) {
        toast({ title: "Error", description: "Please check the form for errors.", variant: "destructive" });

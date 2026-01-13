@@ -92,7 +92,7 @@ export default function OrdersPage() {
                     <TableRow key={order.id}>
                       <TableCell>
                         <Link 
-                          href={`/wb-admin/orders/${order.id}`}
+                          href={`/sr-admin/orders/${order.id}`}
                           className="font-mono text-sm hover:underline"
                         >
                           {order.id.slice(0, 8)}...

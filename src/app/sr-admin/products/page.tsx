@@ -91,7 +91,7 @@ export default function ProductsPage() {
       <div className="flex items-center justify-between mb-8 gap-4">
         <h1 className="text-3xl font-headline font-bold text-center flex-1">Products</h1>
         <Button asChild>
-          <Link href="/wb-admin/products/new"><PlusCircle className="mr-2 h-4 w-4"/> Add Product</Link>
+          <Link href="/sr-admin/products/new"><PlusCircle className="mr-2 h-4 w-4"/> Add Product</Link>
         </Button>
       </div>
 
@@ -223,7 +223,7 @@ export default function ProductsPage() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem asChild>
-                        <Link href={`/wb-admin/products/${product.id}/edit`}>Edit</Link>
+                        <Link href={`/sr-admin/products/${product.id}/edit`}>Edit</Link>
                       </DropdownMenuItem>
                        <form action={deleteProductAction}>
                          <input type="hidden" name="id" value={product.id} />

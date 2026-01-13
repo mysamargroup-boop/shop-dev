@@ -90,7 +90,7 @@ export default async function TagPage({ params }: { params: { slug: string } }) 
                       <span className="font-bold">₹{p.price.toFixed(2)}</span>
                     </div>
                     <Link
-                      href={`/wb-admin/products/${p.id}/edit`}
+                      href={`/sr-admin/products/${p.id}/edit`}
                       className="text-xs underline mt-2 inline-block"
                     >
                       Edit

@@ -1,5 +1,8 @@
 
 
+'use client';
+
+import { usePathname } from 'next/navigation';
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import './globals.css';
@@ -8,39 +11,39 @@ import { Toaster } from '@/components/ui/toaster';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import MobileNavFooter from '@/components/layout/MobileNavFooter';
-import Link from 'next/link';
 import { AuthProvider } from '@/lib/auth';
 import ProgressBar from '@/components/layout/ProgressBar';
 import Script from 'next/script';
 import { ThemeProvider } from 'next-themes';
 
-import { getSiteSettings } from '@/lib/actions';
-
-export async function generateMetadata(): Promise<Metadata> {
-  const settings = await getSiteSettings();
-  const googleVerification = process.env.GOOGLE_SITE_VERIFICATION;
+// export async function generateMetadata(): Promise<Metadata> {
+//   const settings = await getSiteSettings();
+//   const googleVerification = process.env.GOOGLE_SITE_VERIFICATION;
   
-  return {
-    title: settings.home_meta_title || 'Nema One',
-    description: settings.home_meta_description || 'Exquisite Personalized Wooden Gifts',
-    manifest: '/manifest.webmanifest',
-    icons: { icon: '/favicon.svg' },
-    verification: {
-      google: googleVerification,
-    },
-  };
-}
+//   return {
+//     title: settings.home_meta_title || 'Nema One',
+//     description: settings.home_meta_description || 'Exquisite Personalized Wooden Gifts',
+//     manifest: '/manifest.webmanifest',
+//     icons: { icon: '/favicon.svg' },
+//     verification: {
+//       google: googleVerification,
+//     },
+//   };
+// }
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
 
-  const settings = await getSiteSettings();
-  const gtmId = settings.google_tag_manager_id;
-  const themeBackground = settings.theme_background;
-  const themeMuted = settings.theme_muted;
+  const pathname = usePathname();
+  const isAdminPage = pathname.startsWith('/sr-admin');
+
+  // const settings = await getSiteSettings();
+  const gtmId = process.env.NEXT_PUBLIC_GTM_ID; // settings.google_tag_manager_id;
+  const themeBackground = '0 0% 100%';//settings.theme_background;
+  const themeMuted = '210 40% 96.1%'; //settings.theme_muted;
 
   const themeStyle = (themeBackground || themeMuted) ? (
     <style>
@@ -49,15 +52,38 @@ export default async function RootLayout({
           ${themeBackground ? `--background: ${themeBackground};` : ''}
           ${themeMuted ? `--muted: ${themeMuted};` : ''}
         }
-        body {
+        body:not(.admin-page) {
           background-image: linear-gradient(to bottom, hsl(${themeBackground}) , #e0f2fe);
         }
-        .dark body {
+        .dark body:not(.admin-page) {
           background-image: linear-gradient(to bottom, hsl(var(--background)), #0c1e35);
         }
       `}
     </style>
   ) : <style>{`body { background-image: linear-gradient(to bottom, #ffffff, #e0f2fe); } .dark body { background-image: linear-gradient(to bottom, hsl(var(--background)), #0c1e35); }`}</style>;
+
+  if (isAdminPage) {
+    return (
+       <html lang="en" suppressHydrationWarning>
+        <body>
+           <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+          >
+            <Suspense fallback={null}>
+                <ProgressBar />
+            </Suspense>
+             <AuthProvider>
+                {children}
+            </AuthProvider>
+             <Toaster />
+          </ThemeProvider>
+        </body>
+      </html>
+    )
+  }
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -80,7 +106,10 @@ export default async function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
         <link rel="manifest" href="/manifest.webmanifest" />
       </head>
-      <body className={cn('min-h-screen bg-background font-body antialiased flex flex-col')}>
+      <body className={cn(
+        'min-h-screen bg-background font-body antialiased flex flex-col',
+        isAdminPage && 'admin-page'
+      )}>
         <ThemeProvider
             attribute="class"
             defaultTheme="system"
@@ -101,10 +130,10 @@ export default async function RootLayout({
                 <ProgressBar />
             </Suspense>
             <AuthProvider>
-                <Header />
-                <main className="flex-1 pb-20 md:pb-0">{children}</main>
-                <Footer />
-                <MobileNavFooter />
+                {!isAdminPage && <Header />}
+                <main className={cn("flex-1", !isAdminPage && "pb-20 md:pb-0")}>{children}</main>
+                {!isAdminPage && <Footer />}
+                {!isAdminPage && <MobileNavFooter />}
                 <Toaster />
             </AuthProvider>
             <Script id="cashfree-js" src="https://sdk.cashfree.com/js/v3/cashfree.js" strategy="lazyOnload" />

@@ -44,8 +44,8 @@ SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 3. Click "Run" to execute
 
 ## Step 4: Test Features
-- Admin Panel: http://localhost:3000/wb-admin
-- Orders Page: http://localhost:3000/wb-admin/orders
+- Admin Panel: http://localhost:3000/sr-admin
+- Orders Page: http://localhost:3000/sr-admin/orders
 - Test order management (cancel/return/refund)
 
 # PENDING HIGH PRIORITY TASKS:

@@ -18,7 +18,7 @@ export default function EditBlogClient({ post, slug, siteImages }: { post: BlogP
   useEffect(() => {
     if (state?.success) {
       toast({ title: "Success", description: "Blog post updated successfully." });
-      router.push("/wb-admin/blogs");
+      router.push("/sr-admin/blogs");
     }
     if (state?.errors) {
        toast({ title: "Error", description: "Please check the form for errors.", variant: "destructive" });
