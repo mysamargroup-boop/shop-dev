@@ -13,7 +13,6 @@ import {
 import Autoplay from "embla-carousel-autoplay"
 import type { Product } from '@/lib/types';
 
-
 const popularProductIds = ["WB-1710", "WB-2331", "WB-1680"];
 
 export default function PopularProducts({ products }: { products: Product[]}) {
@@ -41,10 +40,10 @@ export default function PopularProducts({ products }: { products: Product[]}) {
                 ]}
                 className="w-full"
                 >
-                <CarouselContent>
+                <CarouselContent className="-ml-4">
                     {popularProducts.map((product) => (
-                        product && <CarouselItem key={product.id} className="basis-full sm:basis-1/2 md:basis-1/3">
-                            <div className="p-1 h-full">
+                        product && <CarouselItem key={product.id} className="basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5 pl-4">
+                            <div className="h-full">
                                 <ProductCard product={product} />
                             </div>
                         </CarouselItem>

@@ -108,7 +108,7 @@ export default async function Home() {
         
 
         <PromoSlider siteImages={siteImages} />
-        <ShopByOccasion products={products} tags={tags}/>
+        <ShopByOccasion products={products} tags={tags} />
 
         <ReviewsCarousel />
 

@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import React from 'react';
+import React, { Suspense } from 'react';
 import { ShoppingCart, Menu, Search, Gift, Box, Brush, Info, ShoppingBag, LayoutGrid, Heart, Mail, KeyRound, Smartphone, ImageIcon, Moon, Sun, Sparkles, User, LogOut } from 'lucide-react';
 import Logo from '@/components/icons/Logo';
 import { Button } from '@/components/ui/button';
@@ -32,7 +32,7 @@ import { Switch } from '../ui/switch';
 import { getProducts, getCategories } from '@/lib/data-async';
 import { getHeaderLinks } from '@/lib/actions';
 import { useAuth } from '@/lib/auth';
-
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 
 const Marquee = () => {
     const messages = ["🎉 Great discount offer depends on quantity 💰", "Custom Engraving Available on All Products", "Handcrafted with Love"];
@@ -74,8 +74,7 @@ const DarkModeToggle = () => {
     );
 };
 
-
-const Header = () => {
+const HeaderContent = () => {
   const { cartCount, isLoaded: cartLoaded } = useCart();
   const { wishlistCount, isLoaded: wishlistLoaded } = useWishlist();
   const { user } = useAuth();
@@ -93,14 +92,12 @@ const Header = () => {
         const [products, categories, links] = await Promise.all([
           getProducts(),
           getCategories(),
-          getHeaderLinks()
+          getHeaderLinks(),
         ]);
         
         setAllProducts(products);
         setAllCategories(categories);
-        if (links) {
-          setHeaderLinks(links);
-        }
+        setHeaderLinks(links);
     }
     fetchData();
   }, [])
@@ -128,36 +125,103 @@ const Header = () => {
 
   const MobileNavContent = () => (
     <div className="flex flex-col h-full">
-        <nav className="flex flex-col gap-4 pt-4 flex-1">
-        {headerLinks.map((link) => {
-            const isActive = pathname.startsWith(link.href);
-            const specialClassName = link.label === 'Our Story'
-                ? "bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent"
-                : "bg-gradient-to-r from-blue-800 to-cyan-600 bg-clip-text text-transparent";
-            
-            const Icon = link.label === 'Categories' ? LayoutGrid :
-                         link.label === 'Keychains' ? KeyRound :
-                         link.label === 'Wall Hanging' ? ImageIcon :
-                         link.label === 'Mobile Stand' ? Smartphone :
-                         link.label === 'Our Story' ? Info :
-                         link.label === 'Contact Us' ? Mail : ShoppingBag;
-
-            return (
-            <Button key={link.label} variant="ghost" asChild className="h-auto p-2 hover:bg-transparent group justify-start" data-active={isActive}>
-                <Link href={link.href} className="flex items-center gap-2">
-                <div className="h-6 w-6 flex items-center justify-center text-primary group-hover:text-foreground group-data-[active=true]:text-accent"><Icon /></div>
-                <span className={cn(
-                    "text-sm font-semibold text-foreground group-hover:text-accent transition-colors uppercase",
-                    link.special ? specialClassName :
-                    (isActive) && "bg-gradient-to-r from-destructive to-accent bg-clip-text text-transparent"
-                )}>
-                    {link.label}
-                </span>
-                </Link>
+        <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"/>
+            <Input 
+              placeholder="Search For Gifts..." 
+              className="pl-10 bg-muted"
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
+              onFocus={(e) => handleSearch(e.target.value)}
+            />
+            {isSearchOpen && searchResults.length > 0 && (
+              <div className="absolute top-full mt-2 w-full p-2 bg-popover border rounded-md shadow-lg z-20">
+                  <ScrollArea className="max-h-60">
+                    <div className="space-y-1">
+                        {searchResults.map(product => {
+                            const categorySlug = product.category.split(',')[0].trim().toLowerCase().replace(/ /g, '-');
+                            return (
+                            <Link 
+                              key={product.id} 
+                              href={`/collections/${categorySlug}/${product.id}`} 
+                              className="flex items-center gap-3 p-2 rounded-md hover:bg-accent/10"
+                              onClick={() => setIsSheetOpen(false)}
+                            >
+                                <Image src={product.imageUrl} alt={product.name} width={40} height={40} className="rounded-md object-cover"/>
+                                <div>
+                                    <p className="font-semibold text-sm">{product.name}</p>
+                                    <p className="text-sm text-muted-foreground">₹{product.price.toFixed(2)}</p>
+                                </div>
+                            </Link>
+                        )})}
+                    </div>
+                  </ScrollArea>
+              </div>
+          )}
+        </div>
+        <ScrollArea className="flex-1">
+          <nav className="flex flex-col gap-2 pr-4">
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="categories">
+                <AccordionTrigger className="hover:no-underline">
+                  <div className="flex items-center gap-3 text-sm font-semibold text-foreground group-hover:text-accent transition-colors uppercase">
+                      <LayoutGrid className="h-5 w-5 text-primary"/>
+                      Categories
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                    <div className="pl-6 space-y-0">
+                      {allCategories.map(category => (
+                          <Link key={category.id} href={`/collections/${category.id}`} className="flex items-center gap-3 py-2 rounded-md hover:bg-muted/50" onClick={() => setIsSheetOpen(false)}>
+                            <Image src={category.imageUrl} alt={category.name} width={24} height={24} className="rounded-md object-cover w-6 h-6"/>
+                            <p className="font-medium text-sm text-muted-foreground">{category.name}</p>
+                          </Link>
+                      ))}
+                    </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+            {
+              headerLinks.filter(l => !l.isMegaMenu && l.label !== 'Shop' && l.label !== 'Our Story' && l.label !== 'Contact Us').map((link) => {
+                const isActive = pathname.startsWith(link.href);
+                const Icon = link.href.includes('keychains') ? KeyRound :
+                            link.href.includes('wall-hangings') ? ImageIcon :
+                            link.href.includes('mobile-stands') ? Smartphone :
+                            ShoppingBag;
+                return (
+                  <Button key={link.label} variant="ghost" asChild className="h-auto p-2 hover:bg-transparent group justify-start" data-active={isActive}>
+                      <Link href={link.href} className="flex items-center gap-3">
+                        <div className="h-6 w-6 flex items-center justify-center text-primary group-hover:text-foreground group-data-[active=true]:text-accent"><Icon className="h-5 w-5" /></div>
+                        <span className={cn(
+                          "text-sm font-semibold text-foreground group-hover:text-accent transition-colors uppercase",
+                          (isActive) && "bg-gradient-to-r from-destructive to-accent bg-clip-text text-transparent"
+                        )}>{link.label}</span>
+                      </Link>
+                  </Button>
+                )
+              })
+            }
+            <Button variant="ghost" asChild className="h-auto p-2 hover:bg-transparent group justify-start">
+              <Link href="/shop" className="flex items-center gap-3">
+                <div className="h-6 w-6 flex items-center justify-center text-primary"><ShoppingBag className="h-5 w-5" /></div>
+                <span className="text-sm font-semibold uppercase bg-gradient-to-r from-red-600 to-orange-500 bg-clip-text text-transparent">Shop</span>
+              </Link>
             </Button>
-        )})}
-        </nav>
-        <div className="mt-auto space-y-4">
+            <Button variant="ghost" asChild className="h-auto p-2 hover:bg-transparent group justify-start">
+              <Link href="/our-story" className="flex items-center gap-3">
+                <div className="h-6 w-6 flex items-center justify-center text-primary"><Info className="h-5 w-5" /></div>
+                <span className="text-sm font-semibold uppercase bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Our Story</span>
+              </Link>
+            </Button>
+            <Button variant="ghost" asChild className="h-auto p-2 hover:bg-transparent group justify-start">
+              <Link href="/connect" className="flex items-center gap-3">
+                <div className="h-6 w-6 flex items-center justify-center text-primary"><Mail className="h-5 w-5" /></div>
+                <span className="text-sm font-semibold uppercase text-foreground">Contact Us</span>
+              </Link>
+            </Button>
+          </nav>
+        </ScrollArea>
+        <div className="mt-auto space-y-4 pt-4 border-t">
             {user && (
               <Button variant="outline" asChild className="w-full justify-start">
                   <Link href="/wb-admin" className="flex items-center gap-2">
@@ -252,43 +316,11 @@ const Header = () => {
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="flex flex-col">
-                  <SheetHeader>
-                    <SheetTitle className="sr-only">Mobile Navigation Menu</SheetTitle>
+                  <SheetHeader className="border-b pb-4">
+                    <SheetTitle className="flex items-center justify-center">
+                      <Logo className="h-8 w-auto"/>
+                    </SheetTitle>
                   </SheetHeader>
-                  <div className="relative mt-8 mb-4">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"/>
-                      <Input 
-                        placeholder="Search For Gifts..." 
-                        className="pl-10 bg-white"
-                        value={searchQuery}
-                        onChange={(e) => handleSearch(e.target.value)}
-                        onFocus={(e) => handleSearch(e.target.value)}
-                      />
-                      {isSearchOpen && searchResults.length > 0 && (
-                        <div className="absolute top-full mt-2 w-full p-2 bg-popover border rounded-md shadow-lg z-20">
-                            <ScrollArea className="max-h-60">
-                              <div className="space-y-1">
-                                  {searchResults.map(product => {
-                                      const categorySlug = product.category.split(',')[0].trim().toLowerCase().replace(/ /g, '-');
-                                      return (
-                                      <Link 
-                                        key={product.id} 
-                                        href={`/collections/${categorySlug}/${product.id}`} 
-                                        className="flex items-center gap-3 p-2 rounded-md hover:bg-accent/10"
-                                        onClick={() => setIsSheetOpen(false)}
-                                      >
-                                          <Image src={product.imageUrl} alt={product.name} width={40} height={40} className="rounded-md object-cover"/>
-                                          <div>
-                                              <p className="font-semibold text-sm">{product.name}</p>
-                                              <p className="text-sm text-muted-foreground">₹{product.price.toFixed(2)}</p>
-                                          </div>
-                                      </Link>
-                                  )})}
-                              </div>
-                            </ScrollArea>
-                        </div>
-                    )}
-                  </div>
                   <MobileNavContent />
                 </SheetContent>
               </Sheet>
@@ -327,7 +359,10 @@ const Header = () => {
           </div>
 
           <div className="flex justify-center w-auto md:w-1/3">
-            <Logo />
+            <Link href="/" className="flex items-center gap-2">
+              <Logo />
+              <span className="font-bold text-xl hidden sm:inline-block">Woody</span>
+            </Link>
           </div>
 
           <div className="flex items-center justify-end w-1/3">
@@ -363,4 +398,10 @@ const Header = () => {
   );
 };
 
-export default Header;
+export default function Header() {
+    return (
+        <Suspense fallback={<header className="h-20" />}>
+            <HeaderContent />
+        </Suspense>
+    );
+}

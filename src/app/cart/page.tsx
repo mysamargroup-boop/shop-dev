@@ -20,13 +20,16 @@ export default function CartPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [checkoutMode, setCheckoutMode] = useState<'whatsapp' | 'payment'>('payment');
   const [settings, setSettings] = useState<SiteSettings | null>(null);
+  const [isClient, setIsClient] = useState(false);
+
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
   
   useEffect(() => {
+    setIsClient(true);
     getSiteSettings().then(setSettings);
   }, []);
 
-  if (!isLoaded || !settings) {
+  if (!isLoaded || !settings || !isClient) {
     return (
         <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -174,4 +177,3 @@ export default function CartPage() {
     </>
   );
 }
-
