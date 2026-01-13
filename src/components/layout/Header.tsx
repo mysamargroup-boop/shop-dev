@@ -333,7 +333,7 @@ const Header = () => {
                 </Button>
                 <Button variant="ghost" size="icon" asChild className="h-auto w-auto p-1 group hover:bg-transparent [&_svg]:!size-6">
                 <Link href="/cart" aria-label="Shopping Cart" className="relative flex items-center justify-center">
-                    <ShoppingCart size={22} className="text-foreground group-hover:text-primary transition-colors"/>
+                    <ShoppingCart size={22} className="text-foreground group-hover:text-accent transition-colors"/>
                     {isCountsLoaded && cartCount > 0 && (
                     <span className="absolute -right-0.5 -top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
                         {cartCount}
@@ -353,3 +353,4 @@ const Header = () => {
 };
 
 export default Header;
+
