@@ -6,11 +6,10 @@ export async function GET() {
     const settings = await getSiteSettings();
     return NextResponse.json(settings || {}, {
       headers: {
-        'Cache-Control': 'public, max-age=300, stale-while-revalidate=600',
+        'Cache-Control': 'public, max-age=60, stale-while-revalidate=300',
       },
     });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Failed to load settings' }, { status: 500 });
   }
 }
-

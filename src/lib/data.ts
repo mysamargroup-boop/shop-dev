@@ -2,11 +2,20 @@
 // Do not import any server-only modules like 'fs' or 'path' here.
 
 import type { Category } from './types';
+import categoriesJson from './categories.json';
+import imageData from './placeholder-images.json';
+import tagsJson from './tags.json';
 
 export async function getTags(): Promise<string[]> {
-    return [];
+    const data = tagsJson as { tags: string[] };
+    return Array.isArray(data.tags) ? data.tags : [];
 }
 
 export async function getCategories(): Promise<Category[]> {
-    return [];
+    const data = categoriesJson as { categories: Category[] };
+    return Array.isArray(data.categories) ? data.categories : [];
+}
+
+export async function getImageData() {
+    return imageData;
 }

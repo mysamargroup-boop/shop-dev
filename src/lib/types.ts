@@ -153,6 +153,7 @@ export interface SiteSettings {
   theme_background?: string;
   theme_muted?: string;
   redirects?: string;
+  whatsapp_only_checkout_enabled?: boolean;
 }
 
 export interface Coupon {

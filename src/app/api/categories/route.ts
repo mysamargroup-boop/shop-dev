@@ -1,37 +1,21 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { NextResponse } from "next/server";
+import path from 'path';
+import fs from 'fs/promises';
 
-export async function GET() {
+const categoriesFilePath = path.join(process.cwd(), 'src', 'lib', 'categories.json');
+
+async function getCategories() {
   try {
-    const { data: categories, error } = await supabaseAdmin()
-      .from('categories')
-      .select('*')
-      .order('name');
-
-    if (error) throw error;
-
-    return NextResponse.json(categories);
-  } catch (error: any) {
-    console.error('Error fetching categories:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const fileContent = await fs.readFile(categoriesFilePath, 'utf-8');
+    const data = JSON.parse(fileContent);
+    return data.categories || [];
+  } catch (error) {
+    console.error("Error reading categories file:", error);
+    return [];
   }
 }
 
-export async function POST(req: NextRequest) {
-  try {
-    const categoryData = await req.json();
-    
-    const { data: category, error } = await supabaseAdmin()
-      .from('categories')
-      .insert(categoryData)
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    return NextResponse.json(category);
-  } catch (error: any) {
-    console.error('Error creating category:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
+export async function GET() {
+  const categories = await getCategories();
+  return NextResponse.json(categories);
 }

@@ -6,20 +6,20 @@ import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import { getSiteSettings } from '@/lib/actions';
-import { getFooterLinkSections } from '@/lib/data-supabase';
+import { getCategories } from '@/lib/data-async';
 
 const Footer = async () => {
   const settings = await getSiteSettings();
+  const allCategories = await getCategories();
 
-  const defaultSections = [
+  const shopLinks = allCategories.slice(0, 4).map(c => ({ href: `/collections/${c.id}`, label: c.name }));
+  shopLinks.push({ href: '/offers', label: 'Special Offers' });
+
+
+  const linkSections = [
       {
         title: 'Shop',
-        links: [
-          { href: '/collections/desk-accessories', label: 'Desk Accessories' },
-          { href: '/collections/wall-decor', label: 'Wall Decor' },
-          { href: '/collections/keychains', label: 'Keychains' },
-          { href: '/offers', label: 'Special Offers' },
-        ],
+        links: shopLinks,
       },
       {
         title: 'About',
@@ -41,10 +41,7 @@ const Footer = async () => {
         ],
       },
   ];
-  let linkSections = await getFooterLinkSections();
-  if (!linkSections || linkSections.length === 0) {
-    linkSections = defaultSections;
-  }
+  
 
   return (
     <footer className="bg-primary/5 border-t mt-auto pb-20 md:pb-0">
@@ -69,11 +66,11 @@ const Footer = async () => {
             <div className="hidden md:grid md:grid-cols-3 col-span-3 gap-8">
               {linkSections.map((section: any) => (
                 <div key={section.title}>
-                    <h3 className="font-bold text-lg text-foreground mb-4">{section.title}</h3>
+                    <h3 className="font-bold text-xl text-foreground mb-4">{section.title}</h3>
                     <ul className="space-y-2 text-sm">
                     {section.links.map((link: any) => (
                         <li key={link.href}>
-                        <Link href={link.href} className="text-muted-foreground hover:text-primary font-medium">{link.label}</Link>
+                        <Link href={link.href} className="text-muted-foreground hover:text-primary font-semibold">{link.label}</Link>
                         </li>
                     ))}
                     </ul>
@@ -102,7 +99,7 @@ const Footer = async () => {
             </div>
 
               <div className="md:col-span-1">
-                <h3 className="font-bold text-lg text-foreground mb-4">Newsletter</h3>
+                <h3 className="font-bold text-xl text-foreground mb-4">Newsletter</h3>
                 <p className="text-sm text-muted-foreground mb-4">Subscribe for special offers, and new product announcements.</p>
                 <form className="flex">
                   <Input type="email" placeholder="Your e-mail" className="rounded-r-none focus-visible:ring-0 focus-visible:ring-offset-0 border-r-0" />

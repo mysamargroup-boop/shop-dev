@@ -22,9 +22,9 @@ export default async function SettingsPage({ searchParams }: { searchParams: { t
       </div>
 
       <Tabs defaultValue={tab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 h-auto">
           <TabsTrigger value="general">General & SEO</TabsTrigger>
-          <TabsTrigger value="invoice">Invoice</TabsTrigger>
+          <TabsTrigger value="invoice">Invoice & Checkout</TabsTrigger>
           <TabsTrigger value="redirects">Redirects</TabsTrigger>
           <TabsTrigger value="banners">Banners</TabsTrigger>
           <TabsTrigger value="tests">Tests</TabsTrigger>

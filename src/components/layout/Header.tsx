@@ -30,6 +30,7 @@ import { BLUR_DATA_URL } from '@/lib/constants';
 import { useTheme } from 'next-themes';
 import { Label } from '../ui/label';
 import { Switch } from '../ui/switch';
+import { getProducts, getCategories } from '@/lib/data-async';
 
  
 
@@ -88,21 +89,15 @@ const Header = () => {
 
   useEffect(() => {
     async function fetchData() {
-        const [productsRes, categoriesRes, headerRes] = await Promise.all([
-          fetch('/api/products'),
-          fetch('/api/categories'),
+        const [products, categories, headerRes] = await Promise.all([
+          getProducts(),
+          getCategories(),
           fetch('/api/navigation/header', { cache: 'no-store' })
         ]);
         
-        if (productsRes.ok) {
-          const products = await productsRes.json();
-          setAllProducts(products);
-        }
+        setAllProducts(products);
+        setAllCategories(categories);
 
-        if (categoriesRes.ok) {
-          const categories = await categoriesRes.json();
-          setAllCategories(categories);
-        }
         if (headerRes?.ok) {
           try {
             const links = await headerRes.json();

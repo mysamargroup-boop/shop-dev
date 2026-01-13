@@ -3,8 +3,8 @@
 
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
-import { ShoppingCart, Star, Zap, Heart, Share2, Upload, X, Truck } from 'lucide-react';
-import type { Product, OrderItem } from '@/lib/types';
+import { ShoppingCart, Star, Zap, Heart, Share2, Upload, X, Truck, Info } from 'lucide-react';
+import type { Product, OrderItem, SiteSettings } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import useCart from '@/hooks/use-cart';
@@ -31,7 +31,7 @@ import RecentlySoldWidget from './RecentlySoldWidget';
 import Image from 'next/image';
 import { BLUR_DATA_URL } from '@/lib/constants';
 import ProductInfoBadges from '@/components/products/ProductInfoBadges';
-import { SiteSettings } from '@/lib/types';
+import { getSiteSettings } from '@/lib/data-async';
 
 const ImageUpload = ({ onFilesChange }: { onFilesChange: (files: File[]) => void }) => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -108,16 +108,14 @@ const ImageUpload = ({ onFilesChange }: { onFilesChange: (files: File[]) => void
 export default function ProductDetailClient({ product }: { product: Product }) {
   const pathname = usePathname();
   
-  const isKeychainCategory = product?.category.toLowerCase().includes('keychain');
-  const minQuantity = isKeychainCategory ? 100 : 25;
-
-  const [quantity, setQuantity] = useState(minQuantity);
+  const [quantity, setQuantity] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [checkoutMode, setCheckoutMode] = useState<'whatsapp' | 'payment'>('whatsapp');
+  const [checkoutMode, setCheckoutMode] = useState<'whatsapp' | 'payment'>('payment');
   const [showStickyBar, setShowStickyBar] = useState(false);
   const [customImages, setCustomImages] = useState<File[]>([]);
   const [quantityType, setQuantityType] = useState<'preset' | 'custom'>('preset');
-  const [customQuantity, setCustomQuantity] = useState<number | string>(minQuantity);
+  const [customQuantity, setCustomQuantity] = useState<number | string>(1);
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
   
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
   const currentUrl = baseUrl ? `${baseUrl}${pathname}` : '';
@@ -129,10 +127,8 @@ export default function ProductDetailClient({ product }: { product: Product }) {
   const [selectedVariant, setSelectedVariant] = useState(product?.options && product.options.length > 0 ? undefined : product?.options?.[0]?.value);
   
   useEffect(() => {
-    const newMinQuantity = product?.category.toLowerCase().includes('keychain') ? 100 : 25;
-    setQuantity(newMinQuantity);
-    setCustomQuantity(newMinQuantity);
-  }, [product?.category]);
+    getSiteSettings().then(setSettings);
+  }, []);
 
 
   useEffect(() => {
@@ -182,7 +178,8 @@ export default function ProductDetailClient({ product }: { product: Product }) {
   };
 
   const handleBuyNow = () => {
-    setCheckoutMode('payment');
+    const effectiveCheckoutMode = settings?.whatsapp_only_checkout_enabled ? 'whatsapp' : 'payment';
+    setCheckoutMode(effectiveCheckoutMode);
     setIsModalOpen(true);
   };
 
@@ -194,30 +191,15 @@ export default function ProductDetailClient({ product }: { product: Product }) {
     finalQuantity <= 0;
 
   const discountedSubtotal = product.price * finalQuantity;
-  const shippingCost = discountedSubtotal > 2999 ? 0 : 99;
+  const freeShippingThreshold = settings?.free_shipping_threshold ?? 2999;
+  const shippingCost = discountedSubtotal > freeShippingThreshold ? 0 : 99;
   const totalCost = discountedSubtotal + shippingCost;
 
   const presetQuantities = [1, 2, 5, 10];
 
-  const [deliveryMinDays, setDeliveryMinDays] = useState<number>(7);
-  const [deliveryMaxDays, setDeliveryMaxDays] = useState<number>(15);
+  const deliveryMinDays = settings?.expected_delivery_min_days ?? 7;
+  const deliveryMaxDays = settings?.expected_delivery_max_days ?? 15;
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch('/api/settings', { cache: 'no-store' });
-        const data: SiteSettings = await res.json();
-        if (res.ok && data) {
-          if (typeof data.expected_delivery_min_days === 'number') {
-            setDeliveryMinDays(Math.max(1, data.expected_delivery_min_days));
-          }
-          if (typeof data.expected_delivery_max_days === 'number') {
-            setDeliveryMaxDays(Math.max(1, data.expected_delivery_max_days));
-          }
-        }
-      } catch {}
-    })();
-  }, []);
 
   const productsForCheckout: OrderItem[] = [{
     id: product.id,
@@ -279,7 +261,9 @@ export default function ProductDetailClient({ product }: { product: Product }) {
           <Truck className="h-6 w-6 text-primary" />
           <div>
             <p className="font-semibold text-sm">Estimated Delivery: {deliveryMinDays}-{deliveryMaxDays} days</p>
-            <p className="text-xs text-muted-foreground">Depends on order quantity & customization</p>
+            {settings?.free_shipping_threshold && (
+              <p className="text-xs font-bold text-blue-700 dark:text-blue-400">Free shipping on orders over ₹{settings.free_shipping_threshold}.</p>
+            )}
           </div>
         </div>
         
@@ -311,7 +295,6 @@ export default function ProductDetailClient({ product }: { product: Product }) {
 
         {product.allowImageUpload && <ImageUpload onFilesChange={setCustomImages} />}
         
-        {/* Store uploaded images in cart for checkout */}
         {product.allowImageUpload && customImages.length > 0 && (
           <input type="hidden" name="customerImages" value={JSON.stringify(customImages.map(f => f.name))} />
         )}
@@ -337,14 +320,14 @@ export default function ProductDetailClient({ product }: { product: Product }) {
                     <div className="relative">
                         <Input
                             type="number"
-                            min={minQuantity}
+                            min="1"
                             placeholder="Custom"
                             value={customQuantity}
                             onFocus={() => setQuantityType('custom')}
                             onChange={(e) => {
                                 setQuantityType('custom');
                                 const val = e.target.value;
-                                setCustomQuantity(val === '' ? '' : Math.max(minQuantity, parseInt(val, 10) || minQuantity));
+                                setCustomQuantity(val === '' ? '' : Math.max(1, parseInt(val, 10) || 1));
                             }}
                             className={cn(
                                 "w-28 text-center font-semibold rounded-lg bg-muted/50",
@@ -358,20 +341,11 @@ export default function ProductDetailClient({ product }: { product: Product }) {
                 </div>
             </div>
 
-             {areActionsDisabled && (
-              <p className="text-sm text-destructive font-semibold">
-                {product.allowImageUpload && customImages.length === 0 
-                  ? "Please upload at least one image to continue."
-                  : (isKeychainCategory && finalQuantity < 100)
-                  ? `Minimum quantity for keychains is ${minQuantity}.`
-                  : "Please select a valid quantity."}
-              </p>
-             )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
                 <Button size="lg" onClick={() => addToCart(product, finalQuantity)} className="w-full bg-primary hover:bg-primary/80 rounded-lg" disabled={areActionsDisabled}>
                   <ShoppingCart className="mr-2 h-5 w-5" /> Add to Cart
                 </Button>
-                 <Button size="lg" onClick={handleBuyNow} className="w-full bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white shine-effect rounded-lg" disabled={areActionsDisabled}>
+                 <Button size="lg" onClick={handleBuyNow} className="w-full bg-gradient-to-r from-green-600 to-teal-700 hover:from-green-700 hover:to-teal-800 text-white shine-effect rounded-lg" disabled={areActionsDisabled}>
                   <Zap className="mr-2 h-5 w-5 text-yellow-300" /> Buy Now
                 </Button>
             </div>
@@ -380,7 +354,7 @@ export default function ProductDetailClient({ product }: { product: Product }) {
         <div className="my-6 text-left pt-4 border-t">
              <Accordion type="single" collapsible defaultValue="item-1">
                 <AccordionItem value="item-1">
-                  <AccordionTrigger className='text-xl font-headline font-semibold hover:no-underline'>
+                  <AccordionTrigger className='text-lg font-headline font-semibold hover:no-underline'>
                     Description
                   </AccordionTrigger>
                   <AccordionContent>
@@ -388,7 +362,7 @@ export default function ProductDetailClient({ product }: { product: Product }) {
                   </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="item-2">
-                    <AccordionTrigger className='text-xl font-headline font-semibold hover:no-underline'>
+                    <AccordionTrigger className='text-lg font-headline font-semibold hover:no-underline'>
                         Features
                     </AccordionTrigger>
                     <AccordionContent>
@@ -402,7 +376,7 @@ export default function ProductDetailClient({ product }: { product: Product }) {
                     </AccordionContent>
                 </AccordionItem>
                  <AccordionItem value="item-3">
-                    <AccordionTrigger className='text-xl font-headline font-semibold hover:no-underline'>
+                    <AccordionTrigger className='text-lg font-headline font-semibold hover:no-underline'>
                         Specifications
                     </AccordionTrigger>
                     <AccordionContent>
@@ -475,10 +449,10 @@ export default function ProductDetailClient({ product }: { product: Product }) {
               <div className="flex items-center gap-1 w-20">
                 <Input
                     type="number"
-                    min={minQuantity}
+                    min="1"
                     value={finalQuantity}
                     onChange={(e) => {
-                      const val = Math.max(minQuantity, parseInt(e.target.value, 10) || minQuantity);
+                      const val = Math.max(1, parseInt(e.target.value, 10) || 1);
                       if (presetQuantities.includes(val)) {
                         setQuantityType('preset');
                         setQuantity(val);
@@ -493,7 +467,7 @@ export default function ProductDetailClient({ product }: { product: Product }) {
               <Button onClick={() => addToCart(product, finalQuantity)} variant="outline" className="hidden xs:inline-flex rounded-lg" disabled={areActionsDisabled}>
                  Add to Cart
               </Button>
-              <Button onClick={handleBuyNow} className="rounded-lg" disabled={areActionsDisabled}>
+              <Button onClick={handleBuyNow} className="rounded-lg bg-green-600 hover:bg-green-700" disabled={areActionsDisabled}>
                 <Zap className="mr-2 h-4 w-4 text-yellow-300" /> Buy Now
               </Button>
                <Button onClick={() => addToCart(product, finalQuantity)} size="icon" className="xs:hidden" disabled={areActionsDisabled}>

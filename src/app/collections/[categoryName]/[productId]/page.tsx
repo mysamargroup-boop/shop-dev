@@ -66,7 +66,7 @@ export default async function ProductDetailPage({ params }: { params: { productI
         {recommendedProducts.length > 0 && (
             <section className="mt-16 pt-12 border-t">
                 <h2 className="text-3xl font-headline font-bold text-center mb-8">You Might Also Like</h2>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                     {recommendedProducts.map(p => (
                         <ProductCard key={p.id} product={p} />
                     ))}
