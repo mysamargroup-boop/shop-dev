@@ -2,12 +2,13 @@
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { getProductById, getProducts, getCategories } from '@/lib/data-async';
+import { getProductByName, getProducts, getCategories } from '@/lib/data-async';
 import ProductCard from '@/components/products/ProductCard';
 import ReviewsCarousel from '@/components/products/ReviewsCarousel';
 import ProductLightbox from '@/components/products/ProductLightbox';
 import ProductDetailClient from './ProductDetailClient';
 import { Home, ChevronRight } from 'lucide-react';
+import { slugify } from '@/lib/utils';
 
 export const revalidate = 600;
 
@@ -39,7 +40,7 @@ const Breadcrumbs = async ({ product }: { product: any }) => {
 
 
 export default async function ProductDetailPage({ params }: { params: { productId: string, categoryName: string } }) {
-  const product = await getProductById(params.productId);
+  const product = await getProductByName(params.productId);
   
   if (!product) {
     notFound();
@@ -79,3 +80,4 @@ export default async function ProductDetailPage({ params }: { params: { productI
     </>
   );
 }
+

@@ -103,9 +103,9 @@ const ReviewsCarousel = () => {
         ]}
         className="w-full"
         >
-            <CarouselContent>
+            <CarouselContent className="-ml-4">
                 {reviews.map((review, index) => (
-                <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
+                <CarouselItem key={index} className="pl-4 md:basis-1/2 lg:basis-1/3">
                     <div className="p-1 h-full">
                         <Card className="flex flex-col h-full">
                             <CardContent className="p-6 flex-1 flex flex-col">

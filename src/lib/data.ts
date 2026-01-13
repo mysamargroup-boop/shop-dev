@@ -2,16 +2,15 @@
 // Do not import any server-only modules like 'fs' or 'path' here.
 
 import type { Category } from './types';
-import categoriesJson from './categories.json';
-import imageData from './placeholder-images.json';
-import { getTags as getTagsFromSupabase } from './data-supabase';
+import { getTags as getTagsFromSupabase, getCategories as getCategoriesFromSupabase } from './data-supabase';
 import { unstable_noStore as noStore } from 'next/cache';
 
 export async function getCategories(): Promise<Category[]> {
-    const data = categoriesJson as { categories: Category[] };
-    return Array.isArray(data.categories) ? data.categories : [];
+    noStore();
+    return getCategoriesFromSupabase();
 }
 
-export async function getImageData() {
-    return imageData;
+export async function getTags(): Promise<string[]> {
+    noStore();
+    return getTagsFromSupabase();
 }

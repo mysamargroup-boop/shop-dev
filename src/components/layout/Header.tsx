@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import React, { Suspense } from 'react';
+import React from 'react';
 import { ShoppingCart, Menu, Search, Gift, Box, Brush, Info, ShoppingBag, LayoutGrid, Heart, Mail, KeyRound, Smartphone, ImageIcon, Moon, Sun, Sparkles, User, LogOut } from 'lucide-react';
 import Logo from '@/components/icons/Logo';
 import { Button } from '@/components/ui/button';
@@ -30,7 +30,6 @@ import { useTheme } from 'next-themes';
 import { Label } from '../ui/label';
 import { Switch } from '../ui/switch';
 import { getProducts, getCategories } from '@/lib/data-async';
-import { getHeaderLinks } from '@/lib/actions';
 import { useAuth } from '@/lib/auth';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 
@@ -74,7 +73,17 @@ const DarkModeToggle = () => {
     );
 };
 
-const HeaderContent = () => {
+const headerLinks = [
+  { href: '/collections', label: 'Categories', isMegaMenu: true },
+  { href: '/collections/keychains', label: 'Keychains' },
+  { href: '/collections/wall-hangings', label: 'Wall Hanging' },
+  { href: '/collections/mobile-stands', label: 'Mobile Stand' },
+  { href: '/shop', label: 'Shop', special: true },
+  { href: '/our-story', label: 'Our Story', special: true },
+  { href: '/connect', label: 'Contact Us' },
+];
+
+const Header = () => {
   const { cartCount, isLoaded: cartLoaded } = useCart();
   const { wishlistCount, isLoaded: wishlistLoaded } = useWishlist();
   const { user } = useAuth();
@@ -84,20 +93,17 @@ const HeaderContent = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [allCategories, setAllCategories] = useState<Category[]>([]);
-  const [headerLinks, setHeaderLinks] = useState<any[]>([]);
   const pathname = usePathname() || '';
 
   useEffect(() => {
     async function fetchData() {
-        const [products, categories, links] = await Promise.all([
+        const [products, categories] = await Promise.all([
           getProducts(),
           getCategories(),
-          getHeaderLinks(),
         ]);
         
         setAllProducts(products);
         setAllCategories(categories);
-        setHeaderLinks(links);
     }
     fetchData();
   }, [])
@@ -160,17 +166,17 @@ const HeaderContent = () => {
           )}
         </div>
         <ScrollArea className="flex-1">
-          <nav className="flex flex-col gap-2 pr-4">
+          <nav className="flex flex-col gap-1 pr-4">
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="categories">
-                <AccordionTrigger className="hover:no-underline">
+                <AccordionTrigger className="hover:no-underline py-3">
                   <div className="flex items-center gap-3 text-sm font-semibold text-foreground group-hover:text-accent transition-colors uppercase">
                       <LayoutGrid className="h-5 w-5 text-primary"/>
                       Categories
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
-                    <div className="pl-6 space-y-0">
+                    <div className="pl-6 space-y-0.5">
                       {allCategories.map(category => (
                           <Link key={category.id} href={`/collections/${category.id}`} className="flex items-center gap-3 py-2 rounded-md hover:bg-muted/50" onClick={() => setIsSheetOpen(false)}>
                             <Image src={category.imageUrl} alt={category.name} width={24} height={24} className="rounded-md object-cover w-6 h-6"/>
@@ -182,37 +188,34 @@ const HeaderContent = () => {
               </AccordionItem>
             </Accordion>
             {
-              headerLinks.filter(l => !l.isMegaMenu && l.label !== 'Our Story' && l.label !== 'Contact Us').map((link) => {
-                const isActive = pathname.startsWith(link.href);
-                const Icon = link.href.includes('keychains') ? KeyRound :
-                            link.href.includes('wall-hangings') ? ImageIcon :
-                            link.href.includes('mobile-stands') ? Smartphone :
-                            ShoppingBag;
-                return (
+              headerLinks.filter(l => !l.isMegaMenu).map((link) => {
+                  const isActive = pathname.startsWith(link.href);
+                  const specialClassName = link.label === 'Our Story'
+                      ? "bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent"
+                      : "bg-gradient-to-r from-red-600 to-orange-500 bg-clip-text text-transparent";
+                  
+                  const Icon = link.href.includes('keychains') ? KeyRound :
+                              link.href.includes('wall-hangings') ? ImageIcon :
+                              link.href.includes('mobile-stands') ? Smartphone :
+                              link.label === 'Shop' ? ShoppingBag :
+                              link.href.includes('our-story') ? Info :
+                              link.href.includes('connect') ? Mail : ShoppingBag;
+
+                  return (
                   <Button key={link.label} variant="ghost" asChild className="h-auto p-2 hover:bg-transparent group justify-start" data-active={isActive}>
                       <Link href={link.href} className="flex items-center gap-3">
-                        <div className="h-6 w-6 flex items-center justify-center text-primary group-hover:text-foreground group-data-[active=true]:text-accent"><Icon className="h-5 w-5" /></div>
-                        <span className={cn(
+                      <div className="h-6 w-6 flex items-center justify-center text-primary group-hover:text-foreground group-data-[active=true]:text-accent"><Icon className="h-5 w-5" /></div>
+                      <span className={cn(
                           "text-sm font-semibold text-foreground group-hover:text-accent transition-colors uppercase",
+                          link.special ? specialClassName :
                           (isActive) && "bg-gradient-to-r from-destructive to-accent bg-clip-text text-transparent"
-                        )}>{link.label}</span>
+                      )}>
+                          {link.label}
+                      </span>
                       </Link>
                   </Button>
-                )
-              })
-            }
-            <Button variant="ghost" asChild className="h-auto p-2 hover:bg-transparent group justify-start">
-              <Link href="/our-story" className="flex items-center gap-3">
-                <div className="h-6 w-6 flex items-center justify-center text-primary"><Info className="h-5 w-5" /></div>
-                <span className="text-sm font-semibold uppercase bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Our Story</span>
-              </Link>
-            </Button>
-            <Button variant="ghost" asChild className="h-auto p-2 hover:bg-transparent group justify-start">
-              <Link href="/connect" className="flex items-center gap-3">
-                <div className="h-6 w-6 flex items-center justify-center text-primary"><Mail className="h-5 w-5" /></div>
-                <span className="text-sm font-semibold uppercase text-foreground">Contact Us</span>
-              </Link>
-            </Button>
+              )})
+              }
           </nav>
         </ScrollArea>
         <div className="mt-auto space-y-4 pt-4 border-t">
@@ -249,10 +252,10 @@ const HeaderContent = () => {
                          <span className={cn(isCollectionsActive && "stylish-underline")}>{link.label}</span>
                     </NavigationMenuTrigger>
                     <NavigationMenuContent>
-                    <div className="grid grid-cols-4 gap-4 p-6 w-screen max-w-2xl">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 w-screen max-w-sm md:max-w-xl lg:max-w-3xl">
                         {allCategories.map(category => (
-                        <Link key={category.id} href={category.linkUrl || `/collections/${category.id}`} className="group block rounded-lg p-2 hover:bg-muted/50">
-                            <div className="aspect-video relative mb-2 overflow-hidden rounded-md">
+                        <Link key={category.id} href={`/collections/${category.id}`} className="group block rounded-lg p-2 hover:bg-muted/50">
+                            <div className="aspect-square relative mb-2 overflow-hidden rounded-md">
                                 <Image 
                                     src={category.imageUrl} 
                                     alt={category.name} 
@@ -355,6 +358,7 @@ const HeaderContent = () => {
           <div className="flex justify-center w-auto md:w-1/3">
             <Link href="/" className="flex items-center gap-2">
               <Logo />
+              <span className="font-bold text-xl hidden sm:inline-block">Woody</span>
             </Link>
           </div>
 
@@ -391,10 +395,4 @@ const HeaderContent = () => {
   );
 };
 
-export default function Header() {
-    return (
-        <Suspense fallback={<header className="h-20" />}>
-            <HeaderContent />
-        </Suspense>
-    );
-}
+export default Header;
