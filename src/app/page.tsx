@@ -13,7 +13,6 @@ import { Button } from '@/components/ui/button';
 import IconCategoryGrid from '@/components/home/IconCategoryGrid';
 import SubscriptionPopup from '@/components/home/SubscriptionPopup';
 import VideoGallery from '@/components/home/VideoGallery';
-import AnnouncementBanner from '@/components/home/AnnouncementBanner';
 import FeaturedCategories from '@/components/home/FeaturedCategories';
 import PopularProducts from '@/components/home/PopularProducts';
 import ImageGrid from '@/components/home/ImageGrid';
@@ -38,7 +37,6 @@ export default async function Home() {
 
   return (
     <>
-      <AnnouncementBanner />
       <div className="container mx-auto px-4 pt-4 md:hidden">
         <form action="/shop" method="get" className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
