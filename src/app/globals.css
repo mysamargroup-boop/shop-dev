@@ -63,10 +63,6 @@ body {
   }
   body {
     @apply bg-background text-foreground;
-    background-image: linear-gradient(to bottom, #ffffff, #e0f2fe);
-  }
-  .dark body {
-    background-image: linear-gradient(to bottom, hsl(var(--background)), #0c1e35);
   }
 }
 

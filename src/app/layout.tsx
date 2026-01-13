@@ -49,9 +49,15 @@ export default async function RootLayout({
           ${themeBackground ? `--background: ${themeBackground};` : ''}
           ${themeMuted ? `--muted: ${themeMuted};` : ''}
         }
+        body {
+          background-image: linear-gradient(to bottom, hsl(${themeBackground}) , #e0f2fe);
+        }
+        .dark body {
+          background-image: linear-gradient(to bottom, hsl(var(--background)), #0c1e35);
+        }
       `}
     </style>
-  ) : null;
+  ) : <style>{`body { background-image: linear-gradient(to bottom, #ffffff, #e0f2fe); } .dark body { background-image: linear-gradient(to bottom, hsl(var(--background)), #0c1e35); }`}</style>;
 
   return (
     <html lang="en" suppressHydrationWarning>
