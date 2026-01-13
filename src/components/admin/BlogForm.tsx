@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useFormStatus } from "react-dom";
@@ -164,13 +163,13 @@ export function BlogForm({ action, post, buttonText, initialState, siteImages }:
 
            <div className="space-y-2">
             <Label htmlFor="author">Author</Label>
-            <Input id="author" name="author" defaultValue={post?.author ?? "Anuj & Akash Nema"} required />
+            <Input id="author" name="author" defaultValue={post?.author ?? "Woody Business"} required />
              {state?.errors?.author && <p className="text-destructive text-sm">{state.errors.author[0]}</p>}
           </div>
           
            <div className="space-y-2">
             <Label htmlFor="date">Date</Label>
-            <Input id="date" name="date" defaultValue={post?.date ?? new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} required />
+            <Input id="date" name="date" type="date" defaultValue={post?.date ? new Date(post.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]} required />
              {state?.errors?.date && <p className="text-destructive text-sm">{state.errors.date[0]}</p>}
           </div>
 
@@ -185,8 +184,8 @@ export function BlogForm({ action, post, buttonText, initialState, siteImages }:
                 className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
                 <option value="" disabled>Select an image key</option>
-                {imageKeys.map(key => (
-                    <option key={key} value={key}>{key}</option>
+                {siteImages.map(img => (
+                    <option key={img.id} value={img.id}>{img.id} ({img.description})</option>
                 ))}
             </select>
             <p className="text-xs text-muted-foreground">Select an ID from Site Images (Admin → Site Images).</p>
@@ -249,4 +248,3 @@ export function BlogForm({ action, post, buttonText, initialState, siteImages }:
     </form>
   );
 }
-

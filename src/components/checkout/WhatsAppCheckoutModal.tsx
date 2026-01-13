@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
@@ -20,7 +19,6 @@ import { generateWhatsAppCheckoutMessage, WhatsAppCheckoutInput } from '@/ai/flo
 import { useToast } from '@/hooks/use-toast';
 import confetti from 'canvas-confetti';
 import { createPaymentLink } from '@/lib/payment';
-import ImageUploadHandler from '@/components/checkout/ImageUploadHandler';
 import Link from 'next/link';
 import type { Coupon, OrderItem, Product, SiteSettings } from "@/lib/types";
 import { BLUR_DATA_URL } from '@/lib/constants';
@@ -84,7 +82,7 @@ const OrderSummary = ({
           </div>
         )}
         
-        <div className="flex justify-between font-bold text-foreground pt-2 border-t"><span>Total (incl. GST):</span> <span>₹{finalTotal.toFixed(2)}</span></div>
+        <div className="flex justify-between font-bold text-foreground pt-2 border-t"><span>Total <span className="text-sm font-normal text-muted-foreground">(incl. GST)</span>:</span> <span>₹{finalTotal.toFixed(2)}</span></div>
 
          {mode === 'payment' && (
           <div className="flex justify-between font-bold text-primary pt-2 border-t">
@@ -138,16 +136,15 @@ const WhatsAppCheckoutModal = ({ isOpen, onOpenChange, checkoutInput, checkoutMo
   const [customerPhoneNumber, setCustomerPhoneNumber] = useState('');
   const [customerAddress, setCustomerAddress] = useState('');
   const [pincode, setPincode] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('');
   const [extraNote, setExtraNote] = useState('');
   const [couponCode, setCouponCode] = useState('');
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [availableCoupons, setAvailableCoupons] = useState<Coupon[]>([]);
-  const [selectedUploadFiles, setSelectedUploadFiles] = useState<File[]>([]);
   const [siteSettings, setSiteSettings] = useState<Partial<SiteSettings>>({});
   
   const { toast } = useToast();
   const audioRef = useRef<HTMLAudioElement>(null);
-  const imageUploader = ImageUploadHandler({ onImagesChange: setSelectedUploadFiles, maxImages: 3 });
 
   const baseTotal = checkoutInput?.totalCost ?? 0;
   const finalTotal = useMemo(() => {
@@ -170,6 +167,7 @@ const WhatsAppCheckoutModal = ({ isOpen, onOpenChange, checkoutInput, checkoutMo
         setCustomerPhoneNumber('');
         setCustomerAddress('');
         setPincode('');
+        setCustomerEmail('');
         setExtraNote('');
         setCouponCode('');
         setCouponDiscount(0);
@@ -256,11 +254,14 @@ const WhatsAppCheckoutModal = ({ isOpen, onOpenChange, checkoutInput, checkoutMo
     
     const fullAddress = `${customerAddress}, ${pincode}`;
     
+    const email = customerEmail || `${customerPhoneNumber}@nemaone.com`;
+
     const orderDetails = {
         sku: checkoutInput.sku,
         productName: checkoutInput.productName,
         totalCost: finalTotal,
         customerName,
+        customerEmail: email,
         customerPhoneNumber: `91${customerPhoneNumber}`,
         customerAddress: fullAddress,
         extraNote,
@@ -285,21 +286,6 @@ const WhatsAppCheckoutModal = ({ isOpen, onOpenChange, checkoutInput, checkoutMo
         
         try {
           localStorage.setItem(`order_${res.orderId}`, JSON.stringify({ ...orderDetails, orderId: res.orderId, amount: advanceAmount }));
-        } catch {}
-
-        try {
-          if (selectedUploadFiles.length > 0 && 'order_items' in res && Array.isArray(res.order_items) && res.order_items.length > 0) {
-            const uploadableIds = checkoutInput.uploadProductIds || [];
-            const targetItem = res.order_items.find((it: any) => uploadableIds.includes(it.product_id));
-            if (targetItem) {
-              const urls = await imageUploader.uploadImages(targetItem.id);
-              if (urls && urls.length > 0) {
-                try {
-                  localStorage.setItem(`order_uploads_${res.orderId}`, JSON.stringify(urls));
-                } catch {}
-              }
-            }
-          }
         } catch {}
         
         const origin = (process.env.NEXT_PUBLIC_BASE_URL || '').trim() || (typeof window !== 'undefined' ? window.location.origin : '');
@@ -439,11 +425,6 @@ const WhatsAppCheckoutModal = ({ isOpen, onOpenChange, checkoutInput, checkoutMo
                       advancePercent={advancePercent}
                       mode={checkoutMode}
                     />
-                    {checkoutMode === 'payment' && checkoutInput && (checkoutInput.uploadProductIds || []).length > 0 && (
-                      <div className="mt-4">
-                        {imageUploader.render}
-                      </div>
-                    )}
                 </div>
                 <div className="grid gap-4 py-4 md:py-0">
                   <div className="space-y-2">
@@ -477,6 +458,16 @@ const WhatsAppCheckoutModal = ({ isOpen, onOpenChange, checkoutInput, checkoutMo
                         className="rounded-l-none"
                         />
                     </div>
+                  </div>
+                   <div className="space-y-2">
+                    <Label htmlFor="email">Email Address (Optional)</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={customerEmail}
+                      onChange={(e) => setCustomerEmail(e.target.value)}
+                      placeholder="e.g., priya@example.com"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="address">Shipping Address</Label>

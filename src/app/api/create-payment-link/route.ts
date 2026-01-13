@@ -17,7 +17,7 @@ const getCashfreeConfig = () => {
 
 export async function POST(req: NextRequest) {
   try {
-    const { orderId, amount, customerName, customerPhone, returnUrl, items } =
+    const { orderId, amount, customerName, customerPhone, customerEmail, returnUrl, items } =
       await req.json();
 
     const { appId, secretKey, baseUrl, env } = getCashfreeConfig();
@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
         customer_id: String(customerPhone).replace(/[^a-zA-Z0-9_-]/g, ""),
         customer_phone: String(customerPhone),
         customer_name: customerName || "Customer",
-        customer_email: "customer@example.com",
+        customer_email: customerEmail || "customer@example.com",
       },
 
       order_meta: {
