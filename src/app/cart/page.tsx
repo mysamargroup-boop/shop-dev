@@ -140,12 +140,12 @@ export default function CartPage() {
                     <span>{shippingCost > 0 ? `₹${shippingCost.toFixed(2)}` : 'Free'}</span>
                   </div>
                   <div className="flex justify-between font-bold text-lg">
-                    <span>Total</span>
+                    <span>Total <span className="text-sm font-normal text-muted-foreground">(incl. GST)</span></span>
                     <span>₹{totalCost.toFixed(2)}</span>
                   </div>
                 </CardContent>
                 <CardFooter className="flex flex-col gap-3">
-                  <Button className="w-full" size="lg" onClick={handlePaymentCheckout}>
+                  <Button className="w-full bg-gradient-to-r from-green-700 to-green-900 hover:from-green-800 hover:to-green-900 text-white" size="lg" onClick={handlePaymentCheckout}>
                     <FileText className="mr-2 h-4 w-4" /> Order with Advance
                   </Button>
                 </CardFooter>

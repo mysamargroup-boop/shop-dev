@@ -235,7 +235,7 @@ const Header = () => {
              <div className="md:hidden mr-2">
               <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-auto w-auto p-1 group hover:bg-transparent hover:text-destructive [&_svg]:!size-6">
+                  <Button variant="ghost" size="icon" className="h-auto w-auto p-1 group hover:bg-transparent hover:text-accent [&_svg]:!size-6">
                     <Menu size={22} />
                     <span className="sr-only">Open menu</span>
                   </Button>

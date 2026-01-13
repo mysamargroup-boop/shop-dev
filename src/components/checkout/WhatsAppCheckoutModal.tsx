@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, CheckCircle, Tag, X, FileText, Zap, Phone } from 'lucide-react';
+import { Loader2, CheckCircle, Tag, X, FileText, Zap, Phone, Truck, Info, IndianRupee } from 'lucide-react';
 import { generateWhatsAppCheckoutMessage, WhatsAppCheckoutInput } from '@/ai/flows/whatsapp-checkout-message';
 import { useToast } from '@/hooks/use-toast';
 import confetti from 'canvas-confetti';
@@ -84,7 +84,7 @@ const OrderSummary = ({
           </div>
         )}
         
-        <div className="flex justify-between font-bold text-foreground pt-2 border-t"><span>Total:</span> <span>₹{finalTotal.toFixed(2)}</span></div>
+        <div className="flex justify-between font-bold text-foreground pt-2 border-t"><span>Total (incl. GST):</span> <span>₹{finalTotal.toFixed(2)}</span></div>
 
          {mode === 'payment' && (
           <div className="flex justify-between font-bold text-primary pt-2 border-t">
@@ -115,9 +115,17 @@ const OrderSummary = ({
           )}
         </div>
       </div>
-       <div className="text-xs text-muted-foreground pt-3 border-t">
-        <p>Estimated Delivery: 7-15 days, depending on location.</p>
-        {supportPhoneNumber && <p>For details, call <a href={`tel:${supportPhoneNumber}`} className="font-semibold text-primary">{supportPhoneNumber}</a>.</p>}
+       <div className="flex items-center gap-3 p-3 rounded-lg border bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 mt-3">
+          <Truck className="h-6 w-6" />
+          <div>
+              <p className="font-semibold text-sm">Estimated Delivery: 7-15 days</p>
+              {supportPhoneNumber && <p className="text-xs">For details, call <a href={`tel:${supportPhoneNumber}`} className="font-bold">{supportPhoneNumber}</a>.</p>}
+          </div>
+      </div>
+      <div className="text-center text-[11px] text-muted-foreground pt-2 space-x-3">
+        <Link href="/pricing" target="_blank" className="hover:underline">Pricing Policy</Link>
+        <Link href="/shipping" target="_blank" className="hover:underline">Shipping</Link>
+        <Link href="/returns-and-refunds" target="_blank" className="hover:underline">Returns & Refunds</Link>
       </div>
     </div>
   );
@@ -216,18 +224,6 @@ const WhatsAppCheckoutModal = ({ isOpen, onOpenChange, checkoutInput, checkoutMo
     }
     discountAmount = Math.min(discountAmount, subtotal);
     setCouponDiscount(discountAmount);
-    try {
-      fetch('/api/coupon-redemptions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          code,
-          subtotal,
-          discountAmount,
-          sessionId: typeof window !== 'undefined' ? (window.sessionStorage.getItem('session_id') || '') : '',
-        }),
-      }).catch(() => {});
-    } catch {}
     
     confetti({
         particleCount: 100,
@@ -287,12 +283,10 @@ const WhatsAppCheckoutModal = ({ isOpen, onOpenChange, checkoutInput, checkoutMo
         };
         const res = await createPaymentLink(paymentInput);
         
-        // Store order details locally for the confirmation page
         try {
           localStorage.setItem(`order_${res.orderId}`, JSON.stringify({ ...orderDetails, orderId: res.orderId, amount: advanceAmount }));
         } catch {}
 
-        // Upload any selected images to the first matching order_item
         try {
           if (selectedUploadFiles.length > 0 && 'order_items' in res && Array.isArray(res.order_items) && res.order_items.length > 0) {
             const uploadableIds = checkoutInput.uploadProductIds || [];
@@ -324,7 +318,6 @@ const WhatsAppCheckoutModal = ({ isOpen, onOpenChange, checkoutInput, checkoutMo
           return null;
         };
 
-        // Use Cashfree SDK for payment
         if ((window as any).Cashfree) {
             const cfModeEnv = (process.env.NEXT_PUBLIC_CASHFREE_ENV || 'SANDBOX').toUpperCase();
             const cashfree = (window as any).Cashfree({
@@ -354,9 +347,8 @@ const WhatsAppCheckoutModal = ({ isOpen, onOpenChange, checkoutInput, checkoutMo
               }
             });
             
-            // Safety net: if still loading after 8s, fallback to hosted redirect
             setTimeout(async () => {
-              if (document.hidden) return; // avoid double redirect if user switched tabs
+              if (document.hidden) return;
               if (typeof window !== 'undefined') {
                 const returnUrl = composeReturnUrl(res.orderId);
                 let hostedUrl = res.payment_url;
@@ -369,7 +361,6 @@ const WhatsAppCheckoutModal = ({ isOpen, onOpenChange, checkoutInput, checkoutMo
               }
             }, 8000);
         } else {
-             // Fallback for redirect if SDK fails
             const returnUrl = composeReturnUrl(res.orderId);
             let hostedUrl = res.payment_url;
             if (!hostedUrl) hostedUrl = await getPaymentsUrl(res.orderId);
@@ -530,7 +521,7 @@ const WhatsAppCheckoutModal = ({ isOpen, onOpenChange, checkoutInput, checkoutMo
             </div>
             <DialogFooter className="mt-6">
                {checkoutMode === 'payment' ? (
-                 <Button type="submit" className="w-full bg-gradient-to-r from-green-600 to-teal-700 hover:from-green-700 hover:to-teal-800 text-white">
+                 <Button type="submit" className="w-full bg-gradient-to-r from-green-700 to-green-900 hover:from-green-800 hover:to-green-900 text-white">
                     <FileText className="mr-2 h-4 w-4" />
                     Proceed to Pay ₹{advanceAmount.toFixed(2)}
                  </Button>
@@ -550,7 +541,7 @@ const WhatsAppCheckoutModal = ({ isOpen, onOpenChange, checkoutInput, checkoutMo
             <p className="mt-4 text-lg">Processing your order...</p>
           </div>
         );
-      case 'confirmation': // This case is now only for non-payment flows
+      case 'confirmation':
         return (
             <div className="flex flex-col items-center justify-center p-8 text-center min-h-[300px]">
                 <CheckCircle className="h-16 w-16 text-green-500 mb-4" />

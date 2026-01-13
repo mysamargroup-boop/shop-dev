@@ -52,13 +52,7 @@ const Footer = async () => {
                 <Logo />
                 <p className="text-sm text-muted-foreground mt-4 max-w-md">Exquisite Personalized Wooden Gifts. Handcrafted with love, designed to capture your most cherished memories.</p>
             </div>
-            <div className='flex flex-col items-center text-center md:items-end md:text-right'>
-                 <h3 className="font-bold text-lg text-foreground mb-4">Our Portals</h3>
-                 <ul className="space-y-2 text-sm">
-                    <li><a href="https://woody.co.in" target="_blank" rel="noopener noreferrer" className="font-bold text-primary hover:underline">Retail Site (Woody)</a></li>
-                    <li><a href="https://business.woody.co.in" target="_blank" rel="noopener noreferrer" className="font-bold text-primary hover:underline">B2B / Bulk Site</a></li>
-                </ul>
-            </div>
+            
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -66,7 +60,7 @@ const Footer = async () => {
             <div className="hidden md:grid md:grid-cols-3 col-span-3 gap-8">
               {linkSections.map((section: any) => (
                 <div key={section.title}>
-                    <h3 className="font-bold text-xl text-foreground mb-4">{section.title}</h3>
+                    <h3 className="font-bold text-lg text-foreground mb-4">{section.title}</h3>
                     <ul className="space-y-2 text-sm">
                     {section.links.map((link: any) => (
                         <li key={link.href}>
@@ -99,7 +93,7 @@ const Footer = async () => {
             </div>
 
               <div className="md:col-span-1">
-                <h3 className="font-bold text-xl text-foreground mb-4">Newsletter</h3>
+                <h3 className="font-bold text-lg text-foreground mb-4">Newsletter</h3>
                 <p className="text-sm text-muted-foreground mb-4">Subscribe for special offers, and new product announcements.</p>
                 <form className="flex">
                   <Input type="email" placeholder="Your e-mail" className="rounded-r-none focus-visible:ring-0 focus-visible:ring-offset-0 border-r-0" />
@@ -139,7 +133,7 @@ const Footer = async () => {
 
         <div className="mt-16 border-t pt-6 text-center text-sm text-muted-foreground">
           <p>
-            &copy; {new Date().getFullYear()} {settings.invoice_business_name || 'Woody Business'}. All rights reserved.
+            &copy; {new Date().getFullYear()} {settings.invoice_business_name || 'Nema One'}. All rights reserved.
           </p>
            <p className="text-xs mt-2">
             Designed by <a href="https://instagram.com/shubham__nema" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary hover:underline">Samar</a>
