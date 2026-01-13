@@ -13,6 +13,13 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  experimental: {
+    allowedDevOrigins: [
+        "6000-firebase-studio-1766766772147.cluster-fkltigo73ncaixtmokrzxhwsfc.cloudworkstations.dev",
+        "9000-firebase-studio-1766766772147.cluster-fkltigo73ncaixtmokrzxhwsfc.cloudworkstations.dev"
+    ]
+  },
+  turbopack: {},
   async headers() {
     return [
         {
