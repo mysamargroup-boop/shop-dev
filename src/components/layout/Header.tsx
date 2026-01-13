@@ -14,7 +14,7 @@ import { Input } from '../ui/input';
 import { usePathname } from 'next/navigation';
 import { ScrollArea } from '../ui/scroll-area';
 import { cn } from '@/lib/utils';
-import type { Product, Category } from '@/lib/types';
+import type { Product, Category, SiteSettings } from '@/lib/types';
 import Image from 'next/image';
 import {
   NavigationMenu,
@@ -73,16 +73,6 @@ const DarkModeToggle = () => {
     );
 };
 
-const headerLinks = [
-  { href: '/collections', label: 'Categories', isMegaMenu: true },
-  { href: '/collections/keychains', label: 'Keychains' },
-  { href: '/collections/wall-hangings', label: 'Wall Hanging' },
-  { href: '/collections/mobile-stands', label: 'Mobile Stand' },
-  { href: '/shop', label: 'Shop', special: true },
-  { href: '/our-story', label: 'Our Story', special: true },
-  { href: '/connect', label: 'Contact Us' },
-];
-
 const Header = () => {
   const { cartCount, isLoaded: cartLoaded } = useCart();
   const { wishlistCount, isLoaded: wishlistLoaded } = useWishlist();
@@ -93,17 +83,24 @@ const Header = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [allCategories, setAllCategories] = useState<Category[]>([]);
+  const [headerLinks, setHeaderLinks] = useState<any[]>([]);
+  const [siteSettings, setSiteSettings] = useState<SiteSettings>({});
+
   const pathname = usePathname() || '';
 
   useEffect(() => {
     async function fetchData() {
-        const [products, categories] = await Promise.all([
+        const [products, categories, settings, navLinks] = await Promise.all([
           getProducts(),
           getCategories(),
+          fetch('/api/settings').then(res => res.json()),
+          fetch('/api/navigation?area=header').then(res => res.json())
         ]);
         
         setAllProducts(products);
         setAllCategories(categories);
+        setSiteSettings(settings);
+        setHeaderLinks(navLinks || []);
     }
     fetchData();
   }, [])
@@ -149,7 +146,7 @@ const Header = () => {
                             return (
                             <Link 
                               key={product.id} 
-                              href={`/collections/${categorySlug}/${product.id}`} 
+                              href={`/collections/${categorySlug}/${product.name}`} 
                               className="flex items-center gap-3 p-2 rounded-md hover:bg-accent/10"
                               onClick={() => setIsSheetOpen(false)}
                             >
@@ -252,25 +249,25 @@ const Header = () => {
                          <span className={cn(isCollectionsActive && "stylish-underline")}>{link.label}</span>
                     </NavigationMenuTrigger>
                     <NavigationMenuContent>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 w-screen max-w-sm md:max-w-xl lg:max-w-3xl">
-                        {allCategories.map(category => (
-                        <Link key={category.id} href={`/collections/${category.id}`} className="group block rounded-lg p-2 hover:bg-muted/50">
-                            <div className="aspect-square relative mb-2 overflow-hidden rounded-md">
-                                <Image 
-                                    src={category.imageUrl} 
-                                    alt={category.name} 
-                                    fill 
-                                    className="object-cover group-hover:scale-105 transition-transform" 
-                                    data-ai-hint={category.imageHint}
-                                    sizes="20vw"
-                                    placeholder="blur"
-                                    blurDataURL={BLUR_DATA_URL}
-                                />
-                            </div>
-                            <p className="font-semibold text-sm text-center text-foreground group-hover:text-primary">{category.name}</p>
-                        </Link>
-                        ))}
-                    </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 w-screen max-w-sm md:max-w-xl lg:max-w-3xl">
+                            {allCategories.map(category => (
+                            <Link key={category.id} href={`/collections/${category.id}`} className="group block rounded-lg p-2 hover:bg-muted/50">
+                                <div className="aspect-video relative mb-2 overflow-hidden rounded-md">
+                                    <Image 
+                                        src={category.imageUrl} 
+                                        alt={category.name} 
+                                        fill 
+                                        className="object-cover group-hover:scale-105 transition-transform" 
+                                        data-ai-hint={category.imageHint}
+                                        sizes="20vw"
+                                        placeholder="blur"
+                                        blurDataURL={BLUR_DATA_URL}
+                                    />
+                                </div>
+                                <p className="font-semibold text-sm text-center text-foreground group-hover:text-primary">{category.name}</p>
+                            </Link>
+                            ))}
+                        </div>
                     </NavigationMenuContent>
                 </NavigationMenuItem>
                 );
@@ -340,7 +337,7 @@ const Header = () => {
                               {searchResults.map(product => {
                                   const categorySlug = product.category.split(',')[0].trim().toLowerCase().replace(/ /g, '-');
                                   return (
-                                  <Link key={product.id} href={`/collections/${categorySlug}/${product.id}`} className="flex items-center gap-3 p-2 rounded-md hover:bg-accent/10">
+                                  <Link key={product.id} href={`/collections/${categorySlug}/${product.name}`} className="flex items-center gap-3 p-2 rounded-md hover:bg-accent/10">
                                       <Image src={product.imageUrl} alt={product.name} width={40} height={40} className="rounded-md object-cover"/>
                                       <div>
                                           <p className="font-semibold text-sm">{product.name}</p>
@@ -358,7 +355,6 @@ const Header = () => {
           <div className="flex justify-center w-auto md:w-1/3">
             <Link href="/" className="flex items-center gap-2">
               <Logo />
-              <span className="font-bold text-xl hidden sm:inline-block">Woody</span>
             </Link>
           </div>
 
