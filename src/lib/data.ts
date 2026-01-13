@@ -4,7 +4,8 @@
 import type { Category } from './types';
 import categoriesJson from './categories.json';
 import imageData from './placeholder-images.json';
-
+import { getTags as getTagsFromSupabase } from './data-supabase';
+import { unstable_noStore as noStore } from 'next/cache';
 
 export async function getCategories(): Promise<Category[]> {
     const data = categoriesJson as { categories: Category[] };
@@ -13,4 +14,9 @@ export async function getCategories(): Promise<Category[]> {
 
 export async function getImageData() {
     return imageData;
+}
+
+export async function getTags(): Promise<string[]> {
+    noStore();
+    return getTagsFromSupabase();
 }

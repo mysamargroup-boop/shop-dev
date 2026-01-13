@@ -208,7 +208,7 @@ body {
 
 .animated-gradient-ring {
     position: relative;
-    padding: 2px; /* This controls the thickness of the ring */
+    padding: 3px; /* This controls the thickness of the ring */
     background: conic-gradient(from var(--gradient-angle, 0deg), #f43f5e, #ec4899, #d946ef, #8b5cf6, #3b82f6, #14b8a6, #facc15, #f43f5e);
     animation: gradient-rotate 4s linear infinite;
 }

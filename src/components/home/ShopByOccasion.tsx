@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/carousel';
 import { cn } from '@/lib/utils';
 import type { Product } from '@/lib/types';
+import { getTags } from '@/lib/data';
 
 const ShopByOccasion = ({ products }: { products: Product[] }) => {
   const [selectedTag, setSelectedTag] = useState('');
@@ -23,13 +24,10 @@ const ShopByOccasion = ({ products }: { products: Product[] }) => {
   useEffect(() => {
     async function fetchTags() {
       try {
-        const res = await fetch('/api/tags');
-        if (res.ok) {
-          const data = await res.json();
-          setOccasionTags(data.tags);
-          if (data.tags.length > 0) {
-            setSelectedTag(data.tags[0]);
-          }
+        const tags = await getTags();
+        setOccasionTags(tags);
+        if (tags.length > 0) {
+          setSelectedTag(tags[0]);
         }
       } catch (error) {
         console.error("Failed to fetch tags", error);

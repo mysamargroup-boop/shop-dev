@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import React from 'react';
-import { ShoppingCart, Menu, Search, Gift, Box, Brush, Info, ShoppingBag, LayoutGrid, Heart, Mail, KeyRound, Smartphone, ImageIcon, Moon, Sun } from 'lucide-react';
+import { ShoppingCart, Menu, Search, Gift, Box, Brush, Info, ShoppingBag, LayoutGrid, Heart, Mail, KeyRound, Smartphone, ImageIcon, Moon, Sun, Sparkles, User, LogOut } from 'lucide-react';
 import Logo from '@/components/icons/Logo';
 import { Button } from '@/components/ui/button';
 import useCart from '@/hooks/use-cart';
@@ -30,8 +30,9 @@ import { useTheme } from 'next-themes';
 import { Label } from '../ui/label';
 import { Switch } from '../ui/switch';
 import { getProducts, getCategories } from '@/lib/data-async';
+import { getHeaderLinks } from '@/lib/actions';
+import { useAuth } from '@/lib/auth';
 
- 
 
 const Marquee = () => {
     const messages = ["🎉 Great discount offer depends on quantity 💰", "Custom Engraving Available on All Products", "Handcrafted with Love"];
@@ -77,6 +78,7 @@ const DarkModeToggle = () => {
 const Header = () => {
   const { cartCount, isLoaded: cartLoaded } = useCart();
   const { wishlistCount, isLoaded: wishlistLoaded } = useWishlist();
+  const { user } = useAuth();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Product[]>([]);
@@ -88,22 +90,16 @@ const Header = () => {
 
   useEffect(() => {
     async function fetchData() {
-        const [products, categories, headerRes] = await Promise.all([
+        const [products, categories, links] = await Promise.all([
           getProducts(),
           getCategories(),
-          fetch('/api/navigation/header', { cache: 'no-store' })
+          getHeaderLinks()
         ]);
         
         setAllProducts(products);
         setAllCategories(categories);
-
-        if (headerRes?.ok) {
-          try {
-            const links = await headerRes.json();
-            if (Array.isArray(links) && links.length > 0) {
-              setHeaderLinks(links);
-            }
-          } catch {}
+        if (links) {
+          setHeaderLinks(links);
         }
     }
     fetchData();
@@ -138,10 +134,18 @@ const Header = () => {
             const specialClassName = link.label === 'Our Story'
                 ? "bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent"
                 : "bg-gradient-to-r from-blue-800 to-cyan-600 bg-clip-text text-transparent";
+            
+            const Icon = link.label === 'Categories' ? LayoutGrid :
+                         link.label === 'Keychains' ? KeyRound :
+                         link.label === 'Wall Hanging' ? ImageIcon :
+                         link.label === 'Mobile Stand' ? Smartphone :
+                         link.label === 'Our Story' ? Info :
+                         link.label === 'Contact Us' ? Mail : ShoppingBag;
+
             return (
             <Button key={link.label} variant="ghost" asChild className="h-auto p-2 hover:bg-transparent group justify-start" data-active={isActive}>
                 <Link href={link.href} className="flex items-center gap-2">
-                {link.icon && <div className="h-6 w-6 flex items-center justify-center text-primary group-hover:text-foreground group-data-[active=true]:text-accent">{link.icon}</div>}
+                <div className="h-6 w-6 flex items-center justify-center text-primary group-hover:text-foreground group-data-[active=true]:text-accent"><Icon /></div>
                 <span className={cn(
                     "text-sm font-semibold text-foreground group-hover:text-accent transition-colors uppercase",
                     link.special ? specialClassName :
@@ -153,7 +157,14 @@ const Header = () => {
             </Button>
         )})}
         </nav>
-        <div className="mt-auto">
+        <div className="mt-auto space-y-4">
+            {user && (
+              <Button variant="outline" asChild className="w-full justify-start">
+                  <Link href="/wb-admin" className="flex items-center gap-2">
+                    <User className="h-5 w-5" /> Admin Panel
+                  </Link>
+              </Button>
+            )}
             <DarkModeToggle />
         </div>
     </div>
@@ -168,7 +179,7 @@ const Header = () => {
             const isActive = pathname === link.href || (link.href !== '/collections' && pathname.startsWith(link.href) && !link.isMegaMenu);
             const specialClassName = link.label === 'Our Story'
                 ? "bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent"
-                : "bg-gradient-to-r from-blue-800 to-cyan-600 bg-clip-text text-transparent";
+                : "bg-gradient-to-r from-red-600 to-orange-500 bg-clip-text text-transparent";
 
             if (link.isMegaMenu) {
                 return (
@@ -333,7 +344,7 @@ const Header = () => {
                 </Button>
                 <Button variant="ghost" size="icon" asChild className="h-auto w-auto p-1 group hover:bg-transparent [&_svg]:!size-6">
                 <Link href="/cart" aria-label="Shopping Cart" className="relative flex items-center justify-center">
-                    <ShoppingCart size={22} className="text-foreground group-hover:text-accent transition-colors"/>
+                    <ShoppingCart size={22} className="text-foreground group-hover:text-primary transition-colors"/>
                     {isCountsLoaded && cartCount > 0 && (
                     <span className="absolute -right-0.5 -top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
                         {cartCount}
@@ -353,4 +364,3 @@ const Header = () => {
 };
 
 export default Header;
-

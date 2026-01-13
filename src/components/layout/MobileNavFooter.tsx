@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { Home, LayoutGrid, ShoppingBag } from "lucide-react";
+import { Home, LayoutGrid, ShoppingBag, Sparkles } from "lucide-react";
 import { usePathname } from 'next/navigation';
 import { cn } from "@/lib/utils";
 
@@ -27,7 +27,7 @@ const regularNavItems = [
 
 const rightNavItems = [
     { href: 'https://wa.me/919691045405?text=Hi%2C%20I%27m%20interested%20in%20your%20products.', label: 'WhatsApp', icon: <WhatsAppIcon />, isExternal: true, activeColor: 'text-green-500' },
-    { href: 'https://woody.co.in', label: 'Woody Retail', icon: <ShoppingBag className="h-5 w-5" />, isExternal: true, special: true },
+    { href: '/offers', label: 'Offers', icon: <Sparkles className="h-5 w-5" />, special: true },
 ]
 
 export default function MobileNavFooter() {
@@ -49,15 +49,15 @@ export default function MobileNavFooter() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                    "flex w-full flex-col items-center justify-center gap-1 text-[11px] font-medium text-muted-foreground transition-colors hover:text-primary",
-                    isActive && (item.activeColor ? item.activeColor : 'text-primary')
+                    "flex w-full flex-col items-center justify-center gap-1 text-[11px] font-medium transition-colors",
+                    isActive ? (item.activeColor || 'text-primary') : 'text-muted-foreground hover:text-primary'
                 )}
                 {...linkProps}
             >
-                {item.icon}
+                {React.cloneElement(item.icon, { className: "h-5 w-5" })}
                 <span className={cn(
                     'whitespace-nowrap',
-                    item.special && 'font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent'
+                    item.special && 'font-bold bg-gradient-to-r from-accent to-destructive bg-clip-text text-transparent'
                 )}>
                     {item.label}
                 </span>
@@ -72,7 +72,7 @@ export default function MobileNavFooter() {
 
                 <Link href="/shop" className="flex w-full flex-col items-center justify-center gap-1">
                     <div className="relative -mt-8">
-                         <div className="animated-gradient-ring rounded-full p-0.5">
+                         <div className="animated-gradient-ring rounded-full p-1">
                             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg">
                                 <ShoppingBag className="h-8 w-8" />
                             </div>
