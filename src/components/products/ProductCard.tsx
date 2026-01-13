@@ -52,6 +52,11 @@ const ProductCard = ({ product }: ProductCardProps) => {
       toast({ title: "Added to Wishlist", description: `${product.name} added to your wishlist.` });
     }
   };
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    addToCart(product);
+  };
   
   const discountedSubtotal = product.price;
   const shippingCost = discountedSubtotal > 2999 ? 0 : 99;
@@ -115,7 +120,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
                     <span className="text-[11px] sm:text-xs">({product.reviewCount} Reviews)</span>
                 </div>
                  <Button 
-                    onClick={() => addToCart(product)} 
+                    onClick={handleAddToCart} 
                     className="rounded-full h-8 w-8 p-0 bg-primary/10 text-primary hover:bg-primary/20 disabled:bg-muted disabled:text-muted-foreground"
                     disabled={product.inventory === 0}
                     variant="outline"
