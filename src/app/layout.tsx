@@ -67,7 +67,7 @@ function MainLayout({ children }: { children: React.ReactNode }) {
             <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
             <link rel="manifest" href="/manifest.webmanifest" />
         </head>
-        <body className={cn('min-h-screen bg-background font-body antialiased flex flex-col')}>
+        <body className={cn('min-h-screen bg-background font-body antialiased flex flex-col')} suppressHydrationWarning>
             <ThemeProvider
                 attribute="class"
                 defaultTheme="system"
@@ -104,7 +104,7 @@ function MainLayout({ children }: { children: React.ReactNode }) {
 function AdminLayout({ children }: { children: React.ReactNode }) {
     return (
         <html lang="en" suppressHydrationWarning>
-            <body className={cn('min-h-screen font-body antialiased admin-bg')}>
+            <body className={cn('min-h-screen font-body antialiased admin-bg')} suppressHydrationWarning>
             <ThemeProvider
                 attribute="class"
                 defaultTheme="system"

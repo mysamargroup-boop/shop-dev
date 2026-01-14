@@ -6,7 +6,7 @@
   "social_twitter": "",
   "home_meta_title": "Nema One | Personalized Wooden Gifts",
   "home_meta_description": "Discover exquisite personalized wooden gifts handcrafted with love. Perfect for corporate gifting, birthdays, and special occasions.",
-  "logo_url": "https://woody.co.in/wp-content/uploads/2024/08/woody-logo.png",
+  "logo_url": "https://bakersonwheel.in/wp-content/uploads/2020/08/Bakers-On-Wheel-Logo-7-1-e1599231431862.png",
   "google_tag_manager_id": "",
   "theme_background": "0 0% 100%",
   "theme_muted": "210 40% 96.1%",
@@ -29,5 +29,6 @@
   "expected_delivery_max_days": 15,
   "whatsapp_only_checkout_enabled": false,
   "owner_first_name": "Shashank",
-  "owner_last_name": "Nema"
+  "owner_last_name": "Nema",
+  "product_id_prefix": "SN"
 }
