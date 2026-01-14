@@ -1,3 +1,5 @@
+// This API route is not currently used in the application.
+
 import { NextRequest, NextResponse } from 'next/server';
 
 // DELETE endpoint for analytics data cleanup

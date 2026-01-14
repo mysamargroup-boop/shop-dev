@@ -1,3 +1,5 @@
+// This API route is not currently used in the application.
+
 import { NextResponse } from 'next/server';
 import { getTags } from '@/lib/data-async';
 
