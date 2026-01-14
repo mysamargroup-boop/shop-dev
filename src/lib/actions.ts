@@ -15,6 +15,7 @@ const fs = require('fs').promises;
 const settingsFilePath = path.join(process.cwd(), 'src', 'lib', 'site-settings.json');
 
 const siteSettingsSchema = z.object({
+  owner_name: z.string().optional(),
   logo_url: z.string().optional(),
   contact_email: z.string().email().optional().or(z.literal('')),
   contact_phone: z.string().optional(),
@@ -132,7 +133,7 @@ const subscriptionSchema = z.object({
 export async function createSubscription(input: { name: string; phone: string; source?: string }): Promise<{ success: boolean }> {
   const validated = subscriptionSchema.safeParse({
     name: input.name,
-    phone: input.phone.replace(/\D/g, '').slice(-10) ? `91${input.phone.replace(/\D/g, '').slice(-10)}` : input.phone,
+    phone: input.phone.replace(/\D/g, '').slice(-10) ? `91${'\'\'\''}${input.phone.replace(/\D/g, '').slice(-10)}` : input.phone,
     source: input.source,
   });
   if (!validated.success) {
@@ -252,7 +253,7 @@ export async function updateProduct(productId: string, previousState: any, formD
   if (rest.videoUrl !== undefined) payload.video_url = rest.videoUrl || null;
   if (rest.imageAttribution !== undefined) payload.image_attribution = rest.imageAttribution || null;
   if (rest.license !== undefined) payload.license = rest.license || null;
-  if (rest.material !== undefined) payload.material = rest.material || null;
+  if (rest.material !== undefined) payload.material = rest.material;
   if (rest.color !== undefined) payload.color = rest.color || null;
   if (rest.badge !== undefined) payload.badge = rest.badge || null;
   if (rest.specificDescription !== undefined) payload.specific_description = rest.specificDescription || null;
@@ -931,4 +932,48 @@ export async function bulkAddTagToProducts(previousState: any, formData: FormDat
   revalidatePath('/collections');
   revalidatePath('/');
   return { success: true, updatedCount };
+}
+
+export async function getReviewsAdmin() {
+  try {
+    const { data, error } = await supabaseAdmin()
+      .from('reviews')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching reviews for admin:', error);
+    return [];
+  }
+}
+
+export async function updateReviewStatus(reviewId: string, isVerified: boolean) {
+  try {
+    const { error } = await supabaseAdmin()
+      .from('reviews')
+      .update({ is_verified: isVerified, updated_at: new Date().toISOString() })
+      .eq('id', reviewId);
+    if (error) throw error;
+    revalidatePath('/sr-admin/reviews');
+    return { success: true };
+  } catch (error) {
+    return { success: false, message: 'Failed to update review status.' };
+  }
+}
+
+
+export async function deleteReview(reviewId: string) {
+  try {
+    const { error } = await supabaseAdmin()
+      .from('reviews')
+      .delete()
+      .eq('id', reviewId);
+    if (error) throw error;
+    revalidatePath('/sr-admin/reviews');
+    return { success: true };
+  } catch (error) {
+    return { success: false, message: 'Failed to delete review.' };
+  }
 }

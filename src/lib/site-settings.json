@@ -27,5 +27,6 @@
   "invoice_gst_number": "",
   "expected_delivery_min_days": 7,
   "expected_delivery_max_days": 15,
-  "whatsapp_only_checkout_enabled": false
+  "whatsapp_only_checkout_enabled": false,
+  "owner_name": "Shashank Nema"
 }

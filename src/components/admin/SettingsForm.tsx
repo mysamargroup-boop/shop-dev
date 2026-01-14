@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useFormState } from "react-dom";
@@ -172,6 +173,10 @@ export default function SettingsForm({ settings, mode = 'all' }: { settings: Sit
               <CardDescription>Manage your core business details and contact information.</CardDescription>
             </CardHeader>
             <CardContent className="grid md:grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                  <Label htmlFor="owner_name">Owner Name</Label>
+                  <Input id="owner_name" name="owner_name" defaultValue={settings.owner_name || ''} placeholder="e.g. Shashank Nema" />
+              </div>
               <div className="grid gap-2">
                   <Label htmlFor="invoice_business_name">Business Name</Label>
                   <Input id="invoice_business_name" name="invoice_business_name" defaultValue={settings.invoice_business_name || 'Woody Business'} placeholder="Your Business Name" />

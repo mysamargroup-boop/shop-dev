@@ -14,6 +14,7 @@ export default function AdminAuthLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   const isLoginRoute = pathname === "/sr-admin/login";
 
   useEffect(() => {
@@ -27,7 +28,7 @@ export default function AdminAuthLayout({ children }: { children: React.ReactNod
       router.push("/sr-admin/dashboard");
     }
 
-  }, [user, loading, router, pathname, isLoginRoute]);
+  }, [user, loading, router, isLoginRoute]);
 
   if (loading) {
     return (
@@ -71,5 +72,7 @@ export default function AdminAuthLayout({ children }: { children: React.ReactNod
     );
   }
 
+  // If not loading, not on login route, and no user, return null to avoid rendering children
+  // while the redirect effect is taking place.
   return null;
 }
