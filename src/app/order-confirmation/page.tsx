@@ -1,9 +1,9 @@
 
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { CheckCircle, Loader2, AlertCircle, Download, ArrowLeft, CalendarClock } from 'lucide-react';
+import { CheckCircle, Loader2, AlertCircle, Download, ArrowLeft, CalendarClock, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import jsPDF from 'jspdf';
@@ -11,6 +11,7 @@ import autoTable from 'jspdf-autotable';
 import { useToast } from '@/hooks/use-toast';
 import useCart from '@/hooks/use-cart';
 import Link from 'next/link';
+import confetti from 'canvas-confetti';
 
 type OrderData = {
   sku?: string;
@@ -34,6 +35,8 @@ const OrderConfirmationContent = () => {
   const [deliveryMinDays, setDeliveryMinDays] = useState<number>(7);
   const [deliveryMaxDays, setDeliveryMaxDays] = useState<number>(15);
   const [hasLocalData, setHasLocalData] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
+
 
   useEffect(() => {
     const orderId = searchParams.get('order_id') || searchParams.get('orderId');
@@ -82,8 +85,15 @@ const OrderConfirmationContent = () => {
             advanceAmount: Math.max(1, parseFloat((orderAmount * 0.05).toFixed(2))),
           });
         }
-        if (orderStatus === 'PAID' || orderStatus === 'COMPLETED') {
+        if (orderStatus === 'PAID' || orderStatus === 'SUCCESS' || orderStatus === 'COMPLETED') {
           setStatus('success');
+          audioRef.current?.play();
+          confetti({
+              particleCount: 200,
+              spread: 90,
+              origin: { y: 0.6 },
+              zIndex: 10000,
+          });
           const od = localData || {
             customerName: 'Customer',
             customerPhoneNumber: '',
@@ -275,12 +285,12 @@ const OrderConfirmationContent = () => {
     );
   }
 
-  if (status === 'error' && !orderData) {
+  if (status === 'error') {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4 text-center">
-        <AlertCircle className="h-12 w-12 text-destructive" />
+        <XCircle className="h-16 w-16 text-destructive" />
         <h2 className="text-2xl font-bold">Order Confirmation Failed</h2>
-        <p className="text-muted-foreground">We couldn't retrieve your order details. Please contact support.</p>
+        <p className="text-muted-foreground">We couldn't retrieve your order details or the payment was not confirmed. Please contact support.</p>
         <Button asChild>
             <Link href="/"><ArrowLeft className="mr-2 h-4 w-4" /> Go to Homepage</Link>
         </Button>
@@ -288,55 +298,9 @@ const OrderConfirmationContent = () => {
     );
   }
 
-  if (status === 'error' && orderData) {
-    return (
-      <div className="max-w-2xl mx-auto">
-        <Card className="shadow-lg">
-          <CardHeader className="text-center">
-            <div className="mx-auto bg-yellow-100 rounded-full p-3 w-fit">
-              <AlertCircle className="h-12 w-12 text-yellow-600" />
-            </div>
-            <CardTitle className="text-2xl md:text-3xl font-headline mt-4">Order Received</CardTitle>
-            <p className="text-muted-foreground">Payment verification pending due to network issues.</p>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="border rounded-lg p-4 space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Order ID:</span>
-                <span className="font-mono font-semibold">{orderData.orderId}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Product:</span>
-                <span className="font-semibold text-right">{orderData.productName} (x{orderData.quantity})</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Total Amount:</span>
-                <span className="font-semibold">₹{orderData.totalCost.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between font-bold text-primary">
-                <span className="text-muted-foreground">Advance Paid:</span>
-                <span className="font-semibold text-primary">₹{orderData.advanceAmount.toFixed(2)}</span>
-              </div>
-            </div>
-            <p className="text-xs text-center text-muted-foreground">
-              If you have completed payment, your order is safe. We will confirm on WhatsApp shortly.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button className="w-full" onClick={generateInvoice}>
-                <Download className="mr-2 h-4 w-4" /> Download Invoice
-              </Button>
-              <Button variant="outline" className="w-full" asChild>
-                <Link href="/"><ArrowLeft className="mr-2 h-4 w-4" /> Continue Shopping</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <div className="max-w-2xl mx-auto">
+        <audio ref={audioRef} src="https://cdn.freesound.org/previews/270/270319_5122242-lq.mp3" preload="auto" />
         <Card className="shadow-lg">
             <CardHeader className="text-center">
                 <div className="mx-auto bg-green-100 rounded-full p-3 w-fit">
