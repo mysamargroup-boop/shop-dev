@@ -2,7 +2,7 @@
 
 'use server';
 import path from 'path';
-import type { Category, Product, ProductsData, BlogPost, SiteSettings, Sample, Order } from './types';
+import type { Category, Product, ProductsData, BlogPost, SiteSettings, Sample, Order, Review } from './types';
 import { unstable_noStore as noStore } from 'next/cache';
 // Import from Supabase instead of JSON files
 import { 
@@ -14,7 +14,8 @@ import {
   getBlogPostsAdmin as getBlogPostsAdminFromSupabase, 
   getTags as getTagsFromSupabase,
   getSiteImages as getSiteImagesFromSupabase,
-  getCategories as getCategoriesFromSupabase
+  getCategories as getCategoriesFromSupabase,
+  getReviewsByProductId as getReviewsByProductIdFromSupabase
 } from './data-supabase';
 
 import { slugify } from './utils';
@@ -107,4 +108,9 @@ export async function generateStaticParams() {
       categoryName: slugify(product.category.split(',')[0].trim()),
       productName: slugify(product.name),
     }));
+}
+
+export async function getReviewsByProductId(productId: string): Promise<Review[]> {
+  noStore();
+  return getReviewsByProductIdFromSupabase(productId);
 }
