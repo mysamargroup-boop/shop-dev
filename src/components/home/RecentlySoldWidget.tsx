@@ -78,3 +78,4 @@ function RecentlySoldWidget() {
 }
 
 export default RecentlySoldWidget;
+
