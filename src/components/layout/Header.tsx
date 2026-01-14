@@ -10,7 +10,7 @@ import useWishlist from '@/hooks/use-wishlist';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '../ui/sheet';
 import { useState, useEffect, useCallback } from 'react';
 import { Input } from '../ui/input';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { ScrollArea } from '../ui/scroll-area';
 import { cn } from '@/lib/utils';
 import type { Product, Category, SiteSettings } from '@/lib/types';
@@ -85,6 +85,7 @@ const Header = () => {
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({});
 
   const pathname = usePathname() || '';
+  const router = useRouter();
 
   const headerLinks = [
     { href: '/collections', label: 'Categories', isMegaMenu: true, special: false },
@@ -139,47 +140,26 @@ const Header = () => {
   const isCountsLoaded = cartLoaded && wishlistLoaded;
 
   const MobileNavContent = () => {
-    
-    const handleMobileSearch = (query: string) => {
-        handleSearch(query);
+    const handleMobileSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const formData = new FormData(e.currentTarget);
+        const query = formData.get('search') as string;
+        if (query) {
+            router.push(`/shop?search=${encodeURIComponent(query)}`);
+            setIsSheetOpen(false);
+        }
     }
       
     return (
     <div className="flex flex-col h-full">
-        <div className="relative mb-4">
+        <form onSubmit={handleMobileSearchSubmit} className="relative mb-4">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"/>
             <Input 
+              name="search"
               placeholder="Search For Gifts..." 
               className="pl-10 bg-muted"
-              defaultValue={searchQuery}
-              onChange={(e) => handleMobileSearch(e.target.value)}
-              onFocus={(e) => handleMobileSearch(e.target.value)}
             />
-            {isSearchOpen && searchResults.length > 0 && (
-              <div className="absolute top-full mt-2 w-full p-2 bg-popover border rounded-md shadow-lg z-20">
-                  <ScrollArea className="max-h-60">
-                    <div className="space-y-1">
-                        {searchResults.map(product => {
-                            const categorySlug = product.category.split(',')[0].trim().toLowerCase().replace(/ /g, '-');
-                            return (
-                            <Link 
-                              key={product.id} 
-                              href={`/collections/${categorySlug}/${product.name}`} 
-                              className="flex items-center gap-3 p-2 rounded-md hover:bg-accent/10"
-                              onClick={() => setIsSheetOpen(false)}
-                            >
-                                <Image src={product.imageUrl} alt={product.name} width={40} height={40} className="rounded-md object-cover"/>
-                                <div>
-                                    <p className="font-semibold text-sm">{product.name}</p>
-                                    <p className="text-sm text-muted-foreground">₹{product.price.toFixed(2)}</p>
-                                </div>
-                            </Link>
-                        )})}
-                    </div>
-                  </ScrollArea>
-              </div>
-          )}
-        </div>
+        </form>
         <ScrollArea className="flex-1">
           <nav className="flex flex-col gap-1 pr-4">
             <Accordion type="single" collapsible className="w-full">
