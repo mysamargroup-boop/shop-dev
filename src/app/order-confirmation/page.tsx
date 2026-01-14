@@ -34,7 +34,6 @@ const OrderConfirmationContent = () => {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [deliveryMinDays, setDeliveryMinDays] = useState<number>(7);
   const [deliveryMaxDays, setDeliveryMaxDays] = useState<number>(15);
-  const [hasLocalData, setHasLocalData] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
 
@@ -51,7 +50,6 @@ const OrderConfirmationContent = () => {
       if (stored) localData = JSON.parse(stored);
       if (localData) {
         setOrderData(localData);
-        setHasLocalData(true);
       }
     } catch {}
     (async () => {
@@ -281,6 +279,53 @@ const OrderConfirmationContent = () => {
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
         <p className="text-xl">Confirming your order...</p>
+      </div>
+    );
+  }
+
+  if (status === 'error' && orderData) {
+    return (
+      <div className="max-w-2xl mx-auto">
+        <Card className="shadow-lg">
+          <CardHeader className="text-center">
+            <div className="mx-auto bg-yellow-100 rounded-full p-3 w-fit">
+              <AlertCircle className="h-12 w-12 text-yellow-600" />
+            </div>
+            <CardTitle className="text-2xl md:text-3xl font-headline mt-4">Order Received</CardTitle>
+            <p className="text-muted-foreground">Payment verification pending due to network issues.</p>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="border rounded-lg p-4 space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Order ID:</span>
+                <span className="font-mono font-semibold">{orderData.orderId}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Product:</span>
+                <span className="font-semibold text-right">{orderData.productName} (x{orderData.quantity})</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Total Amount:</span>
+                <span className="font-semibold">₹{orderData.totalCost.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between font-bold text-primary">
+                <span className="text-muted-foreground">Advance Paid:</span>
+                <span className="font-semibold text-primary">₹{orderData.advanceAmount.toFixed(2)}</span>
+              </div>
+            </div>
+            <p className="text-xs text-center text-muted-foreground">
+              If you have completed payment, your order is safe. We will confirm on WhatsApp shortly.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button className="w-full" onClick={generateInvoice}>
+                <Download className="mr-2 h-4 w-4" /> Download Invoice
+              </Button>
+              <Button variant="outline" className="w-full" asChild>
+                <Link href="/"><ArrowLeft className="mr-2 h-4 w-4" /> Continue Shopping</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
