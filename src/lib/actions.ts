@@ -504,10 +504,15 @@ export async function deleteCategoryAction(formData: FormData) {
 
 export async function getSiteSettings(): Promise<SiteSettings> {
   try {
-    const fileContent = await fs.readFile(settingsFilePath, 'utf-8');
-    return JSON.parse(fileContent);
+    const { data, error } = await supabaseAdmin()
+      .from('site_settings')
+      .select('*')
+      .maybeSingle();
+    
+    if (error) throw error;
+    return data || {};
   } catch (error) {
-    console.error("Error reading settings file:", error);
+    console.error('Error fetching site settings:', error);
     return {};
   }
 }
@@ -523,15 +528,18 @@ export async function updateSiteSettings(previousState: any, formData: FormData)
     }
 
     try {
-        const currentSettings = await getSiteSettings();
-        const updatedSettings = { ...currentSettings, ...validatedFields.data };
-        await fs.writeFile(settingsFilePath, JSON.stringify(updatedSettings, null, 2));
+        const supabase = supabaseAdmin();
+        const { error } = await supabase
+            .from('site_settings')
+            .upsert(validatedFields.data, { onConflict: 'id' });
+        
+        if (error) throw error;
 
         revalidatePath('/', 'layout');
         return { success: true, message: 'Settings updated successfully' };
     } catch (error) {
-        console.error("Error writing settings file:", error);
-        return { message: 'File System Error: Failed to update settings.' };
+        console.error("Error writing settings to Supabase:", error);
+        return { message: 'Database Error: Failed to update settings.' };
     }
 }
 
@@ -541,6 +549,7 @@ const couponSchema = z.object({
   code: z.string().min(1, "Code is required").toUpperCase(),
   type: z.enum(['percent', 'flat']),
   value: z.coerce.number().min(0, "Value must be positive"),
+  show_on_offers_page: z.coerce.boolean().optional(),
 });
 
 const updateCouponSchema = couponSchema.extend({
@@ -554,7 +563,7 @@ export async function getCoupons() {
       .select('*')
       .order('code');
     if (error) throw error;
-    return data || [];
+    return (data || []).map(c => ({...c, show_on_offers_page: c.show_on_offers_page ?? false}));
   } catch (error) {
     return [];
   }
@@ -590,6 +599,7 @@ export async function createCoupon(previousState: any, formData: FormData) {
       type: validatedFields.data.type,
       value: validatedFields.data.value,
       active: true,
+      show_on_offers_page: validatedFields.data.show_on_offers_page,
     };
     const { error } = await supabase
       .from('coupons')
@@ -598,6 +608,7 @@ export async function createCoupon(previousState: any, formData: FormData) {
       return { message: 'Database Error: Failed to create coupon.', success: false };
     }
     revalidatePath('/sr-admin/coupons');
+    revalidatePath('/offers');
     return { success: true, message: 'Coupon created successfully' };
   } catch (error) {
     return { message: 'Database Error: Failed to create coupon.', success: false };
@@ -636,12 +647,14 @@ export async function updateCoupon(previousState: any, formData: FormData) {
             code: couponData.code,
             type: couponData.type,
             value: couponData.value,
+            show_on_offers_page: couponData.show_on_offers_page,
           })
           .eq('code', originalCode);
         if (error) {
           return { message: 'Database Error: Failed to update coupon.', success: false };
         }
         revalidatePath('/sr-admin/coupons');
+        revalidatePath('/offers');
         return { success: true, message: 'Coupon updated successfully.' };
     } catch (error) {
         return { message: 'Database Error: Failed to update coupon.', success: false };
@@ -660,6 +673,7 @@ export async function deleteCoupon(code: string) {
       return { message: 'Database Error: Failed to delete coupon.' };
     }
     revalidatePath('/sr-admin/coupons');
+    revalidatePath('/offers');
     return { success: true, message: 'Coupon deleted successfully' };
   } catch (error) {
     return { message: 'Database Error: Failed to delete coupon.' };
@@ -686,11 +700,40 @@ export async function toggleCouponStatus(code: string) {
           return { message: 'Database Error: Failed to update coupon.' };
         }
         revalidatePath('/sr-admin/coupons');
+        revalidatePath('/offers');
         return { success: true, message: 'Coupon status updated' };
     } catch (error) {
         return { message: 'Database Error: Failed to update coupon.' };
     }
 }
+
+export async function toggleCouponVisibility(code: string) {
+    try {
+        const supabase = supabaseAdmin();
+        const { data: coupon, error: fetchError } = await supabase
+          .from('coupons')
+          .select('show_on_offers_page')
+          .eq('code', code)
+          .single();
+        if (fetchError) {
+          return { message: 'Database Error: Failed to fetch coupon.' };
+        }
+        const current = !!(coupon && coupon.show_on_offers_page);
+        const { error } = await supabase
+          .from('coupons')
+          .update({ show_on_offers_page: !current })
+          .eq('code', code);
+        if (error) {
+          return { message: 'Database Error: Failed to update coupon visibility.' };
+        }
+        revalidatePath('/sr-admin/coupons');
+        revalidatePath('/offers');
+        return { success: true, message: 'Coupon visibility updated' };
+    } catch (error) {
+        return { message: 'Database Error: Failed to update coupon visibility.' };
+    }
+}
+
 
 const navigationLinkSchema = z.object({
   id: z.coerce.number().optional(),

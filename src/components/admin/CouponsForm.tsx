@@ -2,7 +2,7 @@
 'use client';
 
 import { useFormState, useFormStatus } from 'react-dom';
-import { createCoupon, deleteCoupon, toggleCouponStatus, updateCoupon } from '@/lib/actions';
+import { createCoupon, deleteCoupon, toggleCouponStatus, toggleCouponVisibility } from '@/lib/actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useRef, useState } from 'react';
 import { Coupon } from '@/lib/types';
-import { Trash2, Loader2, Edit } from 'lucide-react';
+import { Trash2, Loader2, Edit, Eye, EyeOff } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 
 const initialState = {
@@ -39,16 +39,13 @@ export default function CouponsForm({ coupons }: { coupons: Coupon[] }) {
   const [currentCode, setCurrentCode] = useState('');
   const [currentType, setCurrentType] = useState('percent');
   const [currentValue, setCurrentValue] = useState<number | string>('');
+  const [showOnOffers, setShowOnOffers] = useState(false);
 
   useEffect(() => {
     const formState = isEditing ? updateState : state;
     if (formState?.success) {
       toast({ title: "Success", description: `Coupon ${isEditing ? 'updated' : 'created'} successfully.` });
-      formRef.current?.reset();
-      setIsEditing(null);
-      setCurrentCode('');
-      setCurrentType('percent');
-      setCurrentValue('');
+      handleCancelEdit();
     } else if (formState?.message) {
       toast({ title: "Error", description: formState.message, variant: "destructive" });
     }
@@ -73,12 +70,23 @@ export default function CouponsForm({ coupons }: { coupons: Coupon[] }) {
           toast({ title: "Error", description: result.message, variant: "destructive" });
       }
   };
+  
+  const handleVisibilityToggle = async (code: string) => {
+      const result = await toggleCouponVisibility(code);
+      if (result.success) {
+          toast({ title: "Success", description: "Coupon visibility updated." });
+      } else {
+          toast({ title: "Error", description: result.message, variant: "destructive" });
+      }
+  };
+
 
   const handleEdit = (coupon: Coupon) => {
       setIsEditing(coupon.code);
       setCurrentCode(coupon.code);
       setCurrentType(coupon.type);
       setCurrentValue(coupon.value);
+      setShowOnOffers(coupon.show_on_offers_page || false);
   };
   
   const handleCancelEdit = () => {
@@ -86,6 +94,7 @@ export default function CouponsForm({ coupons }: { coupons: Coupon[] }) {
     setCurrentCode('');
     setCurrentType('percent');
     setCurrentValue('');
+    setShowOnOffers(false);
     formRef.current?.reset();
   }
 
@@ -99,27 +108,33 @@ export default function CouponsForm({ coupons }: { coupons: Coupon[] }) {
           <CardDescription>{isEditing ? 'Update the details for this coupon.' : 'Add a new discount code for your store.'}</CardDescription>
         </CardHeader>
         <CardContent>
-          <form ref={formRef} action={action} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-            <input type="hidden" name="originalCode" value={isEditing || ''} />
-            <div className="grid gap-2">
-              <Label htmlFor="code">Code</Label>
-              <Input id="code" name="code" placeholder="SUMMER25" required value={currentCode} onChange={(e) => setCurrentCode(e.target.value.toUpperCase())} />
+          <form ref={formRef} action={action} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                <input type="hidden" name="originalCode" value={isEditing || ''} />
+                <div className="grid gap-2">
+                <Label htmlFor="code">Code</Label>
+                <Input id="code" name="code" placeholder="SUMMER25" required value={currentCode} onChange={(e) => setCurrentCode(e.target.value.toUpperCase())} />
+                </div>
+                <div className="grid gap-2">
+                <Label htmlFor="type">Type</Label>
+                <Select name="type" value={currentType} onValueChange={(value) => setCurrentType(value as 'percent' | 'flat')}>
+                    <SelectTrigger>
+                    <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                    <SelectItem value="percent">Percentage (%)</SelectItem>
+                    <SelectItem value="flat">Flat Amount (₹)</SelectItem>
+                    </SelectContent>
+                </Select>
+                </div>
+                <div className="grid gap-2">
+                <Label htmlFor="value">Value</Label>
+                <Input id="value" name="value" type="number" placeholder="10" required min="0" value={currentValue} onChange={(e) => setCurrentValue(e.target.value)} />
+                </div>
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="type">Type</Label>
-              <Select name="type" value={currentType} onValueChange={(value) => setCurrentType(value as 'percent' | 'flat')}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="percent">Percentage (%)</SelectItem>
-                  <SelectItem value="flat">Flat Amount (₹)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="value">Value</Label>
-              <Input id="value" name="value" type="number" placeholder="10" required min="0" value={currentValue} onChange={(e) => setCurrentValue(e.target.value)} />
+             <div className="flex items-center space-x-2 pt-2">
+                <Switch id="show_on_offers_page" name="show_on_offers_page" checked={showOnOffers} onCheckedChange={setShowOnOffers}/>
+                <Label htmlFor="show_on_offers_page">Show on Offers Page</Label>
             </div>
             <div className="flex gap-2">
               <SubmitButton isEditing={!!isEditing} />
@@ -141,14 +156,15 @@ export default function CouponsForm({ coupons }: { coupons: Coupon[] }) {
                     <tr className="border-b bg-muted/50 transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
                         <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Code</th>
                         <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Discount</th>
-                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Status</th>
+                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Active</th>
+                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Visible on Offers</th>
                         <th className="h-12 px-4 text-right align-middle font-medium text-muted-foreground">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {coupons.length === 0 && (
                         <tr>
-                            <td colSpan={4} className="p-4 text-center text-muted-foreground">No coupons found.</td>
+                            <td colSpan={5} className="p-4 text-center text-muted-foreground">No coupons found.</td>
                         </tr>
                     )}
                     {coupons.map((coupon) => (
@@ -162,6 +178,13 @@ export default function CouponsForm({ coupons }: { coupons: Coupon[] }) {
                                   checked={coupon.active}
                                   onCheckedChange={() => handleToggle(coupon.code)}
                                   aria-label="Toggle coupon status"
+                                />
+                            </td>
+                            <td className="p-4 align-middle">
+                                <Switch
+                                  checked={coupon.show_on_offers_page}
+                                  onCheckedChange={() => handleVisibilityToggle(coupon.code)}
+                                  aria-label="Toggle coupon visibility"
                                 />
                             </td>
                             <td className="p-4 align-middle text-right">

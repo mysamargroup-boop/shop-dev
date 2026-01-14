@@ -161,6 +161,7 @@ export interface Coupon {
   type: 'percent' | 'flat';
   value: number;
   active: boolean;
+  show_on_offers_page: boolean;
 }
 
 export interface CouponsData {
