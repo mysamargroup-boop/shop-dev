@@ -9,6 +9,8 @@ import ProductLightbox from '@/components/products/ProductLightbox';
 import ProductDetailClient from './ProductDetailClient';
 import { Home, ChevronRight } from 'lucide-react';
 import { slugify } from '@/lib/utils';
+import { getReviewsByProductId } from '@/lib/data-supabase';
+import ReviewSection from '@/components/reviews/ReviewSection';
 
 export const revalidate = 600;
 
@@ -51,6 +53,8 @@ export default async function ProductDetailPage({ params }: { params: { productI
   ).slice(0, 5);
 
   const allImages = [product.imageUrl, ...(product.galleryImages || [])];
+  
+  const initialReviews = await getReviewsByProductId(product.id);
 
   return (
     <>
@@ -64,6 +68,8 @@ export default async function ProductDetailPage({ params }: { params: { productI
           <ProductDetailClient product={product} />
         </div>
 
+        <ReviewSection productId={product.id} initialReviews={initialReviews} />
+        
         {recommendedProducts.length > 0 && (
             <section className="mt-16 pt-12 border-t">
                 <h2 className="text-3xl font-headline font-bold text-center mb-8">You Might Also Like</h2>
@@ -75,9 +81,7 @@ export default async function ProductDetailPage({ params }: { params: { productI
             </section>
         )}
 
-        <ReviewsCarousel />
       </div>
     </>
   );
 }
-

@@ -41,7 +41,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
       </header>
       
       <div 
-        className="prose dark:prose-invert max-w-none text-base md:text-lg"
+        className="prose dark:prose-invert max-w-none text-base md:text-lg [&_p]:mb-4"
         dangerouslySetInnerHTML={{ __html: post.content }} 
       />
 

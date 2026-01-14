@@ -32,6 +32,7 @@ import Image from 'next/image';
 import { BLUR_DATA_URL } from '@/lib/constants';
 import ProductInfoBadges from '@/components/products/ProductInfoBadges';
 import { getSiteSettings } from '@/lib/actions';
+import ReviewsCarousel from '@/components/products/ReviewsCarousel';
 
 const ImageUpload = ({ onFilesChange }: { onFilesChange: (files: File[]) => void }) => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -508,5 +509,3 @@ export default function ProductDetailClient({ product }: { product: Product }) {
     </>
   );
 }
-
-    

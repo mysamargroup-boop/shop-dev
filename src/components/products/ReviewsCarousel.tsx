@@ -12,49 +12,10 @@ import { Star } from 'lucide-react';
 import { Button } from '../ui/button';
 import Link from 'next/link';
 import { Avatar, AvatarFallback } from '../ui/avatar';
-
-const reviews = [
-  {
-    name: 'Akash Choubey',
-    review: 'The personalized keychain was beyond my expectations. The wood quality is superb and the engraving is so precise. It made for a perfect birthday gift!',
-    rating: 5,
-  },
-  {
-    name: 'Ravi Tiwari',
-    review: 'I ordered a custom mobile stand for my office desk. It\'s not only functional but also a beautiful piece of decor. The finish is smooth and it looks very premium.',
-    rating: 5,
-  },
-  {
-    name: 'Mayank Jain',
-    review: 'The mandala wall art is absolutely stunning! It has become the centerpiece of my living room. The craftsmanship is incredible. Highly recommended.',
-    rating: 5,
-  },
-  {
-    name: 'Priya Sharma',
-    review: 'Excellent service and fantastic products. I bought a pen holder as a corporate gift and my client loved it. The personalization option is a great touch.',
-    rating: 4,
-  },
-  {
-    name: 'Sumit Agarwal',
-    review: 'The wooden nameplate I ordered is beautiful. It gives such a warm and welcoming feel to our home entrance. The quality is top-notch.',
-    rating: 5,
-  },
-  {
-    name: 'Neha Gupta',
-    review: 'I love my engraved cutting board! It\'s almost too beautiful to use. The bamboo is thick and sturdy. It was delivered on time and packaged securely.',
-    rating: 5,
-  },
-  {
-    name: 'Vikram Singh',
-    review: 'Woody Business has a fantastic collection. I was looking for a unique anniversary gift and found the perfect sound wave art. My wife was thrilled!',
-    rating: 5,
-  },
-  {
-    name: 'Anjali Verma',
-    review: 'The customer support was very helpful in getting my custom photo print just right. The final product is amazing and captures the memory perfectly.',
-    rating: 5,
-  }
-];
+import { useEffect, useState } from 'react';
+import { getRecentReviews } from '@/lib/data-supabase';
+import type { Review } from '@/lib/types';
+import { Skeleton } from '../ui/skeleton';
 
 const Rating = ({ rating }: { rating: number }) => (
   <div className="flex items-center gap-0.5 text-yellow-500">
@@ -81,15 +42,60 @@ const NameAvatar = ({ name }: { name: string }) => {
 
 
 const ReviewsCarousel = () => {
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchReviews() {
+      try {
+        const recentReviews = await getRecentReviews(8);
+        setReviews(recentReviews);
+      } catch (error) {
+        console.error("Failed to fetch recent reviews:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchReviews();
+  }, []);
+
+
+  if (loading) {
+    return (
+      <section className="mt-16 pt-12 border-t">
+        <div className="text-center mb-8">
+            <h2 className="text-3xl font-headline font-bold">What Our Customers Say</h2>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {[...Array(3)].map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <div className="flex items-center mb-4">
+                  <Skeleton className="h-12 w-12 rounded-full" />
+                  <div className="ml-4 space-y-2">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-4 w-20" />
+                  </div>
+                </div>
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full mt-2" />
+                <Skeleton className="h-4 w-2/3 mt-2" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+    );
+  }
+  
+  if (reviews.length === 0) {
+    return null; // Don't show the section if there are no reviews
+  }
+
   return (
     <section className="mt-16 pt-12 border-t">
         <div className="text-center mb-8">
             <h2 className="text-3xl font-headline font-bold">What Our Customers Say</h2>
-            <Button asChild variant="outline" className='mt-4'>
-                <Link href="#" target="_blank" rel="noopener noreferrer">
-                    Review us
-                </Link>
-            </Button>
         </div>
         <Carousel
         opts={{
@@ -110,13 +116,13 @@ const ReviewsCarousel = () => {
                         <Card className="flex flex-col h-full">
                             <CardContent className="p-6 flex-1 flex flex-col">
                                 <div className="flex items-center mb-4">
-                                    <NameAvatar name={review.name} />
+                                    <NameAvatar name={review.author_name} />
                                     <div className='ml-4'>
-                                        <h4 className="font-semibold">{review.name}</h4>
+                                        <h4 className="font-semibold">{review.author_name}</h4>
                                         <Rating rating={review.rating} />
                                     </div>
                                 </div>
-                                <p className="text-muted-foreground text-sm flex-1">"{review.review}"</p>
+                                <p className="text-muted-foreground text-sm flex-1">"{review.comment}"</p>
                             </CardContent>
                         </Card>
                     </div>
@@ -129,5 +135,3 @@ const ReviewsCarousel = () => {
 };
 
 export default ReviewsCarousel;
-
-    

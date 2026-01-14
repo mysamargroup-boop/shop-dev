@@ -172,3 +172,13 @@ export interface Subscription {
   source?: string;
   created_at: string;
 }
+
+export interface Review {
+  id: string;
+  product_id: string;
+  rating: number;
+  comment: string;
+  author_name: string;
+  created_at: string;
+  is_verified: boolean;
+}

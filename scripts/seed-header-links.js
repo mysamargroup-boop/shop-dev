@@ -1,3 +1,4 @@
+
 const { createClient } = require('@supabase/supabase-js');
 const path = require('path');
 require('dotenv').config({ path: path.resolve(process.cwd(), '.env.local') });
@@ -17,7 +18,7 @@ const defaultLinks = [
   { href: '/collections/keychains', label: 'Keychains', is_mega_menu: false, special: false },
   { href: '/collections/wall-hangings', label: 'Wall Hanging', is_mega_menu: false, special: false },
   { href: '/collections/mobile-stands', label: 'Mobile Stand', is_mega_menu: false, special: false },
-  { href: '/shop', label: 'All Gifts', is_mega_menu: false, special: true },
+  { href: '/shop', label: 'Shop', is_mega_menu: false, special: true },
   { href: '/our-story', label: 'Our Story', is_mega_menu: false, special: true },
   { href: '/connect', label: 'Contact Us', is_mega_menu: false, special: false },
 ];

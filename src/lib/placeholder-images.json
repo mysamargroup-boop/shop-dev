@@ -121,6 +121,12 @@
       "imageHint": "woodworking craftsman"
     },
     {
+      "id": "founder-shashank-nema",
+      "description": "Portrait of the founder, Shashank Nema",
+      "imageUrl": "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=1887&auto=format&fit=crop",
+      "imageHint": "founder portrait"
+    },
+    {
       "id": "slider-xmas",
       "description": "Santa Claus with gifts for Christmas promotion.",
       "imageUrl": "https://images.unsplash.com/photo-1671811636280-ffd59649e424?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxzYW50YSUyMGNsYXVzJTIwd2l0aCUyMGdpZnRzfGVufDB8fHx8MTc2NjA5MDA1MHww&ixlib.rb-4.1.0&q=80&w=1080",
@@ -195,7 +201,7 @@
     {
       "id": "home-banner-2",
       "name": "Personalized Gifts",
-      "imageUrl": "https://images.unsplash.com/photo-1761211106346-939cb32005d7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxjdXN0b20lMjBnaWZ0c3xlbnwwfHx8fDE3NjgzMjQyMjh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1761211106346-939cb32005d7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxjdXN0b20lMjBnaWZ0c3xlbnwwfHx8fDE3NjgzMjQyMjh8MA&ixlib.rb-4.1.0&q=80&w=1080",
       "imageHint": "custom gifts"
     }
   ],
