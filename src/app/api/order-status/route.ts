@@ -1,5 +1,12 @@
+
+// This file defines an API endpoint for checking the status of an order from Cashfree.
+
 import { NextRequest, NextResponse } from 'next/server';
 
+/**
+ * Retrieves Cashfree API configuration based on the environment.
+ * @returns {object} Cashfree configuration object.
+ */
 const getCashfreeConfig = () => {
   const env = (process.env.CASHFREE_ENV || 'SANDBOX').trim().toUpperCase();
   const baseUrl = env === 'PRODUCTION' 
@@ -13,6 +20,11 @@ const getCashfreeConfig = () => {
   };
 };
 
+/**
+ * Handles GET requests to fetch the status of an order from Cashfree.
+ * @param {NextRequest} req The incoming request object.
+ * @returns {NextResponse} A JSON response with the order status or an error message.
+ */
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);

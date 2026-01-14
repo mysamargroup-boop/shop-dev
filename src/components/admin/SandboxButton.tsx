@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -21,22 +22,27 @@ export default function SandboxButton() {
         return;
       }
       const orderId = `WB-TEST-${Date.now()}`;
-      // Use Supabase Edge Function directly
-      const { supabase } = await import('@/lib/supabase');
-      const { data, error } = await supabase().functions.invoke('create-order', {
-        body: {
-          orderId,
-          amount: 10,
-          customerName: 'Sandbox User',
-          customerPhone: '919999999999',
-          returnUrl: `${window.location.origin}/order-confirmation`
-        }
+      
+      const response = await fetch('/api/create-payment-link', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orderId,
+            amount: 1,
+            customerName: 'Sandbox User',
+            customerPhone: '919999999999',
+            returnUrl: `${window.location.origin}/order-confirmation`,
+            items: [{ id: 'test-item', name: 'Test Product', quantity: 1, price: 1 }]
+          })
       });
       
-      if (error) throw new Error(error.message || 'Failed to create sandbox payment session');
+      const data = await response.json();
+      if (!response.ok) {
+          throw new Error(data.error || 'Failed to create sandbox payment session');
+      }
 
       if ((window as any).Cashfree && data.payment_session_id) {
-        const cfModeEnv = (process.env.NEXT_PUBLIC_CASHFREE_ENV || 'SANDBOX').toUpperCase();
+        const cfModeEnv = (data.env || "SANDBOX").toUpperCase();
         const cashfree = (window as any).Cashfree({
           mode: cfModeEnv === 'PRODUCTION' ? 'production' : 'sandbox'
         });

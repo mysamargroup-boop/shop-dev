@@ -1,6 +1,13 @@
+
+// This file defines API endpoints for managing discount coupons.
+
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
+/**
+ * Handles GET requests to fetch all discount coupons.
+ * @returns {NextResponse} A JSON response with the list of coupons or an error message.
+ */
 export async function GET() {
   try {
     const { data: coupons, error } = await supabaseAdmin
@@ -17,6 +24,11 @@ export async function GET() {
   }
 }
 
+/**
+ * Handles POST requests to create a new discount coupon.
+ * @param {NextRequest} req The incoming request object.
+ * @returns {NextResponse} A JSON response with the newly created coupon or an error message.
+ */
 export async function POST(req: NextRequest) {
   try {
     const couponData = await req.json();

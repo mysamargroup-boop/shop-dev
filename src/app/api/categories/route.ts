@@ -1,6 +1,13 @@
+
+// This file defines API endpoints for managing product categories.
+
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
+/**
+ * Handles GET requests to fetch all product categories.
+ * @returns {NextResponse} A JSON response with the list of categories or an error message.
+ */
 export async function GET() {
   try {
     const { data: categories, error } = await supabaseAdmin()
@@ -17,6 +24,11 @@ export async function GET() {
   }
 }
 
+/**
+ * Handles POST requests to create a new product category.
+ * @param {NextRequest} req The incoming request object.
+ * @returns {NextResponse} A JSON response with the newly created category or an error message.
+ */
 export async function POST(req: NextRequest) {
   try {
     const categoryData = await req.json();

@@ -1,0 +1,1 @@
+ALTER TABLE orders ADD COLUMN client_confirmation_sent BOOLEAN DEFAULT FALSE;

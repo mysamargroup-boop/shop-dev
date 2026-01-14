@@ -24,19 +24,21 @@ type PaymentInput = {
     items: OrderItem[];
 };
 
-import { supabase } from './supabase';
 
-async function getCashfreePaymentLink(orderId: string, amount: number, customerName: string, customerPhone: string, returnUrl: string, items: OrderItem[]) {
-    const { data, error } = await supabase().functions.invoke('create-order', {
-        body: { orderId, amount, customerName, customerPhone, returnUrl, items }
-    });
+async function createServerPaymentLink(payload: any) {
+  const response = await fetch('/api/create-payment-link', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
 
-    if (error) {
-        console.error("Supabase Function Error:", error);
-        throw new Error(error.message || 'Failed to create payment link');
-    }
+  const data = await response.json();
 
-    return data;
+  if (!response.ok) {
+    throw new Error(data.error || 'Failed to create payment link');
+  }
+  
+  return data;
 }
 
 
@@ -44,21 +46,21 @@ export async function createPaymentLink(input: PaymentInput & { productUrls: str
     const orderId = `WB-${Date.now()}`;
     const amount = Math.max(1, parseFloat(input.advanceAmount.toFixed(2))); // Ensure minimum of 1
     
-    // Keep return_url short to satisfy Cashfree's max URL length constraints
     const returnUrl = `${window.location.origin}/order-confirmation`;
     
-    const paymentData: any = await getCashfreePaymentLink(
+    const paymentData: any = await createServerPaymentLink({
         orderId,
         amount,
-        input.customerName,
-        input.customerPhoneNumber,
-        returnUrl,
-        input.items,
-    );
+        customerName: input.customerName,
+        customerPhone: input.customerPhoneNumber,
+        returnUrl: returnUrl,
+        items: input.items,
+    });
 
     return {
         orderId: orderId,
         payment_url: paymentData.payments?.url || paymentData.payment_link || null,
         payment_session_id: paymentData.payment_session_id || null,
+        env: paymentData.env || 'SANDBOX',
     };
 }

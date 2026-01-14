@@ -37,6 +37,7 @@ const OrderConfirmationContent = () => {
   const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'failed'>('loading');
   
   const hasFired = useRef(false);
+  const hasFiredConfetti = useRef(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   
   const fetchOrderDetailsFromServer = async (orderId: string): Promise<OrderData | null> => {
@@ -90,7 +91,10 @@ const OrderConfirmationContent = () => {
         setStatus('success');
         clearCart();
         audioRef.current?.play().catch(e => console.warn("Audio autoplay blocked by browser."));
-        confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 }, zIndex: 10000 });
+        if (!hasFiredConfetti.current) {
+            hasFiredConfetti.current = true;
+            confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 }, zIndex: 10000 });
+        }
 
         const toPhone = (localData.customerPhoneNumber || '').replace(/\D/g, '');
         if (toPhone && !hasFired.current) {
@@ -439,5 +443,3 @@ export default function OrderConfirmationPage() {
         </div>
     )
 }
-
-    
