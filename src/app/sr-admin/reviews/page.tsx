@@ -12,13 +12,14 @@ import { Switch } from '@/components/ui/switch';
 import { Trash2, Check, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-function ReviewActions({ review }: { review: Review }) {
+function ReviewActions({ review, onAction }: { review: Review, onAction: () => void }) {
   const { toast } = useToast();
 
   const handleUpdate = async (isVerified: boolean) => {
     const result = await updateReviewStatus(review.id, isVerified);
     if (result.success) {
       toast({ title: 'Success', description: 'Review status updated.' });
+      onAction();
     } else {
       toast({ title: 'Error', description: result.message, variant: 'destructive' });
     }
@@ -29,6 +30,7 @@ function ReviewActions({ review }: { review: Review }) {
       const result = await deleteReview(review.id);
       if (result.success) {
         toast({ title: 'Success', description: 'Review deleted.' });
+        onAction();
       } else {
         toast({ title: 'Error', description: result.message, variant: 'destructive' });
       }
@@ -52,11 +54,12 @@ function ReviewActions({ review }: { review: Review }) {
 export default function ReviewsPage() {
   const [reviews, setReviews] = useState<Review[]>([]);
 
+  const fetchReviews = async () => {
+    const fetchedReviews = await getReviewsAdmin();
+    setReviews(fetchedReviews);
+  };
+  
   useEffect(() => {
-    async function fetchReviews() {
-      const fetchedReviews = await getReviewsAdmin();
-      setReviews(fetchedReviews);
-    }
     fetchReviews();
   }, []);
 
@@ -94,7 +97,7 @@ export default function ReviewsPage() {
                       <TableCell>{review.rating}/5</TableCell>
                       <TableCell className="max-w-xs truncate">{review.comment}</TableCell>
                       <TableCell className="text-right">
-                        <ReviewActions review={review} />
+                        <ReviewActions review={review} onAction={fetchReviews} />
                       </TableCell>
                     </TableRow>
                   ))

@@ -943,7 +943,7 @@ export async function getReviewsAdmin(): Promise<Review[]> {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return (data || []).map(r => ({...r, author_name: r.customer_name}));
+    return (data || []).map(r => ({...r, author_name: r.customer_name, is_verified: r.is_approved}));
   } catch (error) {
     console.error('Error fetching reviews for admin:', error);
     return [];
@@ -954,7 +954,7 @@ export async function updateReviewStatus(reviewId: string, isVerified: boolean) 
   try {
     const { error } = await supabaseAdmin()
       .from('reviews')
-      .update({ is_verified: isVerified, updated_at: new Date().toISOString() })
+      .update({ is_approved: isVerified, updated_at: new Date().toISOString() })
       .eq('id', reviewId);
     if (error) throw error;
     revalidatePath('/sr-admin/reviews');

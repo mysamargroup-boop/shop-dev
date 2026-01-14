@@ -330,11 +330,11 @@ export async function getReviewsByProductId(productId: string): Promise<Review[]
       .from('reviews')
       .select('*')
       .eq('product_id', productId)
-      .eq('is_verified', true)
+      .eq('is_approved', true)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return (data || []).map(r => ({ ...r, author_name: r.customer_name }));
+    return (data || []).map(r => ({ ...r, author_name: r.customer_name, is_verified: r.is_approved }));
   } catch (error) {
     console.error('Error fetching reviews:', error);
     return [];
@@ -346,26 +346,30 @@ export async function getRecentReviews(limit = 5): Promise<Review[]> {
         const { data, error } = await supabaseAdmin()
             .from('reviews')
             .select('*')
-            .eq('is_verified', true)
+            .eq('is_approved', true)
             .order('created_at', { ascending: false })
             .limit(limit);
 
         if (error) throw error;
-        return (data || []).map(r => ({ ...r, author_name: r.customer_name }));
+        return (data || []).map(r => ({ ...r, author_name: r.customer_name, is_verified: r.is_approved }));
     } catch (error) {
         console.error('Error fetching recent reviews:', error);
         return [];
     }
 }
 
-export async function createReview(reviewData: Omit<Review, 'id' | 'created_at'>): Promise<Review | null> {
+function sanitizeHtml(text: string): string {
+    return text.replace(/<[^>]*>?/gm, '');
+}
+
+export async function createReview(reviewData: Omit<Review, 'id' | 'created_at' | 'is_verified'>): Promise<Review | null> {
     try {
         const payload = {
           product_id: reviewData.product_id,
           rating: reviewData.rating,
-          comment: reviewData.comment,
-          customer_name: reviewData.author_name,
-          is_verified: false,
+          comment: sanitizeHtml(reviewData.comment),
+          customer_name: sanitizeHtml(reviewData.author_name),
+          is_approved: false,
         }
         const { data, error } = await supabaseAdmin()
             .from('reviews')
@@ -374,7 +378,7 @@ export async function createReview(reviewData: Omit<Review, 'id' | 'created_at'>
             .single();
 
         if (error) throw error;
-        return { ...data, author_name: data.customer_name };
+        return { ...data, author_name: data.customer_name, is_verified: data.is_approved };
     } catch (error) {
         console.error('Error creating review:', error);
         return null;
