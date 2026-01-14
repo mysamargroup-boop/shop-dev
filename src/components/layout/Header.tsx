@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import Link from 'next/link';
@@ -101,7 +100,14 @@ const Header = () => {
         setAllProducts(products);
         setAllCategories(categories);
         setSiteSettings(settings);
-        setHeaderLinks(navLinks || []);
+        // Correctly transform the 'All Gifts' link to 'Shop'
+        const transformedLinks = (navLinks || []).map(link => {
+            if (link.label === 'All Gifts') {
+                return { ...link, label: 'Shop', href: '/shop', special: true };
+            }
+            return link;
+        });
+        setHeaderLinks(transformedLinks);
     }
     fetchData();
   }, [])
