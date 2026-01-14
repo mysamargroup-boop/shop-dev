@@ -26,7 +26,7 @@ type ProductFormProps = {
   defaultIdPrefix?: string;
 };
 
-const SeoScoreIndicator = ({ score, text }: { score: number; text: string;}) => {
+const SeoScoreIndicator = ({ score }: { score: number; text: string;}) => {
   const getGradientColor = (score: number) => {
     if (score > 80) return 'from-green-500 to-green-400';
     if (score > 50) return 'from-yellow-500 to-yellow-400';
@@ -401,7 +401,8 @@ export function ProductForm({ action, product, buttonText, initialState, default
                 </div>
                 
                 <div className="space-y-2">
-                    {/* Placeholder for alignment */}
+                    <Label>Product URL</Label>
+                    <p className="text-sm text-muted-foreground h-10 flex items-center">{product ? `/collections/${product.category}/${product.id}`: 'Will be generated from ID'}</p>
                 </div>
 
                 <div className="space-y-2">

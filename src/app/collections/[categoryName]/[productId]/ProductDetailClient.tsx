@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import useCart from '@/hooks/use-cart';
 import useWishlist from '@/hooks/use-wishlist';
-import { cn } from '@/lib/utils';
+import { cn, slugify } from '@/lib/utils';
 import WhatsAppCheckoutModal from '@/components/checkout/WhatsAppCheckoutModal';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
@@ -33,6 +33,7 @@ import { BLUR_DATA_URL } from '@/lib/constants';
 import ProductInfoBadges from '@/components/products/ProductInfoBadges';
 import { getSiteSettings } from '@/lib/actions';
 import ReviewsCarousel from '@/components/products/ReviewsCarousel';
+import Link from 'next/link';
 
 const ImageUpload = ({ onFilesChange }: { onFilesChange: (files: File[]) => void }) => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -226,6 +227,17 @@ export default function ProductDetailClient({ product }: { product: Product }) {
           </Button>
         </div>
         
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          {product.category && (
+            <Link href={`/collections/${slugify(product.category.split(',')[0].trim())}`}>
+              <Badge variant="outline">{product.category}</Badge>
+            </Link>
+          )}
+          {product.subCategory && (
+            <Badge variant="secondary">{product.subCategory}</Badge>
+          )}
+        </div>
+
          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
             {product.rating && product.reviewCount && (
                 <div className="flex items-center gap-1">
@@ -406,16 +418,16 @@ export default function ProductDetailClient({ product }: { product: Product }) {
                                         Nemaonline
                                     </td>
                                 </tr>
-                                {product.weight && (
+                                {product.weightGrams && (
                                     <tr className="border-b">
                                         <td className="py-2 text-muted-foreground">Weight</td>
-                                        <td className="py-2 font-semibold text-right">{product.weight}</td>
+                                        <td className="py-2 font-semibold text-right">{product.weightGrams}g</td>
                                     </tr>
                                 )}
-                                {product.dimensions && (
+                                {product.dimensionsCm && (
                                     <tr>
                                         <td className="py-2 text-muted-foreground">Dimensions</td>
-                                        <td className="py-2 font-semibold text-right">{product.dimensions}</td>
+                                        <td className="py-2 font-semibold text-right">{product.dimensionsCm.length} x {product.dimensionsCm.width} x {product.dimensionsCm.height} cm</td>
                                     </tr>
                                 )}
                             </tbody>
