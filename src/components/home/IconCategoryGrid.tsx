@@ -18,28 +18,28 @@ const iconCategories = [
     color: 'bg-foreground'
   },
   {
-    name: "Personal Gifts",
-    icon: <Heart className="h-8 w-8 text-primary-foreground group-hover:text-white" />,
-    href: "/collections/personal-accessories",
-    color: 'bg-primary'
-  },
-  {
     name: "Under ₹49",
     icon: <div className="text-sm font-bold text-center text-primary-foreground group-hover:text-white">Under<br/>₹49</div>,
     href: "/shop?price=49",
     color: 'bg-foreground'
   },
-   {
+  {
     name: "Under ₹99",
     icon: <div className="text-sm font-bold text-center text-primary-foreground group-hover:text-white">Under<br/>₹99</div>,
     href: "/shop?price=99",
     color: 'bg-primary'
   },
-  {
+   {
     name: "Under ₹199",
     icon: <div className="text-sm font-bold text-center text-primary-foreground group-hover:text-white">Under<br/>₹199</div>,
     href: "/shop?price=199",
     color: 'bg-primary'
+  },
+  {
+    name: "Under ₹499",
+    icon: <div className="text-sm font-bold text-center text-primary-foreground group-hover:text-white">Under<br/>₹499</div>,
+    href: "/shop?price=499",
+    color: 'bg-foreground'
   },
   {
     name: "Under ₹999",

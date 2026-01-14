@@ -9,6 +9,7 @@ import { supabaseAdmin } from "./supabase";
 import { getTags as getTagsFromSupabase } from './data-supabase';
 import { sendWhatsAppTemplateMessage, sendWhatsAppTextMessage } from "./whatsapp-cloud";
 import path from 'path';
+import { slugify } from "./utils";
 const fs = require('fs').promises;
 
 const settingsFilePath = path.join(process.cwd(), 'src', 'lib', 'site-settings.json');
@@ -93,9 +94,10 @@ const blogPostSchema = z.object({
 });
 
 const categorySchema = z.object({
-  id: z.string().min(1, "Category ID is required").regex(/^[a-z0-9-]+$/, "ID must be lowercase, numbers, and hyphens only"),
   name: z.string().min(1, "Name is required"),
   imageUrl: z.string().url("Must be a valid URL").optional(),
+  imageHint: z.string().optional(),
+  linkUrl: z.string().url().optional().or(z.literal('')),
 });
 
 const siteImageSchema = z.object({
@@ -417,7 +419,8 @@ export async function createCategory(previousState: any, formData: FormData) {
     };
   }
 
-  const { id, name, imageUrl } = validatedFields.data;
+  const { name, imageUrl, imageHint, linkUrl } = validatedFields.data;
+  const id = slugify(name);
   const supabase = supabaseAdmin();
 
   const { data: existing } = await supabase
@@ -427,13 +430,15 @@ export async function createCategory(previousState: any, formData: FormData) {
       .single();
 
   if (existing) {
-      return { errors: { id: ["A category with this ID already exists."] } };
+      return { errors: { name: ["A category with this name already exists, resulting in a duplicate ID."] } };
   }
   
   const { error } = await supabase.from('categories').insert({
     id,
     name,
-    image_url: imageUrl
+    image_url: imageUrl,
+    image_hint: imageHint,
+    link_url: linkUrl,
   });
 
   if (error) {
@@ -457,12 +462,14 @@ export async function updateCategory(categoryId: string, previousState: any, for
     };
   }
 
-  const { name, imageUrl } = validatedFields.data;
+  const { name, imageUrl, imageHint, linkUrl } = validatedFields.data;
   const supabase = supabaseAdmin();
 
   const updatePayload: any = {};
   if (name !== undefined) updatePayload.name = name;
   if (imageUrl !== undefined) updatePayload.image_url = imageUrl;
+  if (imageHint !== undefined) updatePayload.image_hint = imageHint;
+  if (linkUrl !== undefined) updatePayload.link_url = linkUrl;
 
   const { error } = await supabase
     .from('categories')

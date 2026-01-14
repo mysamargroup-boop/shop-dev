@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useFormStatus } from "react-dom";
@@ -8,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Category } from "@/lib/types";
 import { Loader2 } from "lucide-react";
+import { slugify } from "@/lib/utils";
+import { useState } from "react";
 
 type CategoryFormProps = {
   action: (formData: FormData) => void;
@@ -28,6 +31,9 @@ function SubmitButton({ text }: { text: string }) {
 
 export function CategoryForm({ action, category, buttonText, initialState }: CategoryFormProps) {
   const state = initialState;
+  const [name, setName] = useState(category?.name || '');
+
+  const generatedId = name ? slugify(name) : '';
 
   return (
     <form action={action}>
@@ -41,14 +47,14 @@ export function CategoryForm({ action, category, buttonText, initialState }: Cat
           
           <div className="space-y-2">
             <Label htmlFor="name">Category Name</Label>
-            <Input id="name" name="name" defaultValue={category?.name} required />
+            <Input id="name" name="name" value={name} onChange={(e) => setName(e.target.value)} required />
              {state?.errors?.name && <p className="text-destructive text-sm">{state.errors.name[0]}</p>}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="id">Category ID (Slug)</Label>
-            <Input id="id" name="id" defaultValue={category?.id} disabled={!!category} required />
-            <p className="text-xs text-muted-foreground">e.g., "desk-accessories". Cannot be changed later.</p>
+            <Input id="id" name="id" value={category?.id || generatedId} disabled />
+            <p className="text-xs text-muted-foreground">Generated automatically from the name. Cannot be changed later.</p>
             {state?.errors?.id && <p className="text-destructive text-sm">{state.errors.id[0]}</p>}
           </div>
 
