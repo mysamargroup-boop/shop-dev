@@ -381,7 +381,7 @@ export default function ProductDetailClient({ product }: { product: Product }) {
                     </AccordionTrigger>
                     <AccordionContent>
                         <ul className="space-y-3 list-disc pl-5 text-muted-foreground">
-                        {product.features.map((feature, index) => (
+                        {(product.features || []).map((feature, index) => (
                             <li key={index}>
                             {feature}
                             </li>
