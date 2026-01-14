@@ -2,14 +2,13 @@
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { getProductByName, getProducts, getCategories } from '@/lib/data-async';
+import { getProductByName, getProducts, getCategories, getReviewsByProductId } from '@/lib/data-async';
 import ProductCard from '@/components/products/ProductCard';
 import ReviewsCarousel from '@/components/products/ReviewsCarousel';
 import ProductLightbox from '@/components/products/ProductLightbox';
 import ProductDetailClient from './ProductDetailClient';
 import { Home, ChevronRight } from 'lucide-react';
 import { slugify } from '@/lib/utils';
-import { getReviewsByProductId } from '@/lib/data-supabase';
 import ReviewSection from '@/components/reviews/ReviewSection';
 
 export const revalidate = 600;

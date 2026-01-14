@@ -1,7 +1,7 @@
 
 'use server';
 import { supabaseAdmin } from './supabase';
-import type { Category, Product, ProductsData, BlogPost, SiteSettings, SiteImage, Video } from './types';
+import type { Category, Product, ProductsData, BlogPost, SiteSettings, SiteImage, Video, Review } from './types';
 import { slugify } from './utils';
 
 export async function getCategories(): Promise<Category[]> {
@@ -320,4 +320,53 @@ export async function getSiteVideos(): Promise<Video[]> {
   }
 }
 
+export async function getReviewsByProductId(productId: string): Promise<Review[]> {
+  try {
+    const { data, error } = await supabaseAdmin()
+      .from('reviews')
+      .select('*')
+      .eq('product_id', productId)
+      .eq('is_verified', true)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching reviews:', error);
+    return [];
+  }
+}
+
+export async function getRecentReviews(limit = 5): Promise<Review[]> {
+    try {
+        const { data, error } = await supabaseAdmin()
+            .from('reviews')
+            .select('*')
+            .eq('is_verified', true)
+            .order('created_at', { ascending: false })
+            .limit(limit);
+
+        if (error) throw error;
+        return data || [];
+    } catch (error) {
+        console.error('Error fetching recent reviews:', error);
+        return [];
+    }
+}
+
+export async function createReview(reviewData: Omit<Review, 'id' | 'created_at'>): Promise<Review | null> {
+    try {
+        const { data, error } = await supabaseAdmin()
+            .from('reviews')
+            .insert(reviewData)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
+    } catch (error) {
+        console.error('Error creating review:', error);
+        return null;
+    }
+}
     
