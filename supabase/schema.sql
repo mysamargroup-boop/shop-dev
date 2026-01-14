@@ -54,6 +54,13 @@ create table if not exists products (
   updated_at timestamptz not null default now()
 );
 
+-- Add foreign key to sub_category in products table
+-- This assumes that all existing values in products.sub_category are valid category IDs.
+-- If this migration fails, you may need to clean up the data in the products table first.
+ALTER TABLE products
+ADD CONSTRAINT fk_products_sub_category
+FOREIGN KEY (sub_category) REFERENCES categories(id) ON DELETE SET NULL;
+
 create index if not exists idx_products_category on products(category_id);
 create index if not exists idx_products_tags on products using gin(tags);
 create index if not exists idx_products_rating on products(rating desc);
@@ -366,6 +373,20 @@ create table if not exists lead_analytics (
   created_at timestamptz not null default now()
 );
 
+-- Reviews
+create table if not exists reviews (
+    id uuid primary key default uuid_generate_v4(),
+    product_id text not null references products(id) on delete cascade,
+    customer_id uuid references customers(id) on delete set null,
+    rating numeric(3, 2) not null check (rating >= 1 and rating <= 5),
+    review_text text,
+    created_at timestamptz not null default now(),
+    updated_at timestamptz not null default now()
+);
+
+create index if not exists idx_reviews_product_id on reviews(product_id);
+create index if not exists idx_reviews_customer_id on reviews(customer_id);
+
 -- Additional indexes
 create index if not exists idx_banners_type on banners(type);
 create index if not exists idx_banners_active on banners(is_active);
@@ -396,6 +417,7 @@ create trigger set_updated_at_videos before update on videos for each row execut
 create trigger set_updated_at_order_status_history before update on order_status_history for each row execute procedure set_updated_at();
 create trigger set_updated_at_lead_analytics before update on lead_analytics for each row execute procedure set_updated_at();
 create trigger set_updated_at_payments before update on payments for each row execute procedure set_updated_at();
+create trigger set_updated_at_reviews before update on reviews for each row execute procedure set_updated_at();
 
 create trigger set_updated_at_blog_posts before update on blog_posts for each row execute procedure set_updated_at();
 create trigger set_updated_at_product_options before update on product_options for each row execute procedure set_updated_at();
@@ -417,6 +439,7 @@ alter table order_items enable row level security;
 alter table banners enable row level security;
 alter table payments enable row level security;
 alter table coupon_redemptions enable row level security;
+alter table reviews enable row level security;
 
 alter table site_images enable row level security;
 alter table blog_posts enable row level security;
@@ -461,6 +484,11 @@ create policy "Service role manage payments" on payments for all using (auth.rol
 
 -- Coupon Redemptions - Restricted access (no public read)
 create policy "Service role manage coupon_redemptions" on coupon_redemptions for all using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
+
+-- Reviews - Public read for storefront
+create policy "Public read reviews" on reviews for select using (true);
+create policy "Users can insert their own reviews" on reviews for insert with check (auth.role() = 'authenticated');
+create policy "Service role manage reviews" on reviews for all using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
 
 -- Site Settings - Restricted access (no public read)
 create policy "Service role manage site_settings" on site_settings for all using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
@@ -516,7 +544,7 @@ begin
     if new_status not in ('PENDING', 'PAID', 'CANCELLED', 'RETURNED', 'REFUNDED') then
         raise exception 'Invalid status: %', new_status;
     end if;
-    update orders set 
+    update orders set
         status = new_status,
         return_reason = case when new_status = 'RETURNED' then reason else return_reason end,
         refund_reason = case when new_status = 'REFUNDED' then reason else refund_reason end,
@@ -534,4 +562,3 @@ on conflict (id) do nothing;
 insert into videos (id, type, url, thumbnail_url) values
 ('video2','instagram','https://www.instagram.com/p/Cx1234567/','https://picsum.photos/seed/insta/400/600')
 on conflict (id) do nothing;
-
