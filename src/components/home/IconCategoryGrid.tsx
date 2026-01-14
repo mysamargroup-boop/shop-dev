@@ -29,6 +29,12 @@ const iconCategories = [
     href: "/shop?price=49",
     color: 'bg-foreground'
   },
+   {
+    name: "Under ₹99",
+    icon: <div className="text-sm font-bold text-center text-primary-foreground group-hover:text-white">Under<br/>₹99</div>,
+    href: "/shop?price=99",
+    color: 'bg-primary'
+  },
   {
     name: "Under ₹199",
     icon: <div className="text-sm font-bold text-center text-primary-foreground group-hover:text-white">Under<br/>₹199</div>,
@@ -47,7 +53,7 @@ export default function IconCategoryGrid() {
   return (
     <section className="py-12">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-4 md:gap-8 justify-items-center">
+        <div className="grid grid-cols-3 sm:grid-cols-7 gap-4 md:gap-8 justify-items-center">
             {iconCategories.map((item, index) => (
                 <Link key={index} href={item.href} className="group flex flex-col items-center text-center gap-3">
                   <div className={`flex items-center justify-center h-20 w-20 rounded-full ${item.color} group-hover:bg-accent transition-colors`}>
