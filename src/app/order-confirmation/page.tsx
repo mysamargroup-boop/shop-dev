@@ -29,11 +29,12 @@ type OrderData = {
 
 const OrderConfirmationContent = () => {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { toast } = useToast();
   const { clearCart } = useCart();
   const [orderData, setOrderData] = useState<OrderData | null>(null);
   const [settings, setSettings] = useState<SiteSettings | null>(null);
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'failed'>('loading');
   
   const hasFired = useRef(false);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -65,12 +66,10 @@ const OrderConfirmationContent = () => {
   const fetchAndProcessOrder = useCallback(async (orderId: string) => {
     let localData: OrderData | null = null;
     try {
-      // 1. Try to get data from localStorage first
       const stored = typeof window !== 'undefined' ? localStorage.getItem(`order_${orderId}`) : null;
       if (stored) {
         localData = JSON.parse(stored);
       } else {
-        // 2. If not in localStorage, fetch from the database
         localData = await fetchOrderDetailsFromServer(orderId);
       }
       
@@ -80,7 +79,6 @@ const OrderConfirmationContent = () => {
          throw new Error(`No details found for order ${orderId}`);
       }
 
-      // 3. Verify payment status with Cashfree
       const res = await fetch(`/api/order-status?order_id=${encodeURIComponent(orderId)}`, { cache: 'no-store' });
       const statusData = await res.json();
       if (!res.ok) throw new Error(statusData.error || 'Status fetch failed');
@@ -94,9 +92,9 @@ const OrderConfirmationContent = () => {
         audioRef.current?.play().catch(e => console.warn("Audio autoplay blocked by browser."));
         confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 }, zIndex: 10000 });
 
-        // 4. Send WhatsApp message (only once)
         const toPhone = (localData.customerPhoneNumber || '').replace(/\D/g, '');
-        if (toPhone) {
+        if (toPhone && !hasFired.current) {
+            hasFired.current = true;
             await fetch('/api/whatsapp/send-template', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -113,9 +111,14 @@ const OrderConfirmationContent = () => {
               }),
             });
         }
-
+      } else if (orderStatus === 'FAILED' || orderStatus === 'CANCELLED') {
+        setStatus('failed');
+        toast({
+          variant: 'destructive',
+          title: 'Payment Failed',
+          description: 'Your payment could not be processed. Please try again.',
+        });
       } else {
-        // Payment not confirmed, but we have order data
         setStatus('error');
         toast({
           variant: 'destructive',
@@ -145,7 +148,6 @@ const OrderConfirmationContent = () => {
   useEffect(() => {
     async function runConfirmation() {
         if (hasFired.current) return;
-        hasFired.current = true;
         
         const fetchedSettings = await getSiteSettings();
         setSettings(fetchedSettings);
@@ -257,6 +259,45 @@ const OrderConfirmationContent = () => {
     );
   }
 
+  if (status === 'failed' && orderData) {
+    return (
+      <div className="max-w-2xl mx-auto">
+        <Card className="shadow-lg border-destructive">
+          <CardHeader className="text-center">
+            <div className="mx-auto bg-red-100 dark:bg-red-900/30 rounded-full p-3 w-fit">
+              <XCircle className="h-12 w-12 text-destructive" />
+            </div>
+            <CardTitle className="text-2xl md:text-3xl font-headline mt-4">Payment Failed</CardTitle>
+            <p className="text-muted-foreground">We were unable to process your payment.</p>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="border rounded-lg p-4 space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Order ID:</span>
+                <span className="font-mono font-semibold">{orderData.orderId}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Amount:</span>
+                <span className="font-semibold">₹{orderData.totalCost.toFixed(2)}</span>
+              </div>
+            </div>
+            <p className="text-xs text-center text-muted-foreground">
+              Please try again or contact support if the problem persists.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button className="w-full" onClick={() => router.push(`/cart`)}>
+                Retry Payment
+              </Button>
+              <Button variant="outline" className="w-full" asChild>
+                <Link href="/"><ArrowLeft className="mr-2 h-4 w-4" /> Go to Homepage</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (status === 'error' && orderData) {
     return (
       <div className="max-w-2xl mx-auto">
@@ -266,7 +307,7 @@ const OrderConfirmationContent = () => {
               <AlertCircle className="h-12 w-12 text-yellow-600 dark:text-yellow-400" />
             </div>
             <CardTitle className="text-2xl md:text-3xl font-headline mt-4">Order Received</CardTitle>
-            <p className="text-muted-foreground">Payment verification is pending. Please wait.</p>
+            <p className="text-muted-foreground">Payment verification is pending due to network issues.</p>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="border rounded-lg p-4 space-y-2 text-sm">
@@ -366,9 +407,11 @@ const OrderConfirmationContent = () => {
                     {supportPhoneNumber && <> For details, call <a href={`tel:${supportPhoneNumber}`} className="font-bold hover:underline">{supportPhoneNumber}</a>.</>}
                   </p>
                   <div className="flex flex-col sm:flex-row gap-3">
-                      <Button className="w-full" onClick={generateInvoice}>
-                          <Download className="mr-2 h-4 w-4" /> Download Invoice
-                      </Button>
+                      {status === 'success' && (
+                        <Button className="w-full" onClick={generateInvoice}>
+                            <Download className="mr-2 h-4 w-4" /> Download Invoice
+                        </Button>
+                      )}
                       <Button variant="outline" className="w-full" asChild>
                          <Link href="/"><ArrowLeft className="mr-2 h-4 w-4" /> Continue Shopping</Link>
                       </Button>
@@ -396,3 +439,5 @@ export default function OrderConfirmationPage() {
         </div>
     )
 }
+
+    
