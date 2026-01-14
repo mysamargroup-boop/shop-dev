@@ -1,7 +1,7 @@
 
 'use client';
 
-import { Suspense, useEffect, useState, useRef } from 'react';
+import { Suspense, useEffect, useState, useRef, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { CheckCircle, Loader2, AlertCircle, Download, ArrowLeft, CalendarClock, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,8 @@ import { useToast } from '@/hooks/use-toast';
 import useCart from '@/hooks/use-cart';
 import Link from 'next/link';
 import confetti from 'canvas-confetti';
+import { getSiteSettings } from '@/lib/data-async';
+import type { SiteSettings } from '@/lib/types';
 
 type OrderData = {
   sku?: string;
@@ -27,172 +29,149 @@ type OrderData = {
 
 const OrderConfirmationContent = () => {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const { toast } = useToast();
   const { clearCart } = useCart();
   const [orderData, setOrderData] = useState<OrderData | null>(null);
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
-  const [deliveryMinDays, setDeliveryMinDays] = useState<number>(7);
-  const [deliveryMaxDays, setDeliveryMaxDays] = useState<number>(15);
+  
+  const hasFired = useRef(false);
   const audioRef = useRef<HTMLAudioElement>(null);
+  
+  const fetchOrderDetailsFromServer = async (orderId: string): Promise<OrderData | null> => {
+      try {
+        const res = await fetch(`/api/orders/by-external/${orderId}`);
+        if (!res.ok) return null;
+        const serverOrder = await res.json();
+        
+        if (serverOrder) {
+          return {
+            orderId: serverOrder.external_order_id,
+            customerName: serverOrder.customer_name,
+            customerPhoneNumber: serverOrder.customer_phone,
+            customerAddress: serverOrder.shipping_address || 'Address not available',
+            productName: serverOrder.order_items?.[0]?.product_name || 'Product',
+            quantity: serverOrder.order_items?.reduce((acc: number, item: any) => acc + item.quantity, 0) || 1,
+            totalCost: serverOrder.total_amount,
+            advanceAmount: serverOrder.total_amount,
+          };
+        }
+      } catch (e) {
+        console.error("Failed to fetch order details from server", e);
+      }
+      return null;
+  }
 
-
-  useEffect(() => {
-    const orderId = searchParams.get('order_id') || searchParams.get('orderId');
-    if (!orderId) {
-      setStatus('error');
-      return;
-    }
-    clearCart();
+  const fetchAndProcessOrder = useCallback(async (orderId: string) => {
     let localData: OrderData | null = null;
     try {
+      // 1. Try to get data from localStorage first
       const stored = typeof window !== 'undefined' ? localStorage.getItem(`order_${orderId}`) : null;
-      if (stored) localData = JSON.parse(stored);
+      if (stored) {
+        localData = JSON.parse(stored);
+      } else {
+        // 2. If not in localStorage, fetch from the database
+        localData = await fetchOrderDetailsFromServer(orderId);
+      }
+      
       if (localData) {
         setOrderData(localData);
+      } else {
+         throw new Error(`No details found for order ${orderId}`);
       }
-    } catch {}
-    (async () => {
-      try {
-        try {
-        const sres = await fetch('/api/settings');
-        const sdata = await sres.json();
-        if (sres.ok && sdata) {
-            if (typeof sdata.expected_delivery_min_days === 'number') {
-              setDeliveryMinDays(Math.max(1, sdata.expected_delivery_min_days));
-            }
-            if (typeof sdata.expected_delivery_max_days === 'number') {
-              setDeliveryMaxDays(Math.max(1, sdata.expected_delivery_max_days));
-            }
-          }
-        } catch {}
-        const res = await fetch(`/api/order-status?order_id=${encodeURIComponent(orderId)}`, { cache: 'no-store' });
-        const statusData = await res.json();
-        if (!res.ok) throw new Error(statusData.error || 'Status fetch failed');
-        const orderStatus = (statusData.order_status || statusData.orderStatus || '').toUpperCase();
-        const orderAmount = Number(statusData.order_amount || statusData.orderAmount || 0);
-        if (!localData) {
-          setOrderData({
-            orderId,
-            customerName: 'Customer',
-            customerPhoneNumber: '',
-            customerAddress: '',
-            productName: 'Order',
-            quantity: 1,
-            totalCost: orderAmount,
-            advanceAmount: Math.max(1, parseFloat((orderAmount * 0.05).toFixed(2))),
-          });
-        }
-        if (orderStatus === 'PAID' || orderStatus === 'SUCCESS' || orderStatus === 'COMPLETED') {
-          setStatus('success');
-          audioRef.current?.play();
-          confetti({
-              particleCount: 200,
-              spread: 90,
-              origin: { y: 0.6 },
-              zIndex: 10000,
-          });
-          const od = localData || {
-            customerName: 'Customer',
-            customerPhoneNumber: '',
-            productName: 'Order',
-            quantity: 1,
-            customerAddress: '',
-            totalCost: orderAmount,
-            orderId,
-            advanceAmount: Math.max(1, parseFloat((orderAmount * 0.05).toFixed(2))),
-          };
-          try {
-            const resp = await fetch('/api/whatsapp/send-template', {
+
+      // 3. Verify payment status with Cashfree
+      const res = await fetch(`/api/order-status?order_id=${encodeURIComponent(orderId)}`, { cache: 'no-store' });
+      const statusData = await res.json();
+      if (!res.ok) throw new Error(statusData.error || 'Status fetch failed');
+      
+      const orderStatus = (statusData.order_status || '').toUpperCase();
+      const orderAmount = Number(statusData.order_amount || 0);
+
+      if (orderStatus === 'PAID' || orderStatus === 'SUCCESS' || orderStatus === 'COMPLETED') {
+        setStatus('success');
+        clearCart();
+        audioRef.current?.play().catch(e => console.warn("Audio autoplay blocked by browser."));
+        confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 }, zIndex: 10000 });
+
+        // 4. Send WhatsApp message (only once)
+        const toPhone = (localData.customerPhoneNumber || '').replace(/\D/g, '');
+        if (toPhone) {
+            await fetch('/api/whatsapp/send-template', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                to: od.customerPhoneNumber,
+                to: toPhone,
                 bodyParameters: [
-                  od.customerName,
+                  localData.customerName,
                   orderId,
-                  od.productName,
-                  `${od.quantity}x`,
-                  od.customerAddress,
-                  `₹${(od.totalCost || orderAmount).toFixed(2)}`,
+                  localData.productName,
+                  `${localData.quantity}x`,
+                  localData.customerAddress,
+                  `₹${(localData.totalCost || orderAmount).toFixed(2)}`,
                 ],
               }),
             });
-            const wdata = await resp.json().catch(() => null);
-            if (!resp.ok) throw new Error(wdata?.error || 'WhatsApp API failed');
-
-            try {
-              const supportNumber = process.env.NEXT_PUBLIC_SUPPORT_PHONE_NUMBER || '';
-              const normalizedSupport = supportNumber.replace(/\D/g, '');
-              const normalizedCustomer = (od.customerPhoneNumber || '').replace(/\D/g, '');
-              if (normalizedSupport && normalizedSupport !== normalizedCustomer) {
-                const resp2 = await fetch('/api/whatsapp/send-template', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    to: supportNumber,
-                    bodyParameters: [
-                      od.customerName,
-                      orderId,
-                      od.productName,
-                      `${od.quantity}x`,
-                      od.customerAddress,
-                      `₹${(od.totalCost || orderAmount).toFixed(2)}`,
-                    ],
-                  }),
-                });
-                await resp2.json().catch(() => null);
-              }
-            } catch {}
-          } catch (err: any) {
-            console.error('Failed to send WhatsApp confirmation:', err?.message || err);
-            toast({
-              variant: 'destructive',
-              title: 'WhatsApp Failed',
-              description: 'Could not send WhatsApp order confirmation.',
-            });
-          }
-        } else {
-          setStatus('error');
-          toast({
-            variant: 'destructive',
-            title: 'Payment Not Confirmed',
-            description: 'We could not confirm your payment. If money is debited, please contact support.',
-          });
         }
-      } catch (err: any) {
-        console.error('Order confirmation status check failed:', err.message || err);
+
+      } else {
+        // Payment not confirmed, but we have order data
         setStatus('error');
         toast({
           variant: 'destructive',
-          title: 'Payment Check Failed',
-          description: 'Could not verify payment status due to network error.',
+          title: 'Payment Not Confirmed',
+          description: 'We could not confirm your payment. If money was debited, please contact support.',
         });
       }
-    })();
-  }, [searchParams, toast, clearCart]);
+    } catch (err: any) {
+      console.error('Order confirmation process failed:', err.message || err);
+      setStatus('error');
+      if (err.message.includes('No details found')) {
+           toast({
+            variant: 'destructive',
+            title: 'Order Not Found',
+            description: 'Could not retrieve details for this order. Please contact support.',
+          });
+      } else {
+           toast({
+            variant: 'destructive',
+            title: 'Verification Failed',
+            description: 'Could not verify payment status due to a network error.',
+          });
+      }
+    }
+  }, [clearCart, toast]);
+
+  useEffect(() => {
+    async function runConfirmation() {
+        if (hasFired.current) return;
+        hasFired.current = true;
+        
+        const fetchedSettings = await getSiteSettings();
+        setSettings(fetchedSettings);
+        
+        const orderId = searchParams.get('order_id') || searchParams.get('orderId');
+        if (!orderId) {
+            setStatus('error');
+            return;
+        }
+        
+        fetchAndProcessOrder(orderId);
+    }
+    runConfirmation();
+  }, [searchParams, fetchAndProcessOrder]);
 
   const generateInvoice = async () => {
     if (!orderData) return;
 
     const doc = new jsPDF();
-    // Optionally fetch invoice settings
-    let businessName = process.env.NEXT_PUBLIC_BUSINESS_NAME || 'Woody Business';
-    let businessAddress = process.env.NEXT_PUBLIC_BUSINESS_ADDRESS || 'Sagar, Madhya Pradesh';
-    let logoUrl = process.env.NEXT_PUBLIC_BUSINESS_LOGO_URL || '';
-    let taxPercent = Number(process.env.NEXT_PUBLIC_TAX_PERCENT || 18);
-    let currencySymbol = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '₹';
-    try {
-          const sres = await fetch('/api/settings');
-          const sdata = await sres.json();
-          if (sres.ok && sdata) {
-        businessName = sdata.invoice_business_name || businessName;
-        businessAddress = sdata.invoice_business_address || businessAddress;
-        logoUrl = sdata.invoice_logo_url || logoUrl;
-        taxPercent = Number(sdata.invoice_tax_percent ?? taxPercent);
-        currencySymbol = sdata.invoice_currency_symbol || currencySymbol;
-      }
-    } catch {}
+    const businessName = settings?.invoice_business_name || 'Woody Business';
+    const businessAddress = settings?.invoice_business_address || 'Sagar, Madhya Pradesh';
+    const logoUrl = settings?.invoice_logo_url || '';
+    const taxPercent = settings?.invoice_tax_percent ?? 18;
+    const currencySymbol = settings?.invoice_currency_symbol || '₹';
+    const gstNumber = settings?.invoice_gst_number || '';
+    
     const netAmount = orderData.totalCost / (1 + taxPercent / 100);
     const taxAmount = orderData.totalCost - netAmount;
     const balanceDue = orderData.totalCost - orderData.advanceAmount;
@@ -206,13 +185,9 @@ const OrderConfirmationContent = () => {
     doc.text('Invoice', 160, 18);
     doc.text(`Order ID: ${orderData.orderId}`, 14, 32);
     doc.text(`Date & Time: ${new Date().toLocaleString('en-GB')}`, 14, 38);
-    try {
-      const sres2 = await fetch('/api/settings');
-      const sdata2 = await sres2.json();
-      if (sres2.ok && sdata2?.invoice_gst_number) {
-        doc.text(`GSTIN: ${sdata2.invoice_gst_number}`, 14, 44);
-      }
-    } catch {}
+    if (gstNumber) {
+        doc.text(`GSTIN: ${gstNumber}`, 14, 44);
+    }
     
     doc.text('Bill To:', 14, 50);
     doc.text(orderData.customerName, 14, 56);
@@ -258,21 +233,20 @@ const OrderConfirmationContent = () => {
   };
   
   const getExpectedDeliveryDate = () => {
+    const minDays = settings?.expected_delivery_min_days ?? 7;
+    const maxDays = settings?.expected_delivery_max_days ?? 15;
     const today = new Date();
     const minDeliveryDate = new Date(today);
-    minDeliveryDate.setDate(today.getDate() + deliveryMinDays);
+    minDeliveryDate.setDate(today.getDate() + minDays);
     const maxDeliveryDate = new Date(today);
-    maxDeliveryDate.setDate(today.getDate() + deliveryMaxDays);
+    maxDeliveryDate.setDate(today.getDate() + maxDays);
 
-    const formatDate = (date: Date) => {
-        return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-    };
+    const formatDate = (date: Date) => date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 
     return `${formatDate(minDeliveryDate)} - ${formatDate(maxDeliveryDate)}`;
   }
   
-  const supportPhoneNumber = process.env.NEXT_PUBLIC_SUPPORT_PHONE_NUMBER;
-
+  const supportPhoneNumber = settings?.contact_phone;
 
   if (status === 'loading') {
     return (
@@ -288,11 +262,11 @@ const OrderConfirmationContent = () => {
       <div className="max-w-2xl mx-auto">
         <Card className="shadow-lg">
           <CardHeader className="text-center">
-            <div className="mx-auto bg-yellow-100 rounded-full p-3 w-fit">
-              <AlertCircle className="h-12 w-12 text-yellow-600" />
+            <div className="mx-auto bg-yellow-100 dark:bg-yellow-900/30 rounded-full p-3 w-fit">
+              <AlertCircle className="h-12 w-12 text-yellow-600 dark:text-yellow-400" />
             </div>
             <CardTitle className="text-2xl md:text-3xl font-headline mt-4">Order Received</CardTitle>
-            <p className="text-muted-foreground">Payment verification pending due to network issues.</p>
+            <p className="text-muted-foreground">Payment verification is pending. Please wait.</p>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="border rounded-lg p-4 space-y-2 text-sm">
@@ -329,74 +303,83 @@ const OrderConfirmationContent = () => {
       </div>
     );
   }
-
-  if (status === 'error') {
+  
+  if (status === 'error' && !orderData) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4 text-center">
         <XCircle className="h-16 w-16 text-destructive" />
         <h2 className="text-2xl font-bold">Order Confirmation Failed</h2>
-        <p className="text-muted-foreground">We couldn't retrieve your order details or the payment was not confirmed. Please contact support.</p>
-        <Button asChild>
-            <Link href="/"><ArrowLeft className="mr-2 h-4 w-4" /> Go to Homepage</Link>
-        </Button>
+        <p className="text-muted-foreground max-w-md">We couldn't retrieve your order details or the payment was not confirmed. Please contact support.</p>
+        {supportPhoneNumber && (
+            <Button asChild>
+                <a href={`tel:${supportPhoneNumber}`}>Contact Support</a>
+            </Button>
+        )}
       </div>
     );
   }
 
-  return (
-    <div className="max-w-2xl mx-auto">
-        <audio ref={audioRef} src="https://cdn.freesound.org/previews/270/270319_5122242-lq.mp3" preload="auto" />
-        <Card className="shadow-lg">
-            <CardHeader className="text-center">
-                <div className="mx-auto bg-green-100 rounded-full p-3 w-fit">
-                    <CheckCircle className="h-12 w-12 text-green-600" />
-                </div>
-                <CardTitle className="text-2xl md:text-3xl font-headline mt-4">Order Confirmed!</CardTitle>
-                <p className="text-muted-foreground">Thank you for your purchase, {orderData.customerName}!</p>
-            </CardHeader>
-            <CardContent className="space-y-6">
-                 <div className="flex items-center gap-3 p-3 rounded-lg border bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300">
-                    <CalendarClock className="h-6 w-6" />
-                    <div>
-                        <p className="font-semibold text-sm">Expected Delivery: {getExpectedDeliveryDate()}</p>
-                    </div>
-                </div>
+  if (status === 'success' && orderData) {
+    return (
+      <div className="max-w-2xl mx-auto">
+          <audio ref={audioRef} src="https://cdn.freesound.org/previews/270/270319_5122242-lq.mp3" preload="auto" />
+          <Card className="shadow-lg">
+              <CardHeader className="text-center">
+                  <div className="mx-auto bg-green-100 dark:bg-green-900/30 rounded-full p-3 w-fit">
+                      <CheckCircle className="h-12 w-12 text-green-600 dark:text-green-400" />
+                  </div>
+                  <CardTitle className="text-2xl md:text-3xl font-headline mt-4">Order Confirmed!</CardTitle>
+                  <p className="text-muted-foreground">Thank you for your purchase, {orderData.customerName}!</p>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                   <div className="flex items-center gap-3 p-3 rounded-lg border bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300">
+                      <CalendarClock className="h-6 w-6" />
+                      <div>
+                          <p className="font-semibold text-sm">Expected Delivery: {getExpectedDeliveryDate()}</p>
+                      </div>
+                  </div>
+  
+                  <div className="border rounded-lg p-4 space-y-2 text-sm">
+                      <div className="flex justify-between">
+                          <span className="text-muted-foreground">Order ID:</span>
+                          <span className="font-mono font-semibold">{orderData.orderId}</span>
+                      </div>
+                       <div className="flex justify-between">
+                          <span className="text-muted-foreground">Product:</span>
+                          <span className="font-semibold text-right">{orderData.productName} (x{orderData.quantity})</span>
+                      </div>
+                      <div className="flex justify-between">
+                          <span className="text-muted-foreground">Total Amount:</span>
+                          <span className="font-semibold">₹{orderData.totalCost.toFixed(2)}</span>
+                      </div>
+                       <div className="flex justify-between font-bold text-primary">
+                          <span className="text-muted-foreground">Amount Paid:</span>
+                          <span className="font-semibold text-primary">₹{orderData.advanceAmount.toFixed(2)}</span>
+                      </div>
+                       <div className="flex justify-between">
+                          <span className="text-muted-foreground">Balance Due:</span>
+                          <span className="font-semibold">₹{(orderData.totalCost - orderData.advanceAmount).toFixed(2)}</span>
+                      </div>
+                  </div>
+                  <p className="text-xs text-center text-muted-foreground">
+                    A confirmation has been sent to your WhatsApp. 
+                    {supportPhoneNumber && <> For details, call <a href={`tel:${supportPhoneNumber}`} className="font-bold hover:underline">{supportPhoneNumber}</a>.</>}
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                      <Button className="w-full" onClick={generateInvoice}>
+                          <Download className="mr-2 h-4 w-4" /> Download Invoice
+                      </Button>
+                      <Button variant="outline" className="w-full" asChild>
+                         <Link href="/"><ArrowLeft className="mr-2 h-4 w-4" /> Continue Shopping</Link>
+                      </Button>
+                  </div>
+              </CardContent>
+          </Card>
+      </div>
+    );
+  }
 
-                <div className="border rounded-lg p-4 space-y-2 text-sm">
-                    <div className="flex justify-between">
-                        <span className="text-muted-foreground">Order ID:</span>
-                        <span className="font-mono font-semibold">{orderData.orderId}</span>
-                    </div>
-                     <div className="flex justify-between">
-                        <span className="text-muted-foreground">Product:</span>
-                        <span className="font-semibold text-right">{orderData.productName} (x{orderData.quantity})</span>
-                    </div>
-                    <div className="flex justify-between">
-                        <span className="text-muted-foreground">Total Amount:</span>
-                        <span className="font-semibold">₹{orderData.totalCost.toFixed(2)}</span>
-                    </div>
-                     <div className="flex justify-between font-bold text-primary">
-                        <span className="text-muted-foreground">Advance Paid:</span>
-                        <span className="font-semibold text-primary">₹{orderData.advanceAmount.toFixed(2)}</span>
-                    </div>
-                     <div className="flex justify-between">
-                        <span className="text-muted-foreground">Balance Due:</span>
-                        <span className="font-semibold">₹{(orderData.totalCost - orderData.advanceAmount).toFixed(2)}</span>
-                    </div>
-                </div>
-                <p className="text-xs text-center text-muted-foreground">A confirmation has been sent to your WhatsApp. You can download a copy of your invoice below. For details, call {supportPhoneNumber}.</p>
-                <div className="flex flex-col sm:flex-row gap-3">
-                    <Button className="w-full" onClick={generateInvoice}>
-                        <Download className="mr-2 h-4 w-4" /> Download Invoice
-                    </Button>
-                    <Button variant="outline" className="w-full" asChild>
-                       <Link href="/"><ArrowLeft className="mr-2 h-4 w-4" /> Continue Shopping</Link>
-                    </Button>
-                </div>
-            </CardContent>
-        </Card>
-    </div>
-  );
+  return null;
 };
 
 
