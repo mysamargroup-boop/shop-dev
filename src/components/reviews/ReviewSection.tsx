@@ -33,28 +33,29 @@ export default function ReviewSection({ productId, initialReviews }: { productId
 
   return (
     <section className="my-16 border-t pt-12">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="md:col-span-1">
-          <h2 className="text-3xl font-headline font-bold mb-4">Customer Reviews</h2>
-          {reviews.length > 0 && (
-            <div className="flex items-center gap-2 mb-4">
-              <Rating rating={reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length} />
-              <p className="text-muted-foreground">Based on {reviews.length} reviews</p>
-            </div>
-          )}
-          <Button onClick={() => setShowForm(!showForm)}>
-            {showForm ? 'Cancel Review' : 'Write a Review'}
-          </Button>
+        <div className="text-center">
+            <h2 className="text-3xl font-headline font-bold mb-4">Customer Reviews</h2>
+            {reviews.length > 0 && (
+                <div className="flex items-center justify-center gap-2 mb-4">
+                <Rating rating={reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length} />
+                <p className="text-muted-foreground">Based on {reviews.length} reviews</p>
+                </div>
+            )}
+            <Button onClick={() => setShowForm(!showForm)}>
+                {showForm ? 'Cancel Review' : 'Write a Review'}
+            </Button>
         </div>
-        <div className="md:col-span-2">
+        
+        <div className="max-w-2xl mx-auto">
             {showForm && (
-                <div className='mb-8'>
+                <div className='mt-8'>
                     <ReviewForm productId={productId} onReviewSubmit={handleReviewSubmit} />
                 </div>
             )}
-            <div className="space-y-6">
-                {reviews.length === 0 ? (
-                    <p className="text-muted-foreground">Be the first to review this product!</p>
+
+            <div className="space-y-6 mt-8">
+                {reviews.length === 0 && !showForm ? (
+                    <p className="text-muted-foreground text-center">Be the first to review this product!</p>
                 ) : (
                     reviews.map((review, index) => (
                         <div key={review.id}>
@@ -73,7 +74,6 @@ export default function ReviewSection({ productId, initialReviews }: { productId
                 )}
             </div>
         </div>
-      </div>
     </section>
   );
 }

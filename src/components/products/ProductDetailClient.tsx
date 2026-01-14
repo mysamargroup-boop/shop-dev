@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { usePathname } from 'next/navigation';
@@ -228,7 +227,7 @@ export default function ProductDetailClient({ product }: { product: Product }) {
         </div>
         
          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-            {product.rating && (
+            {product.rating && product.reviewCount && (
                 <div className="flex items-center gap-1">
                     <div className="flex items-center gap-0.5 text-green-600">
                         <Star className="w-4 h-4 fill-current"/>
