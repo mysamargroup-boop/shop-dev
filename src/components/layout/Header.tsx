@@ -29,7 +29,6 @@ import { useTheme } from 'next-themes';
 import { Label } from '../ui/label';
 import { Switch } from '../ui/switch';
 import { getProducts, getCategories, getSiteSettings as getSettings } from '@/lib/data-async';
-import { getHeaderLinks as getNavLinks } from '@/lib/data-supabase';
 import { useAuth } from '@/lib/auth';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 
@@ -83,31 +82,31 @@ const Header = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [allCategories, setAllCategories] = useState<Category[]>([]);
-  const [headerLinks, setHeaderLinks] = useState<any[]>([]);
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({});
 
   const pathname = usePathname() || '';
 
+  const headerLinks = [
+    { href: '/collections', label: 'Categories', isMegaMenu: true, special: false },
+    { href: '/collections/keychains', label: 'Keychains', isMegaMenu: false, special: false },
+    { href: '/collections/wall-hangings', label: 'Wall Hanging', isMegaMenu: false, special: false },
+    { href: '/collections/mobile-stands', label: 'Mobile Stand', isMegaMenu: false, special: false },
+    { href: '/shop', label: 'Shop', isMegaMenu: false, special: true },
+    { href: '/our-story', label: 'Our Story', isMegaMenu: false, special: true },
+    { href: '/connect', label: 'Contact Us', isMegaMenu: false, special: false },
+  ];
+
   useEffect(() => {
     async function fetchData() {
-        const [products, categories, settings, navLinks] = await Promise.all([
+        const [products, categories, settings] = await Promise.all([
           getProducts(),
           getCategories(),
           getSettings(),
-          getNavLinks()
         ]);
         
         setAllProducts(products);
         setAllCategories(categories);
         setSiteSettings(settings);
-        // Correctly transform the 'All Gifts' link to 'Shop'
-        const transformedLinks = (navLinks || []).map(link => {
-            if (link.label === 'All Gifts') {
-                return { ...link, label: 'Shop', href: '/shop', special: true };
-            }
-            return link;
-        });
-        setHeaderLinks(transformedLinks);
     }
     fetchData();
   }, [])
