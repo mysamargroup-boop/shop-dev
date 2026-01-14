@@ -1,9 +1,10 @@
 
+
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Package, LogOut, Megaphone, Send, PenSquare, ImageIcon, LayoutGrid, Settings, BookText, TicketPercent, Tag as TagIcon, Gift, ShoppingBag, ArrowRightLeft, Users, List } from "lucide-react";
+import { LayoutDashboard, Package, LogOut, Megaphone, Send, PenSquare, ImageIcon, LayoutGrid, Settings, BookText, TicketPercent, Tag as TagIcon, Gift, ShoppingBag, ArrowRightLeft, Users, List, MessageSquare } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import Logo from "../icons/Logo";
 import { Button } from "../ui/button";
@@ -18,8 +19,8 @@ const navItems = [
   { href: "/sr-admin/orders", label: "Orders", icon: ShoppingBag },
   { href: "/sr-admin/products", label: "Products", icon: Package },
   { href: "/sr-admin/categories", label: "Categories", icon: LayoutGrid },
-  // Tags page removed, tags are managed within products
   { href: "/sr-admin/blogs", label: "Blogs", icon: PenSquare },
+  { href: "/sr-admin/reviews", label: "Reviews", icon: MessageSquare },
   { href: "/sr-admin/coupons", label: "Coupons", icon: TicketPercent },
   { href: "/sr-admin/banners", label: "Banners", icon: Gift },
   { href: "/sr-admin/site-images", label: "Site Images", icon: ImageIcon },

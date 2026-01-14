@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { usePathname } from 'next/navigation';
@@ -9,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import useCart from '@/hooks/use-cart';
 import useWishlist from '@/hooks/use-wishlist';
-import { cn } from '@/lib/utils';
+import { cn, slugify } from '@/lib/utils';
 import WhatsAppCheckoutModal from '@/components/checkout/WhatsAppCheckoutModal';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
@@ -33,6 +34,7 @@ import { BLUR_DATA_URL } from '@/lib/constants';
 import ProductInfoBadges from '@/components/products/ProductInfoBadges';
 import { getSiteSettings } from '@/lib/actions';
 import ReviewsCarousel from '@/components/products/ReviewsCarousel';
+import Link from 'next/link';
 
 const ImageUpload = ({ onFilesChange }: { onFilesChange: (files: File[]) => void }) => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -226,8 +228,21 @@ export default function ProductDetailClient({ product }: { product: Product }) {
           </Button>
         </div>
         
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          {product.category && (
+            <Link href={`/collections/${slugify(product.category.split(',')[0].trim())}`}>
+              <Badge variant="outline">{product.category}</Badge>
+            </Link>
+          )}
+          {product.subCategory && (
+            <Link href={`/collections/${slugify(product.category.split(',')[0].trim())}/${slugify(product.subCategory)}`}>
+                <Badge variant="secondary">{product.subCategory}</Badge>
+            </Link>
+          )}
+        </div>
+
          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-            {product.rating && product.reviewCount && (
+            {product.rating && (product.reviewCount || 0) > 0 && (
                 <div className="flex items-center gap-1">
                     <div className="flex items-center gap-0.5 text-green-600">
                         <Star className="w-4 h-4 fill-current"/>
@@ -236,7 +251,7 @@ export default function ProductDetailClient({ product }: { product: Product }) {
                         <Star className="w-4 h-4 fill-current"/>
                         <Star className="w-4 h-4 fill-current"/>
                     </div>
-                    <span className="font-semibold text-foreground">{product.rating}</span>
+                    <span className="font-semibold text-foreground">{product.rating.toFixed(1)}</span>
                     <span className="text-muted-foreground">&bull;</span>
                     <span className="text-muted-foreground underline cursor-pointer">{product.reviewCount} Reviews</span>
                 </div>
