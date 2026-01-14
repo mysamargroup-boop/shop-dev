@@ -334,7 +334,7 @@ export async function getReviewsByProductId(productId: string): Promise<Review[]
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    return (data || []).map(r => ({ ...r, author_name: r.customer_name }));
   } catch (error) {
     console.error('Error fetching reviews:', error);
     return [];
@@ -351,7 +351,7 @@ export async function getRecentReviews(limit = 5): Promise<Review[]> {
             .limit(limit);
 
         if (error) throw error;
-        return data || [];
+        return (data || []).map(r => ({ ...r, author_name: r.customer_name }));
     } catch (error) {
         console.error('Error fetching recent reviews:', error);
         return [];
@@ -360,14 +360,21 @@ export async function getRecentReviews(limit = 5): Promise<Review[]> {
 
 export async function createReview(reviewData: Omit<Review, 'id' | 'created_at'>): Promise<Review | null> {
     try {
+        const payload = {
+          product_id: reviewData.product_id,
+          rating: reviewData.rating,
+          comment: reviewData.comment,
+          customer_name: reviewData.author_name,
+          is_verified: false,
+        }
         const { data, error } = await supabaseAdmin()
             .from('reviews')
-            .insert(reviewData)
+            .insert(payload)
             .select()
             .single();
 
         if (error) throw error;
-        return data;
+        return { ...data, author_name: data.customer_name };
     } catch (error) {
         console.error('Error creating review:', error);
         return null;

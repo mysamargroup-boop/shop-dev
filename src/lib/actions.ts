@@ -4,7 +4,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import type { Product, BlogPost, Category, SiteImageData, SiteImage, Coupon, Subscription, SiteSettings } from "./types";
+import type { Product, BlogPost, Category, SiteImageData, SiteImage, Coupon, Subscription, SiteSettings, Review } from "./types";
 import { supabaseAdmin } from "./supabase";
 import { getTags as getTagsFromSupabase } from './data-supabase';
 import { sendWhatsAppTemplateMessage, sendWhatsAppTextMessage } from "./whatsapp-cloud";
@@ -935,7 +935,7 @@ export async function bulkAddTagToProducts(previousState: any, formData: FormDat
   return { success: true, updatedCount };
 }
 
-export async function getReviewsAdmin() {
+export async function getReviewsAdmin(): Promise<Review[]> {
   try {
     const { data, error } = await supabaseAdmin()
       .from('reviews')
@@ -943,7 +943,7 @@ export async function getReviewsAdmin() {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    return (data || []).map(r => ({...r, author_name: r.customer_name}));
   } catch (error) {
     console.error('Error fetching reviews for admin:', error);
     return [];
