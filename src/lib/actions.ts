@@ -15,7 +15,8 @@ const fs = require('fs').promises;
 const settingsFilePath = path.join(process.cwd(), 'src', 'lib', 'site-settings.json');
 
 const siteSettingsSchema = z.object({
-  owner_name: z.string().optional(),
+  owner_first_name: z.string().optional(),
+  owner_last_name: z.string().optional(),
   logo_url: z.string().optional(),
   contact_email: z.string().email().optional().or(z.literal('')),
   contact_phone: z.string().optional(),

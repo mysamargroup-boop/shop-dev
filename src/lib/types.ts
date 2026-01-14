@@ -115,7 +115,8 @@ export interface CategoriesData {
 }
 
 export interface SiteSettings {
-  owner_name?: string;
+  owner_first_name?: string;
+  owner_last_name?: string;
   logo_url?: string;
   contact_email?: string;
   contact_phone?: string;

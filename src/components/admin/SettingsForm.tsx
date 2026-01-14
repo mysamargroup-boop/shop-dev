@@ -174,8 +174,12 @@ export default function SettingsForm({ settings, mode = 'all' }: { settings: Sit
             </CardHeader>
             <CardContent className="grid md:grid-cols-2 gap-4">
               <div className="grid gap-2">
-                  <Label htmlFor="owner_name">Owner Name</Label>
-                  <Input id="owner_name" name="owner_name" defaultValue={settings.owner_name || ''} placeholder="e.g. Shashank Nema" />
+                  <Label htmlFor="owner_first_name">Owner First Name</Label>
+                  <Input id="owner_first_name" name="owner_first_name" defaultValue={settings.owner_first_name || ''} placeholder="e.g. Shashank" />
+              </div>
+              <div className="grid gap-2">
+                  <Label htmlFor="owner_last_name">Owner Last Name</Label>
+                  <Input id="owner_last_name" name="owner_last_name" defaultValue={settings.owner_last_name || ''} placeholder="e.g. Nema" />
               </div>
               <div className="grid gap-2">
                   <Label htmlFor="invoice_business_name">Business Name</Label>

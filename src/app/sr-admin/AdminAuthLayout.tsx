@@ -56,7 +56,7 @@ export default function AdminAuthLayout({ children }: { children: React.ReactNod
                     <PanelLeft className="h-4 w-4" />
                     <span className="sr-only">Toggle Menu</span>
                   </Button>
-                  <h1 className="font-semibold text-lg">Admin Console</h1>
+                  <h1 className="font-semibold text-lg bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">Admin Console</h1>
               </div>
               <div className="flex items-center gap-2">
                   <span className="text-sm text-muted-foreground hidden sm:inline">{user.email}</span>
