@@ -235,9 +235,7 @@ export default function ProductDetailClient({ product }: { product: Product }) {
             </Link>
           )}
           {product.subCategory && (
-            <Link href={`/collections/${slugify(product.category.split(',')[0].trim())}/${slugify(product.subCategory)}`}>
-                <Badge variant="secondary">{product.subCategory}</Badge>
-            </Link>
+            <Badge variant="secondary">{product.subCategory}</Badge>
           )}
         </div>
 

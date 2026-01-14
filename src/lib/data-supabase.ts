@@ -1,4 +1,5 @@
 
+
 'use server';
 import { supabaseAdmin } from './supabase';
 import type { Category, Product, ProductsData, BlogPost, SiteSettings, SiteImage, Video, Review } from './types';
@@ -50,7 +51,8 @@ export async function getProducts(): Promise<ProductsData> {
       regularPrice: product.regular_price ?? undefined,
       salePrice: product.sale_price ?? undefined,
       // Map category
-      category: product.category_id
+      category: product.category_id,
+      shortDescription: product.short_description,
     }));
     
     return { products: transformedProducts };
@@ -85,7 +87,8 @@ export async function getProductById(id: string): Promise<Product | null> {
       price: data.sale_price || data.regular_price,
       regularPrice: data.regular_price ?? undefined,
       salePrice: data.sale_price ?? undefined,
-      category: data.category_id
+      category: data.category_id,
+      shortDescription: data.short_description,
     };
   } catch (error) {
     console.error('Error fetching product:', error);
@@ -117,7 +120,8 @@ export async function getProductByName(name: string): Promise<Product | null> {
           price: product.sale_price || product.regular_price,
           regularPrice: product.regular_price ?? undefined,
           salePrice: product.sale_price ?? undefined,
-          category: product.category_id
+          category: product.category_id,
+          shortDescription: product.short_description,
         };
 
     } catch (error) {
