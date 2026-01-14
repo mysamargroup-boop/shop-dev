@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import Image from 'next/image';
@@ -26,24 +27,7 @@ const defaultVideos: Video[] = [
   },
 ];
 
-const VideoGallery = () => {
-    const [videos, setVideos] = useState<Video[]>([]);
-
-    useEffect(() => {
-      let active = true;
-      (async () => {
-        try {
-          const res = await fetch('/api/videos', { cache: 'no-store' });
-          const data = await res.json();
-          if (!active) return;
-          setVideos(Array.isArray(data) && data.length > 0 ? data : defaultVideos);
-        } catch {
-          if (!active) return;
-          setVideos(defaultVideos);
-        }
-      })();
-      return () => { active = false; };
-    }, []);
+const VideoGallery = ({ videos }: { videos: Video[] }) => {
 
     if (!videos || videos.length === 0) return null;
 

@@ -2,7 +2,7 @@
 
 'use server';
 import path from 'path';
-import type { Category, Product, ProductsData, BlogPost, SiteSettings, Sample, Order, Review } from './types';
+import type { Category, Product, ProductsData, BlogPost, SiteSettings, Sample, Order, Review, SiteImageData } from './types';
 import { unstable_noStore as noStore } from 'next/cache';
 // Import from Supabase instead of JSON files
 import { 
@@ -23,7 +23,7 @@ import { slugify } from './utils';
 const fs = require('fs').promises;
 
 const settingsFilePath = path.join(process.cwd(), 'src', 'lib', 'site-settings.json');
-const bannersFilePath = path.join(process.cwd(), 'src', 'lib', 'banners.json');
+const imagesFilePath = path.join(process.cwd(), 'src', 'lib', 'placeholder-images.json');
 
 // This function now uses the Supabase client
 export async function getCategories(): Promise<Category[]> {
@@ -80,9 +80,10 @@ export async function getSiteSettings(): Promise<SiteSettings> {
   return data || {};
 }
 
-export async function getSiteImages(): Promise<SiteImage[]> {
+export async function getSiteImages(): Promise<SiteImageData> {
   noStore();
-  return getSiteImagesFromSupabase();
+  const data = await readJsonFile(imagesFilePath);
+  return data || { placeholderImages: [], videos: [] };
 }
 
 const samplesFilePath = path.join(process.cwd(), 'src', 'lib', 'samples.json');

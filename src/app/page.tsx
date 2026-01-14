@@ -25,8 +25,11 @@ export default async function Home() {
   const products = await getProducts();
   const allCategories = await getCategories();
   const settings: SiteSettings = await getSiteSettings();
-  const siteImages = await getSiteImages();
+  const siteImagesData = await getSiteImages();
   const tags = await getTags();
+  
+  const siteImages = siteImagesData.placeholderImages || [];
+  const videos = siteImagesData.videos || [];
 
   const homeBanner1 = siteImages.find(img => img.id === 'home-banner-1') || { imageUrl: 'https://picsum.photos/seed/hb1/1200/600', imageHint: 'office products' };
   const homeBanner2 = siteImages.find(img => img.id === 'home-banner-2') || { imageUrl: 'https://picsum.photos/seed/hb2/1200/600', imageHint: 'custom gifts' };
@@ -112,7 +115,7 @@ export default async function Home() {
 
         <ReviewsCarousel />
 
-        <VideoGallery />
+        <VideoGallery videos={videos} />
 
       </div>
       <SubscriptionPopup />
