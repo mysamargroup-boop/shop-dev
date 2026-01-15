@@ -17,8 +17,9 @@ import { Slider } from '@/components/ui/slider';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Filter } from 'lucide-react';
 import type { Product } from '@/lib/types';
+import { Metadata } from 'next';
 
-export default function ShopClientPage({ allProducts, allTags }: { allProducts: Product[], allTags: string[] }) {
+export default function ShopClientPage({ allProducts, allTags, searchQuery }: { allProducts: Product[], allTags: string[], searchQuery?: string }) {
   const searchParams = useSearchParams();
 
   const [sort, setSort] = useState('relevance');
@@ -40,13 +41,13 @@ export default function ShopClientPage({ allProducts, allTags }: { allProducts: 
     let products = allProducts;
     
     // Search filter
-    const searchQuery = searchParams.get('search');
-    if (searchQuery) {
-        const query = searchQuery.toLowerCase();
+    const query = searchQuery || searchParams.get('search');
+    if (query) {
+        const lowerQuery = query.toLowerCase();
         products = products.filter(p => 
-            p.name.toLowerCase().includes(query) || 
-            p.description?.toLowerCase().includes(query) ||
-            p.category.toLowerCase().includes(query)
+            p.name.toLowerCase().includes(lowerQuery) || 
+            p.description?.toLowerCase().includes(lowerQuery) ||
+            p.category.toLowerCase().includes(lowerQuery)
         );
     }
 

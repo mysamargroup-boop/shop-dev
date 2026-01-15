@@ -3,7 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 
 export async function GET() {
   try {
-    const { data: settings, error } = await supabaseAdmin
+    const { data: settings, error } = await supabaseAdmin()
       .from('site_settings')
       .select('*')
       .single();
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
   try {
     const settingsData = await req.json();
     
-    const { data: settings, error } = await supabaseAdmin
+    const { data: settings, error } = await supabaseAdmin()
       .from('site_settings')
       .upsert(settingsData, { onConflict: 'id' })
       .select()

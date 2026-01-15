@@ -26,13 +26,28 @@ export default function OrderManagementActions({ orderId, currentStatus, amount 
   const handleAction = async (action: string, body: any) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/orders/${action}`, {
+      let url = '';
+      if (action === 'cancel') {
+        url = '/api/orders/cancel';
+      } else if (action === 'return') {
+        url = '/api/orders/return';
+      } else if (action === 'refund') {
+        url = '/api/orders/refund';
+      } else {
+        console.error('Unknown action', action);
+        alert('Unknown action.');
+        return;
+      }
+
+      const res = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId, ...body })
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ orderId, ...body }),
       });
-      
-      if (response.ok) {
+
+      if (res.ok) {
         window.location.reload();
       } else {
         alert('Action failed. Please try again.');

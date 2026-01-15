@@ -8,10 +8,16 @@ export default function AdminFooter() {
   const [settings, setSettings] = useState<SiteSettings | null>(null);
 
   useEffect(() => {
-    fetch('/api/site-settings')
-      .then(res => res.json())
-      .then(data => setSettings(data))
-      .catch(err => console.error("Failed to load settings for footer", err));
+    (async () => {
+      try {
+        const res = await fetch('/api/site-settings');
+        if (!res.ok) return;
+        const data = await res.json();
+        setSettings((data || {}) as SiteSettings);
+      } catch (err) {
+        console.error("Failed to load settings for footer", err);
+      }
+    })();
   }, []);
 
   // Pass empty categories as we might not need dynamic category links in admin footer, 

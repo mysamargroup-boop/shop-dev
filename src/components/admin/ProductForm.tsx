@@ -12,7 +12,7 @@ import type { Product, Category } from "@/lib/types";
 import { getCategories } from "@/lib/data";
 import { getTags } from "@/lib/data";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { Loader2, Sparkles, AlertCircle, Bold, Italic, Underline, List, ListOrdered, Link2, AlignLeft, AlignCenter, AlignRight, Heading1, Heading2, Heading3, Pilcrow } from "lucide-react";
+import { Loader2, Sparkles, AlertCircle, Bold, Italic, Underline, List, ListOrdered, Link2, AlignLeft, AlignCenter, AlignRight, Heading1, Heading2, Heading3, Pilcrow, Plus, X } from "lucide-react";
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { generateProductDescription } from "@/ai/flows/generate-product-description";
 import { Switch } from "../ui/switch";
@@ -192,6 +192,7 @@ export function ProductForm({ action, product, buttonText, initialState, default
   const [tagsInput, setTagsInput] = useState(product?.tags?.join(", ") || "");
   const [showTagSuggestions, setShowTagSuggestions] = useState(false);
   const [filteredTagSuggestions, setFilteredTagSuggestions] = useState<string[]>([]);
+  const [colorOptions, setColorOptions] = useState(product?.colorOptions || []);
   
   const getAdvice = useCallback((score: number, type: 'title' | 'desc' | 'meta' | 'id' | 'url' | 'alt') => {
       let advice = [];
@@ -239,6 +240,20 @@ export function ProductForm({ action, product, buttonText, initialState, default
     else if (len >= 300) score = 100;
     return [score];
   }, [description]);
+
+  const addColorOption = () => {
+    setColorOptions([...colorOptions, { name: '', value: '#000000' }]);
+  };
+
+  const removeColorOption = (index: number) => {
+    setColorOptions(colorOptions.filter((_, i) => i !== index));
+  };
+
+  const updateColorOption = (index: number, field: 'name' | 'value', value: string) => {
+    const newOptions = [...colorOptions];
+    newOptions[index][field] = value;
+    setColorOptions(newOptions);
+  };
   
   const [shortDescriptionScore] = useMemo(() => {
     const len = shortDescription.length;
@@ -429,15 +444,24 @@ export function ProductForm({ action, product, buttonText, initialState, default
                         <SelectValue placeholder="Select a category" />
                     </SelectTrigger>
                     <SelectContent>
-                        {categories.map(c => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
+                        {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                     </SelectContent>
                     </Select>
                     {state?.errors?.category && <p className="text-destructive text-sm">{state.errors.category[0]}</p>}
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="subCategory">Sub Category</Label>
-                    <Input id="subCategory" name="subCategory" defaultValue={product?.subCategory} />
-                    <p className="text-xs text-muted-foreground">e.g., Pen Holders, Calendars</p>
+                    <Label htmlFor="sub_category">Sub Category</Label>
+                    <Select name="sub_category" defaultValue={product?.sub_category}>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Select a sub category (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="">No sub category</SelectItem>
+                        {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                    </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">Optional: Select a sub category from existing categories</p>
+                    {state?.errors?.sub_category && <p className="text-destructive text-sm">{state.errors.sub_category[0]}</p>}
                 </div>
 
                 <div className="md:col-span-2 flex flex-col sm:flex-row gap-4 items-start w-full">
@@ -548,10 +572,57 @@ export function ProductForm({ action, product, buttonText, initialState, default
                     <Label htmlFor="material">Material</Label>
                     <Input id="material" name="material" defaultValue={product?.material} />
                     </div>
-                    <div className="space-y-2">
-                    <Label htmlFor="color">Color</Label>
-                    <Input id="color" name="color" defaultValue={product?.color} />
+                </div>
+                
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                        <Label>Color Options</Label>
+                        <Button type="button" variant="outline" size="sm" onClick={addColorOption}>
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add Color
+                        </Button>
                     </div>
+                    
+                    {colorOptions.map((color, index) => (
+                        <div key={index} className="flex items-center gap-3 p-3 border rounded-lg">
+                            <div className="flex items-center gap-2 flex-1">
+                                <div 
+                                    className="w-8 h-8 rounded-full border-2 border-gray-300 flex-shrink-0"
+                                    style={{ backgroundColor: color.value }}
+                                />
+                                <Input
+                                    placeholder="Color name (e.g., Red, Blue)"
+                                    value={color.name}
+                                    onChange={(e) => updateColorOption(index, 'name', e.target.value)}
+                                    className="flex-1"
+                                />
+                                <Input
+                                    type="color"
+                                    value={color.value}
+                                    onChange={(e) => updateColorOption(index, 'value', e.target.value)}
+                                    className="w-20 h-10 p-1"
+                                />
+                            </div>
+                            <Button
+                                type="button"
+                                variant="destructive"
+                                size="icon"
+                                onClick={() => removeColorOption(index)}
+                            >
+                                <X className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    ))}
+                    
+                    {colorOptions.length === 0 && (
+                        <p className="text-sm text-muted-foreground">No color options added. Click "Add Color" to add color variations.</p>
+                    )}
+                    
+                    <input
+                        type="hidden"
+                        name="colorOptions"
+                        value={JSON.stringify(colorOptions)}
+                    />
                 </div>
                 
                 <div className="space-y-2">

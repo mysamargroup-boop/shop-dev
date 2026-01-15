@@ -32,6 +32,7 @@ create table if not exists products (
   regular_price numeric(12,2) not null,
   sale_price numeric(12,2),
   category_id text not null references categories(id) on delete restrict,
+  sub_category text references categories(id) on delete set null,
   image_url text,
   image_alt text,
   image_hint text,
@@ -44,7 +45,6 @@ create table if not exists products (
   video_url text,
   image_attribution text,
   license text,
-  sub_category text,
   material text,
   color text,
   badge text,
@@ -61,7 +61,9 @@ ALTER TABLE products
 ADD CONSTRAINT fk_products_sub_category
 FOREIGN KEY (sub_category) REFERENCES categories(id) ON DELETE SET NULL;
 
+-- Add indexes for better performance
 create index if not exists idx_products_category on products(category_id);
+create index if not exists idx_products_sub_category on products(sub_category);
 create index if not exists idx_products_tags on products using gin(tags);
 create index if not exists idx_products_rating on products(rating desc);
 create index if not exists idx_products_regular_price on products(regular_price);

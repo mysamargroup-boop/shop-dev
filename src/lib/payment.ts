@@ -26,18 +26,25 @@ type PaymentInput = {
 
 
 async function createServerPaymentLink(payload: any) {
-  const response = await fetch('/api/create-payment-link', {
+  const res = await fetch('/api/create-payment-link', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+    },
     body: JSON.stringify(payload),
   });
 
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.error || 'Failed to create payment link');
+  if (!res.ok) {
+    let message = 'Failed to create payment link';
+    try {
+      const err = await res.json();
+      if (err?.error) message = err.error;
+    } catch {
+    }
+    throw new Error(message);
   }
-  
+
+  const data = await res.json();
   return data;
 }
 

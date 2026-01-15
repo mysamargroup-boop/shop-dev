@@ -149,6 +149,24 @@ const Header = () => {
             setIsSheetOpen(false);
         }
     }
+
+    const handleMobileSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const query = e.target.value;
+        if (query.trim().length > 1) {
+            const lowerCaseQuery = query.toLowerCase();
+            const results = allProducts.filter(p => 
+                p.name.toLowerCase().includes(lowerCaseQuery) ||
+                (p.description && p.description.toLowerCase().includes(lowerCaseQuery)) ||
+                p.category.toLowerCase().includes(lowerCaseQuery) ||
+                (p.tags && p.tags.some(tag => tag.toLowerCase().includes(lowerCaseQuery)))
+            );
+            setSearchResults(results);
+            setIsSearchOpen(true);
+        } else {
+            setSearchResults([]);
+            setIsSearchOpen(false);
+        }
+    }
       
     return (
     <div className="flex flex-col h-full">
@@ -158,7 +176,52 @@ const Header = () => {
               name="search"
               placeholder="Search For Gifts..." 
               className="pl-10 bg-muted"
+              onChange={handleMobileSearchChange}
             />
+            {/* Mobile Search Results Dropdown */}
+            {isSearchOpen && searchResults.length > 0 && (
+                <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-60 overflow-y-auto bg-popover border rounded-md shadow-lg">
+                    <div className="p-2 space-y-1">
+                        {searchResults.slice(0, 5).map(product => {
+                            const categorySlug = product.category.split(',')[0].trim().toLowerCase().replace(/ /g, '-');
+                            return (
+                                <Link 
+                                    key={product.id} 
+                                    href={`/collections/${categorySlug}/${product.id}`}
+                                    className="flex items-center gap-3 p-2 rounded-md hover:bg-accent/10"
+                                    onClick={() => setIsSheetOpen(false)}
+                                >
+                                    <Image 
+                                        src={product.imageUrl} 
+                                        alt={product.name} 
+                                        width={40} 
+                                        height={40} 
+                                        className="rounded-md object-cover"
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium truncate">{product.name}</p>
+                                        <p className="text-xs text-muted-foreground truncate">{product.category}</p>
+                                    </div>
+                                </Link>
+                            );
+                        })}
+                        {searchResults.length > 5 && (
+                            <div className="p-2 text-center">
+                                <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    onClick={() => {
+                                        router.push(`/shop?search=${encodeURIComponent(searchQuery)}`);
+                                        setIsSheetOpen(false);
+                                    }}
+                                >
+                                    View All Results
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
         </form>
         <ScrollArea className="flex-1">
           <nav className="flex flex-col gap-1 pr-4">

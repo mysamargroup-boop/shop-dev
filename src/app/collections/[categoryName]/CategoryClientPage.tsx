@@ -30,7 +30,8 @@ function CategoryClientPage({ allProducts, category }: { allProducts: Product[],
   const categoryProducts = useMemo(() => {
     if (!category) return allProducts;
     return allProducts.filter(p => 
-      p.category.split(',').map(c => c.trim().toLowerCase().replace(/ /g, '-')).includes(category.id.toLowerCase())
+      p.category.split(',').map(c => c.trim().toLowerCase().replace(/ /g, '-')).includes(category.id.toLowerCase()) ||
+      (p.sub_category && p.sub_category.toLowerCase() === category.id.toLowerCase())
     );
   }, [allProducts, category]);
 

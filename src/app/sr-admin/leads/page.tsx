@@ -58,11 +58,13 @@ export default function LeadsPage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch('/api/subscriptions', { cache: 'no-store' });
+        const res = await fetch('/api/subscriptions');
+        if (!res.ok) return;
         const data = await res.json();
-        if (res.ok && Array.isArray(data.subscriptions)) {
-          setSubscriptions(data.subscriptions);
-        }
+        const rows = Array.isArray(data?.subscriptions)
+          ? (data.subscriptions as Subscription[])
+          : [];
+        setSubscriptions(rows);
       } finally {
         setLoading(false);
       }

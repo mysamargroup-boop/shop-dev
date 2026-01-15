@@ -41,8 +41,11 @@ export default function FeaturedCategories({ siteImages }: FeaturedCategoriesPro
     ];
 
     return (
-        <section className="container mx-auto px-4 py-12">
-            <h2 className="mb-8 text-3xl font-headline text-center font-bold md:text-4xl">Featured Categories</h2>
+        <section className="mt-8 pt-8 border-t">
+            <div className="text-center mb-8">
+                <h2 className="text-3xl font-headline font-bold">Featured Categories</h2>
+                <p className="text-muted-foreground mt-2">Explore our most popular collections</p>
+            </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
                 {featuredCategories.map((category) => (
                     <Link key={category.name} href={category.href} className="group block">

@@ -9,15 +9,38 @@ import { User, Phone, Calendar, IndianRupee, Hash, CheckCircle, AlertCircle, Clo
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BLUR_DATA_URL } from "@/lib/constants";
 import OrderManagementActions from '@/components/order-management-actions';
+import { supabaseAdmin } from "@/lib/supabase";
 
 async function getOrder(orderId: string) {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/orders`, {
-      cache: 'no-store'
-    });
-    if (!response.ok) throw new Error('Failed to fetch order');
-    const orders = await response.json();
-    return orders.find((o: any) => o.id === orderId);
+    const { data, error } = await supabaseAdmin()
+      .from('orders')
+      .select('*, order_items(*)')
+      .eq('id', orderId)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) return null;
+
+    return {
+      id: data.id,
+      amount: Number((data as any).total_amount ?? 0),
+      customerName: (data as any).customer_name || '',
+      customerPhone: (data as any).customer_phone || '',
+      status: (data as any).status || 'PENDING',
+      createdAt: (data as any).created_at || new Date().toISOString(),
+      updatedAt: (data as any).updated_at || (data as any).created_at || new Date().toISOString(),
+      transactionId: (data as any).transaction_id || undefined,
+      paymentStatus: (data as any).payment_status || undefined,
+      items: Array.isArray((data as any).order_items)
+        ? (data as any).order_items.map((oi: any) => ({
+            id: oi.product_id || oi.sku || oi.id,
+            name: oi.product_name || 'Item',
+            quantity: Number(oi.quantity ?? 1),
+            price: Number(oi.unit_price ?? oi.total_price ?? 0),
+          }))
+        : [],
+    };
   } catch (error) {
     console.error('Error fetching order:', error);
     return null;
@@ -26,12 +49,21 @@ async function getOrder(orderId: string) {
 
 async function getProductById(productId: string) {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/products`, {
-      cache: 'no-store'
-    });
-    if (!response.ok) throw new Error('Failed to fetch products');
-    const data = await response.json();
-    return data.products?.find((p: any) => p.id === productId);
+    const { data, error } = await supabaseAdmin()
+      .from('products')
+      .select('*')
+      .eq('id', productId)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) return null;
+
+    return {
+      ...data,
+      imageUrl: (data as any).image_url,
+      imageHint: (data as any).image_hint,
+      category: (data as any).category_id || '',
+    };
   } catch (error) {
     console.error('Error fetching product:', error);
     return null;

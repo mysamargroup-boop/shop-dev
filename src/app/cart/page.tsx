@@ -8,7 +8,7 @@ import { Minus, Plus, Trash2, ShoppingCart, Loader2, FileText, ArrowLeft } from 
 import useCart from "@/hooks/use-cart";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import WhatsAppCheckoutModal from "@/components/checkout/WhatsAppCheckoutModal";
+import CheckoutModal from "@/components/checkout/CheckoutModal";
 import type { WhatsAppCheckoutInput } from "@/ai/flows/whatsapp-checkout-message";
 import { BLUR_DATA_URL } from "@/lib/constants";
 import type { OrderItem, SiteSettings } from "@/lib/types";
@@ -168,7 +168,7 @@ export default function CartPage() {
           </div>
         )}
       </div>
-      {checkoutInput && <WhatsAppCheckoutModal 
+      {checkoutInput && <CheckoutModal 
         isOpen={isModalOpen} 
         onOpenChange={setIsModalOpen}
         checkoutInput={checkoutInput}

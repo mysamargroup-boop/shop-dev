@@ -4,7 +4,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Package, LogOut, Megaphone, Send, PenSquare, ImageIcon, LayoutGrid, Settings, BookText, TicketPercent, Tag as TagIcon, Gift, ShoppingBag, ArrowRightLeft, Users, List, MessageSquare } from "lucide-react";
+import { LayoutDashboard, Package, LogOut, Megaphone, Send, PenSquare, ImageIcon, LayoutGrid, Settings, BookText, TicketPercent, Gift, ShoppingBag, ArrowRightLeft, Users, List, MessageSquare } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import Logo from "../icons/Logo";
 import { Button } from "../ui/button";
@@ -44,9 +44,15 @@ export default function AdminSidebar({ isSidebarOpen, setIsSidebarOpen }: { isSi
   const [settings, setSettings] = useState<SiteSettings | null>(null);
   
   useEffect(() => {
-    fetch('/api/site-settings')
-      .then(res => res.json())
-      .then(data => setSettings(data));
+    (async () => {
+      try {
+        const res = await fetch('/api/site-settings');
+        if (!res.ok) return;
+        const data = await res.json();
+        setSettings((data || {}) as SiteSettings);
+      } catch {
+      }
+    })();
   }, []);
   
   useEffect(() => {

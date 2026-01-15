@@ -51,8 +51,14 @@ const SubscriptionPopup = () => {
       try {
         await fetch('/api/subscriptions', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, phone: fullPhoneNumber, source: 'popup' }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name,
+            phone: fullPhoneNumber,
+            source: 'popup',
+          }),
         });
       } catch {}
       toast({

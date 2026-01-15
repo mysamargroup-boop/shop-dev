@@ -29,9 +29,17 @@ export default function OrdersPage() {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/orders');
-      if (!response.ok) throw new Error('Failed to fetch orders');
-      const rows = await response.json();
+      const res = await fetch('/api/orders');
+      if (!res.ok) {
+        let message = 'Failed to fetch orders';
+        try {
+          const body = await res.json();
+          if (body?.error) message = body.error;
+        } catch {
+        }
+        throw new Error(message);
+      }
+      const rows = await res.json();
       const mapped: Order[] = (rows || []).map((row: any) => ({
         id: row.id,
         amount: Number(row.total_amount ?? 0),

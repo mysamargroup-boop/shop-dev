@@ -17,10 +17,12 @@ export default function PromoBanners({ siteImages }: PromoBannersProps) {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch('/api/settings', { cache: 'no-store' });
+        const res = await fetch('/api/site-settings');
+        if (!res.ok) return;
         const data = await res.json();
-        if (res.ok) setSettings(data as SiteSettings);
-      } catch {}
+        setSettings((data || {}) as SiteSettings);
+      } catch {
+      }
     })();
   }, []);
 

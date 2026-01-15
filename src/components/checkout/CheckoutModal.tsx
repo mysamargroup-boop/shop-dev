@@ -16,18 +16,32 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, CheckCircle, Tag, X, FileText, Zap, Phone, Truck, Info, IndianRupee } from 'lucide-react';
-import { generateWhatsAppCheckoutMessage, WhatsAppCheckoutInput } from '@/ai/flows/whatsapp-checkout-message';
 import { useToast } from '@/hooks/use-toast';
 import confetti from 'canvas-confetti';
 import { createPaymentLink } from '@/lib/payment';
 import Link from 'next/link';
-import type { Coupon, OrderItem, Product, SiteSettings } from "@/lib/types";
+import type { OrderItem, Product, SiteSettings } from "@/lib/types";
 import { BLUR_DATA_URL } from '@/lib/constants';
 
-interface WhatsAppCheckoutModalProps {
+// Define type locally since we removed the import
+interface WhatsAppCheckoutInput {
+  productName: string;
+  sku?: string;
+  productDescription?: string;
+  originalPrice?: number;
+  productPrice: number;
+  shippingCost: number;
+  totalCost: number;
+  quantity: number;
+  productUrls?: string[];
+  products?: OrderItem[];
+  discountPercentage?: number;
+}
+
+interface CheckoutModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  checkoutInput: Omit<WhatsAppCheckoutInput, 'customerName' | 'customerPhoneNumber' | 'customerAddress' | 'extraNote'> & { productImages?: string[]; sku?: string, products?: OrderItem[], uploadProductIds?: string[] } | null;
+  checkoutInput: Omit<WhatsAppCheckoutInput, 'customerName' | 'customerPhoneNumber' | 'customerAddress' | 'extraNote'> & { productImages?: string[]; sku?: string, products?: OrderItem[], uploadProductIds?: string[]; discountPercentage?: number } | null;
   checkoutMode: 'whatsapp' | 'payment';
 }
 
@@ -43,7 +57,7 @@ const OrderSummary = ({
   advancePercent,
   mode,
 }: {
-  checkoutInput: WhatsAppCheckoutModalProps['checkoutInput'];
+  checkoutInput: CheckoutModalProps['checkoutInput'];
   couponCode: string;
   setCouponCode: (value: string) => void;
   handleApplyCoupon: () => void;
@@ -131,7 +145,7 @@ const OrderSummary = ({
 };
 
 
-const WhatsAppCheckoutModal = ({ isOpen, onOpenChange, checkoutInput, checkoutMode }: WhatsAppCheckoutModalProps) => {
+const CheckoutModal = ({ isOpen, onOpenChange, checkoutInput, checkoutMode }: CheckoutModalProps) => {
   const [step, setStep] = useState<'form' | 'loading' | 'confirmation'>('form');
   const [customerName, setCustomerName] = useState('');
   const [customerPhoneNumber, setCustomerPhoneNumber] = useState('');
@@ -141,7 +155,6 @@ const WhatsAppCheckoutModal = ({ isOpen, onOpenChange, checkoutInput, checkoutMo
   const [extraNote, setExtraNote] = useState('');
   const [couponCode, setCouponCode] = useState('');
   const [couponDiscount, setCouponDiscount] = useState(0);
-  const [availableCoupons, setAvailableCoupons] = useState<Coupon[]>([]);
   const [siteSettings, setSiteSettings] = useState<Partial<SiteSettings>>({});
   
   const { toast } = useToast();
@@ -180,63 +193,78 @@ const WhatsAppCheckoutModal = ({ isOpen, onOpenChange, checkoutInput, checkoutMo
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch('/api/coupons', { cache: 'no-store' });
+        const res = await fetch('/api/site-settings');
+        if (!res.ok) return;
         const data = await res.json();
-        if (res.ok && Array.isArray(data)) {
-          setAvailableCoupons(data.filter((c: Coupon) => c.active));
-        } else if (res.ok && Array.isArray((data as any).coupons)) {
-          setAvailableCoupons((data as any).coupons.filter((c: Coupon) => c.active));
-        }
+        if (data) setSiteSettings(data as SiteSettings);
       } catch {}
     })();
   }, []);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch('/api/settings', { cache: 'no-store' });
-        const data = await res.json();
-        if (res.ok && data) {
-          setSiteSettings(data);
-        }
-      } catch {}
-    })();
-  }, []);
-
-  const handleApplyCoupon = useCallback(() => {
+  const handleApplyCoupon = useCallback(async () => {
     const code = couponCode.trim().toUpperCase();
-    const coupon = availableCoupons.find(c => c.code.toUpperCase() === code && c.active);
-    if (!coupon) {
+    if (!code) {
       toast({
         variant: "destructive",
         title: "Invalid Coupon",
-        description: "The coupon code you entered is not valid.",
+        description: "Please enter a valid coupon code.",
       });
       return;
     }
-    const subtotal = checkoutInput?.productPrice || 0;
-    let discountAmount = 0;
-    if (coupon.type === 'percent') {
-      discountAmount = subtotal * (coupon.value / 100);
-    } else {
-      discountAmount = coupon.value;
-    }
-    discountAmount = Math.min(discountAmount, subtotal);
-    setCouponDiscount(discountAmount);
-    
-    confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 },
-        zIndex: 10000,
-        colors: ['#ffd700', '#ffeb3b', '#fff59d']
-    });
+    try {
+      // Use Supabase Edge Function instead of local API
+      const res = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/coupons-admin`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          action: 'validate',
+          code: code,
+          subtotal: checkoutInput?.productPrice || 0 
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data?.error) {
+        toast({
+          variant: "destructive",
+          title: "Invalid Coupon",
+          description: data?.error || "The coupon code you entered is not valid.",
+        });
+        return;
+      }
+      const discountAmount = Number(data.discountAmount || 0);
+      if (!Number.isFinite(discountAmount) || discountAmount <= 0) {
+        toast({
+          variant: "destructive",
+          title: "Invalid Coupon",
+          description: "The coupon could not be applied.",
+        });
+        return;
+      }
+      setCouponDiscount(discountAmount);
+      
+      confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+          zIndex: 10000,
+          colors: ['#ffd700', '#ffeb3b', '#fff59d']
+      });
 
-    toast({
-      title: "Coupon Applied!",
-      description: coupon.type === 'percent' ? `You've received ${coupon.value}% off!` : `You've received ₹${coupon.value.toFixed(2)} off!`,
-    });
-  }, [couponCode, checkoutInput, availableCoupons, toast]);
+      toast({
+        title: "Coupon Applied!",
+        description: data.message || `You've received a discount of ₹${discountAmount.toFixed(2)}!`,
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Coupon",
+        description: error?.message || "Failed to validate coupon. Please try again.",
+      });
+    }
+  }, [couponCode, checkoutInput, toast]);
 
   const handleRemoveCoupon = useCallback(() => {
     setCouponDiscount(0);
@@ -296,11 +324,10 @@ const WhatsAppCheckoutModal = ({ isOpen, onOpenChange, checkoutInput, checkoutMo
 
         const getPaymentsUrl = async (orderIdParam: string) => {
           try {
-            const sres = await fetch(`/api/order-status?order_id=${encodeURIComponent(orderIdParam)}`, { cache: 'no-store' });
-            const sdata = await sres.json();
-            if (sres.ok) {
-              return sdata.payments?.url || sdata.payments_url || null;
-            }
+            const resStatus = await fetch(`/api/order-status?order_id=${encodeURIComponent(orderIdParam)}`);
+            if (!resStatus.ok) return null;
+            const sdata = await resStatus.json();
+            return (sdata as any)?.payments?.url || (sdata as any)?.payments_url || null;
           } catch {}
           return null;
         };
@@ -366,22 +393,32 @@ const WhatsAppCheckoutModal = ({ isOpen, onOpenChange, checkoutInput, checkoutMo
         }
 
       } else {
-        await generateWhatsAppCheckoutMessage({
-          productName: checkoutInput.productName,
-          sku: checkoutInput.sku,
-          productDescription: checkoutInput.productDescription,
-          originalPrice: checkoutInput.originalPrice,
-          productPrice: checkoutInput.productPrice,
-          discountPercentage: 0,
-          shippingCost: checkoutInput.shippingCost,
-          totalCost: finalTotal,
-          quantity: checkoutInput.quantity,
+        // For WhatsApp checkout, create order without payment
+        const orderInput = {
+          orderId: `WA-${Date.now()}`,
+          amount: 0, // No payment for WhatsApp orders
           customerName,
-          customerPhoneNumber: `91${customerPhoneNumber}`,
-          customerAddress: fullAddress,
-          extraNote,
-          productUrls: checkoutInput.productUrls || [],
+          customerPhone: `91${customerPhoneNumber}`,
+          customerEmail: email,
+          returnUrl: `${typeof window !== 'undefined' ? window.location.origin : ''}/order-confirmation`,
+          items: checkoutInput.products || [],
+        };
+        
+        await fetch('/api/orders', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            external_order_id: orderInput.orderId,
+            customer_name: orderInput.customerName,
+            customer_phone: orderInput.customerPhone,
+            customer_email: orderInput.customerEmail,
+            status: 'PENDING',
+            total_amount: 0,
+          }),
         });
+        
         audioRef.current?.play();
         confetti({
             particleCount: 150,
@@ -576,6 +613,6 @@ const WhatsAppCheckoutModal = ({ isOpen, onOpenChange, checkoutInput, checkoutMo
   );
 };
 
-export default WhatsAppCheckoutModal;
+export default CheckoutModal;
 
     

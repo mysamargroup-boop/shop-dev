@@ -51,9 +51,12 @@ export default function EnhancedLeadsPage() {
 
   const fetchAnalytics = async () => {
     try {
-      const response = await fetch('/api/analytics');
-      const data = await response.json();
-      setAnalytics(data.data || []);
+      const res = await fetch('/api/lead-analytics');
+      if (!res.ok) {
+        throw new Error('Failed to fetch analytics');
+      }
+      const data = await res.json().catch(() => ({}));
+      setAnalytics(((data as any)?.data || []) as LeadAnalytics[]);
     } catch (error) {
       console.error('Failed to fetch analytics:', error);
     } finally {

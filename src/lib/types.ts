@@ -26,6 +26,7 @@ export interface Product {
   tags?: string[];
   material?: string;
   color?: string;
+  colorOptions?: { name: string; value: string }[];
   badge?: 'Best Seller' | 'New' | 'Limited' | string;
   rating?: number;
   reviewCount?: number;

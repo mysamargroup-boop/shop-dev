@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import useCart from '@/hooks/use-cart';
 import useWishlist from '@/hooks/use-wishlist';
 import { cn, slugify } from '@/lib/utils';
-import WhatsAppCheckoutModal from '@/components/checkout/WhatsAppCheckoutModal';
+import CheckoutModal from '@/components/checkout/CheckoutModal';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import {
@@ -27,12 +27,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { Input } from '@/components/ui/input';
-import RecentlySoldWidget from './RecentlySoldWidget';
+import RecentlySoldWidget from '@/components/home/RecentlySoldWidget';
 import Image from 'next/image';
 import { BLUR_DATA_URL } from '@/lib/constants';
 import ProductInfoBadges from '@/components/products/ProductInfoBadges';
 import { getSiteSettings } from '@/lib/actions';
-import ReviewsCarousel from '@/components/products/ReviewsCarousel';
+import ProductReviews from '@/components/products/ProductReviews';
 import Link from 'next/link';
 
 const ImageUpload = ({ onFilesChange }: { onFilesChange: (files: File[]) => void }) => {
@@ -127,6 +127,7 @@ export default function ProductDetailClient({ product }: { product: Product }) {
   const { toast } = useToast();
   
   const [selectedVariant, setSelectedVariant] = useState(product?.options && product.options.length > 0 ? undefined : product?.options?.[0]?.value);
+  const [selectedColor, setSelectedColor] = useState(product?.colorOptions?.[0]?.value || '');
   
   useEffect(() => {
     setIsClient(true);
@@ -191,6 +192,7 @@ export default function ProductDetailClient({ product }: { product: Product }) {
 
   const areActionsDisabled =
     (product.options && product.options.length > 0 && !selectedVariant) ||
+    (product.colorOptions && product.colorOptions.length > 0 && !selectedColor) ||
     (product.allowImageUpload && customImages.length === 0) ||
     finalQuantity <= 0;
 
@@ -211,12 +213,11 @@ export default function ProductDetailClient({ product }: { product: Product }) {
     quantity: finalQuantity,
     price: product.price,
     imageUrl: product.imageUrl,
-    imageHint: product.imageHint,
+    imageHint: product.imageHint || '',
   }];
 
   return (
-    <>
-      <div className='text-left space-y-4'>
+    <div className='text-left space-y-4'>
         <div className="flex justify-between items-start">
           <div>
             <h1 className="font-headline text-2xl font-bold lg:text-3xl">{product.name}</h1>
@@ -236,7 +237,6 @@ export default function ProductDetailClient({ product }: { product: Product }) {
           {product.subCategory && (
             <Badge variant="secondary">{product.subCategory}</Badge>
           )}
-        </div>
 
          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
             {product.rating && product.reviewCount && (
@@ -258,11 +258,11 @@ export default function ProductDetailClient({ product }: { product: Product }) {
         <div className="space-y-2">
             <div className="flex items-baseline gap-2">
                 {typeof product.salePrice === 'number' && typeof product.regularPrice === 'number' && product.salePrice < product.regularPrice ? (
-                  <>
+                  <div>
                     <p className="text-3xl font-bold text-accent">₹{product.salePrice.toFixed(0)}</p>
                     <p className="text-lg line-through text-muted-foreground">₹{product.regularPrice.toFixed(0)}</p>
-                  </>
-                ) : (
+                  </div>
+  ) : (
                   <p className="text-3xl font-bold text-foreground">
                     {typeof product.regularPrice === 'number'
                       ? `₹${product.regularPrice.toFixed(0)}`
@@ -319,6 +319,39 @@ export default function ProductDetailClient({ product }: { product: Product }) {
           </div>
         )}
 
+        {product.colorOptions && product.colorOptions.length > 0 && (
+          <div className="my-6">
+            <h3 className="font-semibold mb-3">Color:</h3>
+            <div className="flex flex-wrap gap-3">
+              {product.colorOptions.map((colorOption) => (
+                <button
+                  key={colorOption.value}
+                  onClick={() => setSelectedColor(colorOption.value)}
+                  className={cn(
+                    "relative w-12 h-12 rounded-full border-4 transition-all hover:scale-110",
+                    selectedColor === colorOption.value 
+                      ? "border-primary ring-2 ring-primary/30" 
+                      : "border-gray-300"
+                  )}
+                  style={{ backgroundColor: colorOption.value }}
+                  title={colorOption.name}
+                >
+                  {selectedColor === colorOption.value && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-2 h-2 bg-white rounded-full" />
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+            {selectedColor && (
+              <p className="text-sm text-muted-foreground mt-2">
+                Selected: {product.colorOptions.find(c => c.value === selectedColor)?.name}
+              </p>
+            )}
+          </div>
+        )}
+
         {product.allowImageUpload && <ImageUpload onFilesChange={setCustomImages} />}
         
         {product.allowImageUpload && customImages.length > 0 && (
@@ -361,9 +394,6 @@ export default function ProductDetailClient({ product }: { product: Product }) {
                             )}
                         />
                     </div>
-                     <Button variant="ghost" size="icon" onClick={handleWishlistToggle} className="ml-auto">
-                        <Heart className={cn("h-6 w-6", isInWishlist ? "fill-destructive text-destructive" : "text-foreground")} />
-                    </Button>
                 </div>
             </div>
 
@@ -430,6 +460,18 @@ export default function ProductDetailClient({ product }: { product: Product }) {
                                         <td className="py-2 font-semibold text-right">{product.dimensionsCm.length} x {product.dimensionsCm.width} x {product.dimensionsCm.height} cm</td>
                                     </tr>
                                 )}
+                                {product.material && (
+                                    <tr className="border-b">
+                                        <td className="py-2 text-muted-foreground">Material</td>
+                                        <td className="py-2 font-semibold text-right">{product.material}</td>
+                                    </tr>
+                                )}
+                                {product.color && (!product.colorOptions || product.colorOptions.length === 0) && (
+                                    <tr className="border-b">
+                                        <td className="py-2 text-muted-foreground">Color</td>
+                                        <td className="py-2 font-semibold text-right">{product.color}</td>
+                                    </tr>
+                                )}
                             </tbody>
                         </table>
                     </AccordionContent>
@@ -438,25 +480,31 @@ export default function ProductDetailClient({ product }: { product: Product }) {
              <ProductInfoBadges />
         </div>
         
+        {/* Product Reviews Section */}
+        <ProductReviews productId={product.id} />
+        
+        <div className="mt-8">
+          <CheckoutModal 
+            isOpen={isModalOpen} 
+            onOpenChange={setIsModalOpen}
+            checkoutMode={checkoutMode}
+            checkoutInput={{
+              sku: product.id,
+              productName: `${product.name}${selectedVariant ? ` (${product.options?.find(o => o.value === selectedVariant)?.label})` : ''}`,
+              productDescription: product.description,
+              originalPrice: totalCost,
+              productPrice: totalCost,
+              discountPercentage: 0,
+              quantity: finalQuantity,
+              shippingCost: shippingCost,
+              totalCost: totalCost,
+              productUrls: currentUrl ? [currentUrl] : [],
+              products: productsForCheckout,
+            }}
+          />
+        </div>
+      
       </div>
-      <WhatsAppCheckoutModal 
-        isOpen={isModalOpen} 
-        onOpenChange={setIsModalOpen}
-        checkoutMode={checkoutMode}
-        checkoutInput={{
-            sku: product.id,
-            productName: `${product.name}${selectedVariant ? ` (${product.options?.find(o => o.value === selectedVariant)?.label})` : ''}`,
-            productDescription: product.description,
-            originalPrice: totalCost,
-            productPrice: totalCost,
-            discountPercentage: 0,
-            quantity: finalQuantity,
-            shippingCost: shippingCost,
-            totalCost: totalCost,
-            productUrls: currentUrl ? [currentUrl] : [],
-            products: productsForCheckout,
-        }}
-      />
       
       <div className={cn(
         "fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-lg border-t shadow-lg transition-transform duration-300 ease-in-out z-40 pb-16 md:pb-0",
@@ -518,6 +566,6 @@ export default function ProductDetailClient({ product }: { product: Product }) {
           </div>
         </div>
       </div>
-    </>
+      </div>
   );
 }

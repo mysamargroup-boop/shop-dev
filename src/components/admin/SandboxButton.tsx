@@ -23,23 +23,30 @@ export default function SandboxButton() {
       }
       const orderId = `WB-TEST-${Date.now()}`;
       
-      const response = await fetch('/api/create-payment-link', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            orderId,
-            amount: 1,
-            customerName: 'Sandbox User',
-            customerPhone: '919999999999',
-            returnUrl: `${window.location.origin}/order-confirmation`,
-            items: [{ id: 'test-item', name: 'Test Product', quantity: 1, price: 1 }]
-          })
+      const res = await fetch('/api/create-payment-link', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId,
+          amount: 1,
+          customerName: 'Sandbox User',
+          customerPhone: '919999999999',
+          returnUrl: `${window.location.origin}/order-confirmation`,
+          items: [{ id: 'test-item', name: 'Test Product', quantity: 1, price: 1 }],
+        }),
       });
-      
-      const data = await response.json();
-      if (!response.ok) {
-          throw new Error(data.error || 'Failed to create sandbox payment session');
+      if (!res.ok) {
+        let message = 'Failed to create sandbox payment session';
+        try {
+          const body = await res.json();
+          if (body?.error) message = body.error;
+        } catch {
+        }
+        throw new Error(message);
       }
+      const data = await res.json();
 
       if ((window as any).Cashfree && data.payment_session_id) {
         const cfModeEnv = (data.env || "SANDBOX").toUpperCase();
@@ -66,11 +73,10 @@ export default function SandboxButton() {
   
   const getHostedUrl = async (orderId: string) => {
     try {
-      const sres = await fetch(`/api/order-status?order_id=${encodeURIComponent(orderId)}`, { cache: 'no-store' });
-      const sdata = await sres.json();
-      if (sres.ok) {
-        return sdata.payments?.url || sdata.payments_url || null;
-      }
+      const res = await fetch(`/api/order-status?order_id=${encodeURIComponent(orderId)}`);
+      if (!res.ok) return null;
+      const sdata = await res.json();
+      return (sdata as any)?.payments?.url || (sdata as any)?.payments_url || null;
     } catch {}
     return null;
   };

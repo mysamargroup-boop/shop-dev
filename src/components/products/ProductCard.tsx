@@ -13,7 +13,7 @@ import useWishlist from '@/hooks/use-wishlist';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
-import WhatsAppCheckoutModal from '../checkout/WhatsAppCheckoutModal';
+import CheckoutModal from '../checkout/CheckoutModal';
 import { BLUR_DATA_URL } from '@/lib/constants';
 import { getSiteSettings } from '@/lib/actions';
 
@@ -170,7 +170,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
         </Button>
       </CardFooter>
     </Card>
-     <WhatsAppCheckoutModal 
+     <CheckoutModal 
         isOpen={isModalOpen} 
         onOpenChange={setIsModalOpen}
         checkoutMode={checkoutMode}

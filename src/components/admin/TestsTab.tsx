@@ -7,7 +7,6 @@ import { Button } from '../ui/button';
 import { handleSubscription } from '@/ai/flows/handle-subscription';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Send } from 'lucide-react';
-import { sendWhatsAppTemplateMessage } from '@/lib/whatsapp-cloud';
 import { useRouter } from 'next/navigation';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -45,31 +44,56 @@ export default function TestsTab() {
   };
 
   const testWhatsapp = () => {
-    return sendWhatsAppTemplateMessage({
-      to: whatsappTestNumber,
-      templateName: process.env.WHATSAPP_TEMPLATE_NAME || 'hello_world',
-      languageCode: 'en_US',
-    });
+    return (async () => {
+      const res = await fetch('/api/whatsapp/send-template', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: whatsappTestNumber,
+        }),
+      });
+      if (!res.ok) {
+        let message = 'Failed to send WhatsApp message.';
+        try {
+          const body = await res.json();
+          if (body?.error) message = body.error;
+        } catch {
+        }
+        throw new Error(message);
+      }
+    })();
   };
 
   const testPayment = async () => {
     const orderId = `WB-TEST-${Date.now()}`;
-    // Use Supabase Edge Function directly
-    const { supabase } = await import('@/lib/supabase');
-    const { data, error } = await supabase().functions.invoke('create-order', {
-      body: {
+    const res = await fetch('/api/create-payment-link', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
         orderId,
         amount: 1,
         customerName: 'Test Customer',
         customerPhone: '9999999999',
         returnUrl: `${window.location.origin}/order-confirmation`,
-        items: [{ name: 'Test Item', quantity: 1, price: 1 }]
-      }
+        items: [{ name: 'Test Item', quantity: 1, price: 1 }],
+      }),
     });
 
-    if (error) {
-      throw new Error(error.message || 'Failed to create payment link.');
+    if (!res.ok) {
+      let message = 'Failed to create payment link.';
+      try {
+        const body = await res.json();
+        if (body?.error) message = body.error;
+      } catch {
+      }
+      throw new Error(message);
     }
+
+    const data = await res.json();
     
     // Store dummy data for confirmation page
     localStorage.setItem(`order_${orderId}`, JSON.stringify({

@@ -42,11 +42,12 @@ const OrderConfirmationContent = () => {
   
   const fetchOrderDetailsFromServer = async (orderId: string): Promise<OrderData | null> => {
       try {
-        const res = await fetch(`/api/orders/by-external/${orderId}`);
-        if (!res.ok) return null;
+        const res = await fetch(`/api/orders/by-external/${encodeURIComponent(orderId)}`);
+        if (!res.ok) {
+          return null;
+        }
         const serverOrder = await res.json();
-        
-        if (serverOrder) {
+        if (serverOrder && !serverOrder.error) {
           return {
             orderId: serverOrder.external_order_id,
             customerName: serverOrder.customer_name,
@@ -80,9 +81,17 @@ const OrderConfirmationContent = () => {
          throw new Error(`No details found for order ${orderId}`);
       }
 
-      const res = await fetch(`/api/order-status?order_id=${encodeURIComponent(orderId)}`, { cache: 'no-store' });
-      const statusData = await res.json();
-      if (!res.ok) throw new Error(statusData.error || 'Status fetch failed');
+      const statusRes = await fetch(`/api/order-status?order_id=${encodeURIComponent(orderId)}`);
+      if (!statusRes.ok) {
+        let message = 'Status fetch failed';
+        try {
+          const body = await statusRes.json();
+          if (body?.error) message = body.error;
+        } catch {
+        }
+        throw new Error(message);
+      }
+      const statusData = await statusRes.json();
       
       const orderStatus = (statusData.order_status || '').toUpperCase();
       const orderAmount = Number(statusData.order_amount || 0);
@@ -101,7 +110,9 @@ const OrderConfirmationContent = () => {
             hasFired.current = true;
             await fetch('/api/whatsapp/send-template', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: {
+                'Content-Type': 'application/json',
+              },
               body: JSON.stringify({
                 to: toPhone,
                 bodyParameters: [
@@ -190,14 +201,15 @@ const OrderConfirmationContent = () => {
     doc.text(businessAddress, 14, 24);
     doc.text('Invoice', 160, 18);
     doc.text(`Order ID: ${orderData.orderId}`, 14, 32);
-    doc.text(`Date & Time: ${new Date().toLocaleString('en-GB')}`, 14, 38);
+    doc.text(`Transaction ID: ${orderData.orderId}`, 14, 38);
+    doc.text(`Date & Time: ${new Date().toLocaleString('en-GB')}`, 14, 44);
     if (gstNumber) {
-        doc.text(`GSTIN: ${gstNumber}`, 14, 44);
+        doc.text(`GSTIN: ${gstNumber}`, 14, 50);
     }
     
-    doc.text('Bill To:', 14, 50);
-    doc.text(orderData.customerName, 14, 56);
-    doc.text(orderData.customerAddress, 14, 62);
+    doc.text('Bill To:', 14, 56);
+    doc.text(orderData.customerName, 14, 62);
+    doc.text(orderData.customerAddress, 14, 68);
 
     autoTable(doc, {
       startY: 75,
